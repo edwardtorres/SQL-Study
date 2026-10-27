@@ -33,7 +33,8 @@ try {
   await page.evaluate(() => document.fonts.ready);
   const boardResponses = responses.length;
   if (responses.some((response) => /\.(wasm|data)$/.test(new URL(response.url()).pathname))) throw new Error('Engine loaded on the board');
-  await page.locator('.ticket-card').first().getByRole('button', { name: 'Open ticket' }).tap();
+  await page.getByRole('button', { name: /Open chapter 1$/ }).tap();
+  await page.getByRole('button', { name: /The heavy-load shortlist/ }).first().tap();
   await page.waitForFunction(() => {
     const button = document.querySelector('.primary-button');
     return button && !button.disabled;

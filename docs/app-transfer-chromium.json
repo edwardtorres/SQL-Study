@@ -1,28 +1,28 @@
 {
-  "recordedAt": "2026-10-27T18:42:55.600Z",
+  "recordedAt": "2026-10-27T21:37:35.460Z",
   "browser": "chromium",
-  "browserVersion": "156.0.8078.4",
+  "browserVersion": "153.0.8010.12",
   "scope": "Fresh browser context, 1280px touch viewport; actual observed requests replayed with browser Accept-Encoding and encoded body bytes counted before decompression. Excludes headers/TLS; no mobile-network timing claim.",
-  "boardBytes": 160002,
-  "sqlAdditionalBytes": 5017705,
-  "totalBytes": 5177707,
+  "boardBytes": 141430,
+  "sqlAdditionalBytes": 5078699,
+  "totalBytes": 5220129,
   "requests": [
     {
       "asset": "",
       "screen": "board",
-      "bytes": 318,
+      "bytes": 335,
       "encoding": "br"
     },
     {
-      "asset": "assets/main-CmY-fhFs.css",
+      "asset": "assets/main-DlfYh_t4.css",
       "screen": "board",
-      "bytes": 6683,
+      "bytes": 7330,
       "encoding": "br"
     },
     {
-      "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+      "asset": "assets/jsx-runtime-Wy9s6hX0.js",
       "screen": "board",
-      "bytes": 342,
+      "bytes": 3260,
       "encoding": "br"
     },
     {
@@ -32,9 +32,15 @@
       "encoding": "br"
     },
     {
-      "asset": "assets/main-COQrjjmj.js",
+      "asset": "assets/loader-circle-jGAMIvld.js",
       "screen": "board",
-      "bytes": 74340,
+      "bytes": 1480,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/main-DRRLpU6T.js",
+      "screen": "board",
+      "bytes": 91110,
       "encoding": "br"
     },
     {
@@ -44,27 +50,45 @@
       "encoding": "identity"
     },
     {
-      "asset": "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
-      "screen": "board",
-      "bytes": 40404,
-      "encoding": "identity"
+      "asset": "assets/ResultsTable-B-ZaJUai.js",
+      "screen": "sql",
+      "bytes": 787,
+      "encoding": "br"
     },
     {
-      "asset": "assets/client-ivWQ3ESG.js",
+      "asset": "assets/Workspace-OqhYht4q.js",
+      "screen": "sql",
+      "bytes": 4325,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/external-link-C98T77mP.js",
+      "screen": "sql",
+      "bytes": 306,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/client-BrfsseG6.js",
       "screen": "sql",
       "bytes": 774,
       "encoding": "br"
     },
     {
-      "asset": "assets/Workspace-DwEAF9sq.js",
+      "asset": "assets/SqlEditor-aihNFD-m.js",
       "screen": "sql",
-      "bytes": 133755,
+      "bytes": 129247,
       "encoding": "br"
     },
     {
-      "asset": "assets/game.worker-BPJMWEd6.js",
+      "asset": "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
       "screen": "sql",
-      "bytes": 126856,
+      "bytes": 40404,
+      "encoding": "identity"
+    },
+    {
+      "asset": "assets/game.worker-CPHDf93f.js",
+      "screen": "sql",
+      "bytes": 146536,
       "encoding": "br"
     },
     {
