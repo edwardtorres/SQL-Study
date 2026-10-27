@@ -1,0 +1,23 @@
+{
+  "id": "c5-i4",
+  "solutionSql": "SELECT c.id,\n       c.name\nFROM customers c\nWHERE EXISTS (\n  SELECT 1\n  FROM shipments s\n  JOIN invoices i ON i.shipment_id = s.id\n  WHERE s.customer_id = c.id\n)\nORDER BY c.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks"
+    ],
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      3,
+      "Cobalt Paperworks"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "All six customers with shipments have an invoiced shipment, and customers 7 and 8 have no shipments at all. EXISTS over the join returns each customer once, with no duplicates."
+}

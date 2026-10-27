@@ -80,7 +80,6 @@ describe('independent blind content review', () => {
 describe('post-blind review of author references and examples', () => {
   test('references match independently solved tickets on every fixture and wrong variants are caught', async () => {
     const { challenges } = await import('../src/data/challenges');
-    const wrongDetected = new Set<string>();
     for (const fixture of fixtures) {
       await db.exec(`SET search_path TO blind_${fixture.id};`);
       for (const challenge of challenges) {
@@ -88,11 +87,9 @@ describe('post-blind review of author references and examples', () => {
         const reference = await db.query<unknown[]>(challenge.referenceSql, [], { rowMode: 'array' });
         expect(normalize(reference.rows), `${fixture.id}: ${challenge.id}`).toEqual(normalize(own.rows));
         expect(reference.fields.map((field) => ({ name: field.name, type: field.dataTypeID }))).toEqual(challenge.columns);
-        const wrong = await db.query<unknown[]>(challenge.wrongSql, [], { rowMode: 'array' });
-        if (JSON.stringify(normalize(wrong.rows)) !== JSON.stringify(normalize(reference.rows))) wrongDetected.add(challenge.id);
-        await expect(db.query(challenge.exampleSql)).resolves.toBeDefined();
+        // Wrong-variant detection is checked per variant and per dataset in data-seed.test.ts.
+        if (challenge.exampleSql) await expect(db.query(challenge.exampleSql)).resolves.toBeDefined();
       }
     }
-    expect([...wrongDetected].sort()).toEqual(['dispatch', 'latest-event', 'unbilled']);
   });
 });

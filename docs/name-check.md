@@ -36,8 +36,8 @@ terms, in the same session.
 
 - Public web search only. Search cannot rule out a small, unlisted, or
   out-of-state business.
-- Before publishing, check **Larkspur Freight** against the FMCSA SAFER carrier
-  database and the relevant state business registry.
+- Owner decision: the web check is accepted for Larkspur Freight. No FMCSA SAFER,
+  state registry, or trademark search is required before Step 2.
 - No trademark search was run.
 
 ## Scope

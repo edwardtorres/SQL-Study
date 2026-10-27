@@ -1,0 +1,23 @@
+{
+  "id": "c4-i5",
+  "solutionSql": "SELECT s.id,\n       s.tracking_code\nFROM shipments s\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM shipment_events e\n  WHERE e.shipment_id = s.id\n)\nORDER BY s.id;",
+  "sampleRowCount": 22,
+  "sampleFirstRows": [
+    [
+      1,
+      "JF-104729-0001"
+    ],
+    [
+      12,
+      "JF-104729-0012"
+    ],
+    [
+      23,
+      "JF-104729-0023"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Twenty-two shipments have no events, mostly on a regular id pattern (1, 12, 23, and so on). NOT EXISTS is used, so the answer does not depend on NULL handling."
+}

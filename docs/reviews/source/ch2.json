@@ -1,0 +1,196 @@
+{
+  "chapterId": 2,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c2-s1",
+      "claim": "A missing value is stored as NULL. It means unknown.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : '(The null value represents an unknown value, and it is not known whether two unknown values are equal.)'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "A missing value means unknown: not zero, and not empty text.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'In particular, sum of no rows returns null, not zero as one might expect'. This supports 'not zero' only in the aggregate context. No cited page says NULL differs from an empty string, so 'not empty text' is unsourced.",
+      "suggestedFix": "A missing value is stored as NULL, which means unknown. Do not read it as zero: sum of no rows returns null, not zero."
+    },
+    {
+      "where": "c2-s1",
+      "claim": "A comparison with an unknown value is itself unknown, so = and <> never select a NULL.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Ordinary comparison operators yield null (signifying unknown), not true or false, when either input is null. For example, 7 = NULL yields null, as does 7 <> NULL.' WHERE keeps only true rows (tutorial-select.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "Use IS NULL and IS NOT NULL to test for missing values.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'To check whether a value is or is not null, use the predicates: expression IS NULL, expression IS NOT NULL'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "predict explanation: 'driver_id = NULL is never true, because the result of comparing with NULL is unknown.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Do not write expression = NULL because NULL is not equal to NULL.' and 'Ordinary comparison operators yield null (signifying unknown)...'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "predict explanation: 'The filter removes every row.'",
+      "verdict": "engine",
+      "evidence": "Engine check: states the result (zero rows, answerRows 0). Row-count flag: lesson text must not state result rows. Reword to explain the logic only, e.g. 'the WHERE test is never true, so no row passes it.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "predict explanation: 'Replace it with driver_id IS NULL to find the unassigned shipments.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'expression IS NULL'. The meaning of 'unassigned' is a lesson convention, not a PostgreSQL claim.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "commonMistakes NULL_EQUALS: 'Writing = NULL or <> NULL keeps no rows at all.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : '7 = NULL yields null, as does 7 <> NULL', and WHERE keeps only rows whose condition is true (tutorial-select.html). This is a general statement about the form, not a row count for the example.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s1",
+      "claim": "commonMistakes NULL_EQUALS: 'The database cannot say whether an unknown value equals anything.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : '(The null value represents an unknown value, and it is not known whether two unknown values are equal.)'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "SQL conditions have three results: true, false, and unknown.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-logical.html : 'SQL uses a three-valued logic system with true, false, and null, which represents unknown.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "WHERE keeps only the rows where the condition is true, so unknown rows are dropped.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-select.html : 'only rows for which the Boolean expression is true are returned.' Unknown is null on https://www.postgresql.org/docs/18/functions-logical.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "COALESCE returns the first of its arguments that is not NULL.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html : 'The COALESCE function returns the first of its arguments that is not null.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "predict explanation: 'Each customer with a region is true for one of the two tests.'",
+      "verdict": "supported",
+      "evidence": "Follows from the OR truth table on https://www.postgresql.org/docs/18/functions-logical.html (TRUE OR FALSE gives TRUE) for any non-NULL region.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "predict explanation: 'A customer whose region is NULL is unknown for both, so WHERE drops it.'",
+      "verdict": "supported",
+      "evidence": "Follows from https://www.postgresql.org/docs/18/functions-comparison.html (comparison with NULL yields null) and the OR truth table with NULL on https://www.postgresql.org/docs/18/functions-logical.html, plus WHERE keeping only true rows. Whether NULL-region customers exist in the sample is a data fact for the engine check.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "predict explanation: 'The COALESCE label never gets a chance to run for those rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'All these transformations produce a virtual table that provides the rows that are passed to the select list to compute the output rows of the query.' Rows removed by WHERE never reach the select list.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s2",
+      "claim": "commonMistakes CASE: 'CASE WHEN x = NULL never takes the THEN branch.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : '7 = NULL yields null'. https://www.postgresql.org/docs/18/functions-conditional.html : 'If the condition's result is not true, any subsequent WHEN clauses are examined in the same manner.' The advice 'Test CASE WHEN x IS NULL instead' follows from the IS NULL predicate.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "COUNT(*) counts every row.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'For example, count(*) yields the total number of input rows'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "COUNT(column) counts only the rows where that column is not NULL.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the number of input rows in which the input value is not null.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "SUM, AVG, MIN and MAX skip NULL values.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the sum of the non-null input values.' 'Computes the average (arithmetic mean) of all the non-null input values.' 'Computes the minimum of the non-null input values.' 'Computes the maximum of the non-null input values.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "In a LEFT JOIN, a row with no match gets NULL in the right-hand columns.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'Then, for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "A NOT IN test against a list that contains NULL cannot return true for any row.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (NOT IN): 'if there are no equal right-hand values and at least one right-hand row yields null, the result of the NOT IN construct will be null, not true.' Citation gap: the attached quote for this section (pg-in-null) is the IN sentence, not the NOT IN one. Attach pg-not-in-null, which is already in citations.json.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "predict explanation: 'GROUP BY puts every NULL driver into one group of unassigned shipments.'",
+      "verdict": "engine",
+      "evidence": "Engine check: the cited GROUP BY section (queries-table-expressions.html, 7.2.3) says rows 'having common values' form one group but says nothing about NULL. The only related sentence, on https://www.postgresql.org/docs/18/queries-select-lists.html, is 'Null values are considered equal in this comparison' for DISTINCT. Run the GROUP BY to confirm NULL driver rows form one group.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "predict explanation: 'That group sits beside the four drivers, which makes five rows.'",
+      "verdict": "engine",
+      "evidence": "Engine check: states the result row count (answerRows 5). Row-count flag: lesson text must not state result rows. Remove the count and describe the NULL group only.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "commonMistakes COUNT_STAR_VS_COL: 'COUNT(*) counts rows with a missing value too.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'count(*) yields the total number of input rows; count(f1) yields the number of input rows in which f1 is non-null'. The advice 'Use COUNT(column) when only real values should count' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c2-s3",
+      "claim": "commonMistakes NOT_IN_NULL: 'If the list in NOT IN contains NULL, the test is never true, so no rows return.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html : 'the result of the NOT IN construct will be null, not true.' This is a general statement about the construct, not a row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL has ISNULL as well as COALESCE; their typing and evaluation rules differ.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/language-elements/coalesce-transact-sql (section 'Compare COALESCE and ISNULL'): 'Because ISNULL is a function, it's evaluated only once.' and 'Data type determination of the resulting expression is different. ISNULL uses the data type of the first parameter, and COALESCE follows the CASE expression rules'. The advice 'Use this game's PostgreSQL COALESCE examples as written' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark documents NULL-aware comparisons and null-safe equality separately; ordinary equality with NULL does not evaluate to TRUE.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-null-semantics.html (Comparison Operators): 'The result of these operators is unknown or NULL when one of the operands or both the operands are unknown or NULL. In order to compare the NULL values for equality, Spark provides a null-safe equal operator (<=>)'.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 23, "partly": 1, "unsupported": 0, "unverified": 0, "engine": 3 }
+}

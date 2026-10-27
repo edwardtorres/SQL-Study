@@ -1,0 +1,23 @@
+{
+  "id": "c2-i1",
+  "solutionSql": "SELECT id, name\nFROM customers\nWHERE region IS NULL\nORDER BY id ASC;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ],
+    [
+      7,
+      "Glimmer Clayworks"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Customers 1, 4 and 7 have a NULL region in customers. The customer_versions history also has NULL regions, but the ticket asks about customers, so only the current column is read."
+}

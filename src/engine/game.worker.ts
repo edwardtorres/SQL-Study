@@ -1,6 +1,7 @@
-import { challenges, datasets, schema, seedSql } from '../data';
-import { compareResults, validateSql } from '../grader';
-import type { DatasetOutcome, GradeReport, QueryResult } from '../core/types';
+import { datasetCatalog, schema, seedSql } from '../data';
+import { items } from '../data/catalog';
+import { compareResults, sameRows, validateSql } from '../grader';
+import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
 import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, WorkerRequest, WorkerResponse } from './protocol';
 import { WarmEngine } from './runtime';
 
@@ -22,8 +23,8 @@ function engine(): Promise<WarmEngine> {
     initialization = (async () => {
       const start = performance.now();
       const runtime = await WarmEngine.create();
-      for (const dataset of datasets) {
-        const seed = developmentSeed === undefined ? dataset.seed : developmentSeed + datasets.indexOf(dataset);
+      for (const dataset of datasetCatalog) {
+        const seed = developmentSeed === undefined ? dataset.seed : developmentSeed + datasetCatalog.indexOf(dataset);
         await runtime.prepare({ ...dataset, seed }, seedSql(seed, dataset.variant));
       }
       info = { initializationMs: performance.now() - start, memoryBytes: runtime.memoryBytes() };
@@ -34,10 +35,11 @@ function engine(): Promise<WarmEngine> {
 }
 async function grade(challengeId: string, sql: string): Promise<GradedSubmission> {
   const runtime = await engine();
-  const challenge = challenges.find((item) => item.id === challengeId);
+  const challenge = items.find((item) => item.id === challengeId);
   if (!challenge) throw new Error('Unknown ticket.');
   const start = performance.now();
   const outcomes: DatasetOutcome[] = [];
+  const actualResults = new Map<string, QueryResult>();
   let preview: QueryResult | null = null;
   try {
     await validateSql(sql, challenge.structure ? { mode: 'read', structure: challenge.structure } : { mode: 'read' });
@@ -47,6 +49,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   for (const dataset of challenge.datasets) {
     try {
       const actual = await runtime.run(dataset.id, sql);
+      actualResults.set(dataset.id, actual);
       if (!dataset.hidden) preview = actual;
       const expected = await runtime.run(dataset.id, challenge.referenceSql);
       const diff = compareResults(actual, expected, { ordered: challenge.ordered, columns: challenge.columns });
@@ -56,8 +59,34 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
       outcomes.push({ id: dataset.id, label: dataset.label, hidden: dataset.hidden, passed: false, diff: { passed: false, message: safeError(error), missing: [], extra: [] } });
     }
   }
-  const report: GradeReport = { passed: outcomes.every((outcome) => outcome.passed), outcomes, elapsedMs: performance.now() - start };
+  const passed = outcomes.every((outcome) => outcome.passed);
+  const report: GradeReport = { passed, outcomes, elapsedMs: performance.now() - start };
+  if (!passed) {
+    const mistake = await matchMistake(runtime, challenge, actualResults);
+    if (mistake) report.mistake = mistake;
+  }
   return { report, preview };
+}
+
+// A failing submission that returns exactly a known wrong variant's rows on every dataset gets that
+// mistake's targeted explanation. Any error while running a variant means it does not match.
+async function matchMistake(runtime: WarmEngine, challenge: Challenge, actual: ReadonlyMap<string, QueryResult>): Promise<MistakeFeedback | undefined> {
+  if (actual.size !== challenge.datasets.length) return undefined;
+  for (const variant of challenge.wrongVariants) {
+    let matches = true;
+    for (const dataset of challenge.datasets) {
+      try {
+        const wrong = await runtime.run(dataset.id, variant.sql);
+        if (!sameRows(actual.get(dataset.id)!, wrong, challenge.ordered)) { matches = false; break; }
+      } catch (error) {
+        if (fatalError(error)) throw error;
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return { id: variant.id, mistake: variant.mistake, explanation: variant.explanation };
+  }
+  return undefined;
 }
 async function handle(request: EngineRequest): Promise<EngineValue> {
   if (request.type === 'init') {
@@ -72,7 +101,7 @@ async function handle(request: EngineRequest): Promise<EngineValue> {
     return runtime.run('sample', `SELECT * FROM "${request.table}" ORDER BY 1 LIMIT 5;`);
   }
   if (request.type === 'grade') return grade(request.challengeId, request.sql);
-  const challenge = challenges.find((item) => item.id === request.challengeId);
+  const challenge = items.find((item) => item.id === request.challengeId);
   if (!challenge) throw new Error('Unknown ticket.');
   await grade(challenge.id, challenge.referenceSql);
   const samplesMs: number[] = [];

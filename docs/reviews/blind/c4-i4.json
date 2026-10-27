@@ -1,0 +1,26 @@
+{
+  "id": "c4-i4",
+  "solutionSql": "SELECT s.id,\n       c.name AS customer_name,\n       w.city AS origin_city\nFROM shipments s\nJOIN customers c ON c.id = s.customer_id\nJOIN routes r ON r.id = s.route_id\nJOIN warehouses w ON w.id = r.origin_id\nWHERE s.id BETWEEN 1 AND 6\nORDER BY s.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks",
+      "Valehaven"
+    ],
+    [
+      2,
+      "Brindle Pantry",
+      "Mossreach"
+    ],
+    [
+      3,
+      "Cobalt Paperworks",
+      "Cloudmere"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Origin is the route's origin warehouse, reached through routes.origin_id, and the ticket's where-it-leaves-from wording matches that. Each shipment's route resolves to a city."
+}

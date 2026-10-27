@@ -1,0 +1,29 @@
+{
+  "id": "c5-b1-p1",
+  "solutionSql": "SELECT s.id,\n       s.weight_kg\nFROM shipments s\nWHERE s.status = 'queued'\n  AND s.id BETWEEN 1 AND 60\n  AND s.weight_kg > (\n    SELECT AVG(q.weight_kg)\n    FROM shipments q\n    WHERE q.status = 'queued'\n  )\nORDER BY s.id;",
+  "sampleRowCount": 8,
+  "sampleFirstRows": [
+    [
+      7,
+      1412
+    ],
+    [
+      13,
+      1986
+    ],
+    [
+      36,
+      1680
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "whose weight is greater than the average weight of all queued shipments",
+      "readingChosen": "The average covers every queued shipment in the table with a recorded weight, not just ids 1 through 60.",
+      "alternativeReading": "The average covers only the queued shipments with ids 1 through 60, matching the scope of the outer rows."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Eight rows. The queued average is taken over the whole queued population, which the word all states, and a queued NULL weight is ignored by the average and fails the comparison."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "c1-b1-p2",
+  "solutionSql": "SELECT id, tracking_code\nFROM shipments\nWHERE RIGHT(tracking_code, 4) BETWEEN '0010' AND '0019'\nORDER BY id ASC;",
+  "sampleRowCount": 10,
+  "sampleFirstRows": [
+    [
+      10,
+      "JF-104729-0010"
+    ],
+    [
+      11,
+      "JF-104729-0011"
+    ],
+    [
+      12,
+      "JF-104729-0012"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return id and tracking_code for shipments whose tracking code ends in 0010 through 0019.",
+      "readingChosen": "The last four characters are compared as text, so 0010 to 0019 is a string range.",
+      "alternativeReading": "The four-digit serial is read as a number and checked to be from 10 to 19."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Every tracking code has a fixed-width four-digit serial, so the text and numeric readings return the same rows here. Ids 10 to 19 are the result."
+}

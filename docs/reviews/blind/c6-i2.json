@@ -1,0 +1,26 @@
+{
+  "id": "c6-i2",
+  "solutionSql": "SELECT id,\n       LEFT(tracking_code, 2) AS prefix,\n       RIGHT(tracking_code, 4) AS serial\nFROM shipments\nWHERE id BETWEEN 1 AND 5\nORDER BY id;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    [
+      1,
+      "JF",
+      "0001"
+    ],
+    [
+      2,
+      "JF",
+      "0002"
+    ],
+    [
+      3,
+      "JF",
+      "0003"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Prefix is the first two characters and serial the last four, both explicit. Serial stays text, so the leading zeros in 0001 to 0005 are kept."
+}

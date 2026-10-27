@@ -1,0 +1,29 @@
+{
+  "id": "c3-i2",
+  "solutionSql": "SELECT route_id,\n       COUNT(*)::integer AS shipments,\n       COUNT(weight_kg)::integer AS weighed,\n       ROUND(100.0 * COUNT(weight_kg) / COUNT(*), 1) AS pct_weighed\nFROM shipments\nGROUP BY route_id\nORDER BY route_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      40,
+      38,
+      "95.0"
+    ],
+    [
+      2,
+      40,
+      38,
+      "95.0"
+    ],
+    [
+      3,
+      40,
+      38,
+      "95.0"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The body is explicit that shipments include cancelled rows and that the percentage is weighed over shipments. The title says Heavy routes, but nothing in the body measures weight, so the title is misleading. Every route has 40 shipments and 38 weighed rows in the sample."
+}

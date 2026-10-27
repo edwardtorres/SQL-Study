@@ -1,0 +1,32 @@
+{
+  "id": "c5-i2",
+  "solutionSql": "SELECT s.id,\n       s.customer_id,\n       s.weight_kg\nFROM shipments s\nWHERE s.id BETWEEN 1 AND 40\n  AND s.weight_kg > (\n    SELECT AVG(s2.weight_kg)\n    FROM shipments s2\n    WHERE s2.customer_id = s.customer_id\n  )\nORDER BY s.id;",
+  "sampleRowCount": 21,
+  "sampleFirstRows": [
+    [
+      6,
+      6,
+      1931
+    ],
+    [
+      7,
+      1,
+      1412
+    ],
+    [
+      8,
+      2,
+      1214
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "whose weight is greater than the average weight of all shipments with the same customer_id",
+      "readingChosen": "The average covers all of that customer's shipments with a recorded weight, whatever their id.",
+      "alternativeReading": "The average covers only that customer's shipments with ids 1 through 40, matching the scope of the outer rows."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Twenty-one rows. A shipment with a NULL weight drops out because the comparison is not true. The average is taken over each customer's full history, which the word all supports."
+}

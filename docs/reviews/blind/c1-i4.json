@@ -1,0 +1,26 @@
+{
+  "id": "c1-i4",
+  "solutionSql": "SELECT DISTINCT status\nFROM shipments\nORDER BY status ASC;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "cancelled"
+    ],
+    [
+      "delivered"
+    ],
+    [
+      "in_transit"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return each shipments.status value once, sorted alphabetically ascending.",
+      "readingChosen": "Plain ascending text order.",
+      "alternativeReading": "Locale collation such as en_US, which ignores underscores at the first level."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A CHECK constraint fixes the four status values, and the order is the same under either collation, so the result does not change."
+}

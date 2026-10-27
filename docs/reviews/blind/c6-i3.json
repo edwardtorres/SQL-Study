@@ -1,0 +1,23 @@
+{
+  "id": "c6-i3",
+  "solutionSql": "SELECT id,\n       booked_at\nFROM shipments\nWHERE id BETWEEN 1 AND 60\n  AND booked_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND booked_at < TIMESTAMPTZ '2026-02-01 00:00:00+00'\nORDER BY id;",
+  "sampleRowCount": 14,
+  "sampleFirstRows": [
+    [
+      1,
+      "2026-01-31T00:00:00.000Z"
+    ],
+    [
+      2,
+      "2026-01-31T23:59:59.999Z"
+    ],
+    [
+      49,
+      "2026-01-01T00:00:00.000Z"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Shipments 1 and 2 are booked on 31 January, and shipments 49 to 60 on 1 January. The half-open range from 2026-01-01 UTC to 2026-02-01 UTC includes the 23:59:59.999 boundary on shipment 2, as the ticket requires."
+}

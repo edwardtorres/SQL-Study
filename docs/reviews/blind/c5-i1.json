@@ -1,0 +1,23 @@
+{
+  "id": "c5-i1",
+  "solutionSql": "SELECT d.id,\n       d.name\nFROM drivers d\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM drivers sup\n  WHERE sup.supervisor_id = d.id\n)\nORDER BY d.id;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      2,
+      "Olin Moss"
+    ],
+    [
+      3,
+      "Pella Reed"
+    ],
+    [
+      4,
+      "Tarin Wren"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Written with NOT EXISTS. A NOT IN subquery over supervisor_id would return no rows at all, because driver 1 has a NULL supervisor_id, and the ticket warns about that missing value. The answer is drivers 2, 3 and 4."
+}

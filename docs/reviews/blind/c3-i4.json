@@ -1,0 +1,23 @@
+{
+  "id": "c3-i4",
+  "solutionSql": "SELECT status,\n       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM shipments), 1) AS pct_of_shipments\nFROM shipments\nGROUP BY status\nORDER BY status;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "cancelled",
+      "26.7"
+    ],
+    [
+      "delivered",
+      "27.5"
+    ],
+    [
+      "in_transit",
+      "20.4"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The denominator is the whole table, which the ticket states explicitly. The four rounded percentages sum to 100.0 in the sample."
+}

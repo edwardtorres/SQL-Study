@@ -1,0 +1,23 @@
+{
+  "id": "c4-i1",
+  "solutionSql": "SELECT s.id,\n       d.name AS driver_name\nFROM shipments s\nLEFT JOIN drivers d ON d.id = s.driver_id\nWHERE s.id BETWEEN 1 AND 10\nORDER BY s.id;",
+  "sampleRowCount": 10,
+  "sampleFirstRows": [
+    [
+      1,
+      null
+    ],
+    [
+      2,
+      "Pella Reed"
+    ],
+    [
+      3,
+      "Nera Vale"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Shipments 1 and 8 have no driver. The LEFT JOIN keeps them with driver_name NULL, which the ticket asks for; an inner join would drop two rows."
+}

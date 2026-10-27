@@ -1,0 +1,266 @@
+{
+  "chapterId": 6,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c6-s1",
+      "claim": "A CASE expression tests conditions in order and returns the value of the first one that is true.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html (9.18.1 CASE): 'If the condition's result is true, the value of the CASE expression is the result that follows the condition, and the remainder of the CASE expression is not processed.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "If no condition is true and there is no ELSE, the result is NULL.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html (9.18.1 CASE): 'If the ELSE clause is omitted and no condition is true, the result is null.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "A NULL weight is not less than 1000, so the test is not true.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Ordinary comparison operators yield null (signifying unknown), not true or false, when either input is null.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "It does not match the WHEN branch; it falls through to whatever comes next, which is ELSE here.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html (9.18.1 CASE): 'If the condition's result is not true, any subsequent WHEN clauses are examined in the same manner. If no WHEN condition yields true, the value of the CASE expression is the result of the ELSE clause.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "predict explanation: 'A missing weight fails the WHEN test and takes ELSE, which is heavy. So only known weights under 1000 kg pass the final filter.'",
+      "verdict": "supported",
+      "evidence": "Follows from the CASE rules on https://www.postgresql.org/docs/18/functions-conditional.html and the NULL comparison rule on https://www.postgresql.org/docs/18/functions-comparison.html. The explanation states no result count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "commonMistakes NULL_AS_DEFAULT: 'A NULL does not satisfy a WHEN test, so it falls to ELSE.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html : 'If the condition's result is not true, any subsequent WHEN clauses are examined in the same manner.' Advice 'Add a WHEN ... IS NULL branch' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "commonMistakes CASE_ORDER: 'The first true WHEN wins.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html (9.18.1 CASE): 'If the condition's result is true, the value of the CASE expression is the result that follows the condition, and the remainder of the CASE expression is not processed.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s1",
+      "claim": "commonMistakes CASE_ORDER: 'Put the more specific test before a broader one, or every row matches the broad test.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html (9.18.1 CASE): 'the value of the CASE expression is the result that follows the condition, and the remainder of the CASE expression is not processed.' A broad test placed first takes the rows it matches, which include the rows the specific test should label. It does not match every row. 'Every row matches the broad test' overstates it.",
+      "suggestedFix": "Put the more specific test before a broader one. Otherwise the broader test takes the rows the specific test was meant to label."
+    },
+    {
+      "where": "c6-s2",
+      "claim": "LEFT(text, n) keeps the first n characters.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-string.html : 'Returns first n characters in the string, or when n is negative, returns all but last |n| characters.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "UPPER changes letters to capitals.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-string.html : 'Converts the string to all upper case, according to the rules of the database's locale.' The locale detail is omitted in the lesson.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "Both change each row's value, not the number of rows.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): the rows passed to the select list produce the output rows. A function in the select list changes values, not the row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "PostgreSQL string positions start at 1.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-string.html : 'position ( substring text IN string text ) → integer' with the example 'position('om' in 'Thomas') → 3'. The page shows 1-based positions by example. The sentence 'positions start at 1' is not stated as a rule, and the cited substring signature ('starting at the start th character') does not say it.",
+      "suggestedFix": "String positions are 1-based: position('om' in 'Thomas') returns 3 (https://www.postgresql.org/docs/18/functions-string.html)."
+    },
+    {
+      "where": "c6-s2",
+      "claim": "The || operator joins two strings, and a NULL operand makes the joined result NULL.",
+      "verdict": "engine",
+      "evidence": "Engine check: https://www.postgresql.org/docs/18/functions-string.html gives only 'Concatenates the two strings.' for ||, and says nothing about NULL. The NULL result must be run against the engine ('abc' || NULL). Keep the sentence only if the engine confirms it.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "CONCAT skips NULL arguments instead.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-string.html : 'Concatenates the text representations of all the arguments. NULL arguments are ignored.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "A cast with :: changes a value's type.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html (4.2.9 Type Casts): 'A type cast specifies a conversion from one data type to another. PostgreSQL accepts two equivalent syntaxes for type casts: expression :: type'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "ROUND breaks ties away from zero before a cast to integer.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'round ( numeric ) → numeric ... Rounds to nearest integer. For numeric, ties are broken by rounding away from zero. For double precision, the tie-breaking behavior is platform dependent, but \"round to nearest even\" is the most common rule.' The rule holds for numeric only. The lesson's weight_kg type is not stated, so the general claim goes beyond the page for double precision.",
+      "suggestedFix": "For numeric values, ROUND breaks ties away from zero. For double precision, the tie-breaking rule is platform dependent (https://www.postgresql.org/docs/18/functions-math.html)."
+    },
+    {
+      "where": "c6-s2",
+      "claim": "Integer division truncates.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'Division (for integral types, division truncates the result towards zero)'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "predict explanation: 'Text functions change values in each row. They do not filter or repeat rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): the table expression, not the select list, filters and groups; the select list 'determines which columns of the intermediate table are actually output' (https://www.postgresql.org/docs/18/queries-select-lists.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "predict explanation: 'so the count is the number of customers.'",
+      "verdict": "engine",
+      "evidence": "Engine check: states the result row count (answerRows 8) in terms of the table. Row-count flag: lesson text must not state result rows. Confirm with the engine, then reword to 'the function does not change how many rows there are' without stating the count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "commonMistakes STRING_INDEX: 'A start of 0 quietly shortens the result by one character.'",
+      "verdict": "engine",
+      "evidence": "Engine check: the manual does not describe the result of a start of 0 for substring. Run substring('abcdef' from 0 for 3) against the engine before keeping the sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "commonMistakes CONCAT_NULL: 'With ||, one missing part makes the whole label NULL.'",
+      "verdict": "engine",
+      "evidence": "Engine check: the same claim as the NULL-operand sentence in paragraph 2 of this section. The page says only 'Concatenates the two strings.' for || (https://www.postgresql.org/docs/18/functions-string.html). Confirm with the engine.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "commonMistakes CONCAT_NULL: 'Use COALESCE for the fallback text, or CONCAT when NULL parts should be skipped.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html : 'The COALESCE function returns the first of its arguments that is not null.' and https://www.postgresql.org/docs/18/functions-string.html : 'NULL arguments are ignored.' for CONCAT.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "commonMistakes CAST_ROUNDING: 'Truncating and rounding give different whole numbers.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'Rounds to nearest integer.' (round) and 'Truncates to integer (towards zero)' (trunc). The two definitions differ for fractions of one half or more.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s2",
+      "claim": "commonMistakes CAST_ROUNDING: 'Read the ticket: nearest whole number means ROUND, not TRUNC.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'round ( numeric ) → numeric. Rounds to nearest integer.' and 'trunc ( numeric ) → numeric. Truncates to integer (towards zero)'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "A timestamp with time zone is one moment.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/datatype-datetime.html : 'For timestamp with time zone values, ... the value is stored internally as UTC, and the originally stated or assumed time zone is not retained.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "AT TIME ZONE converts it to the wall-clock time in a named zone, and the calendar day then depends on that zone.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html (9.9.4): 'The AT TIME ZONE operator converts time stamp without time zone to/from time stamp with time zone'. https://www.postgresql.org/docs/18/functions-datetime.html : 'Converts given time stamp with time zone to time stamp without time zone, as the time would appear in that zone.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "BETWEEN includes both endpoints.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Notice that BETWEEN treats the endpoint values as included in the range.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "A range that ends at 23:59:59 misses the last fraction of that second.",
+      "verdict": "supported",
+      "evidence": "Follows from BETWEEN inclusiveness (https://www.postgresql.org/docs/18/functions-comparison.html) and the timestamp resolution: 'timestamp ... 1 microsecond' (https://www.postgresql.org/docs/18/datatype-datetime.html). Moments after 23:59:59.000000 and up to 23:59:59.999999 are excluded.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "A half-open range, with >= on the start and < on the next day, keeps every moment of the day.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html (Table 9.1): '>=' is 'Greater than or equal to' and '<' is 'Less than'. The start is included and the next day's first moment is excluded.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "predict stem: 'The range is in UTC.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/datatype-datetime.html (Time Zone Input table): 'zulu ... Military abbreviation for UTC'. The literal suffix Z is that abbreviation.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "predict explanation: 'The start is the first moment of the day and the end is the first moment of the next day. Every moment in between is kept, including 23:59:59.999.'",
+      "verdict": "supported",
+      "evidence": "Follows from the >= and < operators (https://www.postgresql.org/docs/18/functions-comparison.html) and the 1-microsecond resolution (https://www.postgresql.org/docs/18/datatype-datetime.html). The explanation states no result count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "commonMistakes BETWEEN_END_BOUND: 'BETWEEN includes its end value.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Notice that BETWEEN treats the endpoint values as included in the range.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "commonMistakes BETWEEN_END_BOUND: 'A range ending at 23:59:59 misses the last fraction of a second, so use < the next day.'",
+      "verdict": "supported",
+      "evidence": "Same basis as the paragraph claim above: inclusive BETWEEN (https://www.postgresql.org/docs/18/functions-comparison.html) and 1-microsecond resolution (https://www.postgresql.org/docs/18/datatype-datetime.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c6-s3",
+      "claim": "commonMistakes TIMEZONE_ASSUMED: 'Without AT TIME ZONE, the day boundary is set by the zone named in the ticket or by the session, not by what the ticket says.'",
+      "verdict": "unsupported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html : 'When comparing a timestamp without time zone to a timestamp with time zone, the former value is assumed to be given in the time zone specified by the TimeZone configuration parameter'. https://www.postgresql.org/docs/18/datatype-datetime.html : 'If no time zone is stated in the input string, then it is assumed to be in the time zone indicated by the system's TimeZone parameter'. PostgreSQL never reads the ticket, so a zone 'named in the ticket' sets nothing unless it is written into the query. The sentence also contradicts itself.",
+      "suggestedFix": "Without AT TIME ZONE, a timestamp with no zone in its literal is read in the session's TimeZone setting, so the day boundary depends on that setting. Write the zone in the query."
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL provides DATEADD(datepart, number, date).",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/functions/dateadd-transact-sql : 'DATEADD ( datepart , number , date )'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "PostgreSQL date arithmetic uses interval expressions, documented on its date and time functions page.",
+      "verdict": "partly",
+      "evidence": "The cited Microsoft page cannot support the PostgreSQL half. The PostgreSQL claim is supported by https://www.postgresql.org/docs/18/functions-datetime.html : 'When adding an interval value to (or subtracting an interval value from) a timestamp or timestamp with time zone value, the months, days, and microseconds fields of the interval value are handled in turn.' The note names the page without a URL.",
+      "suggestedFix": "PostgreSQL date arithmetic adds interval values, as documented at https://www.postgresql.org/docs/18/functions-datetime.html."
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark has its own catalog of date, timestamp and string functions.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-functions-builtin.html : 'All built-in functions live in the virtual schema system.builtin.' The page has a 'Date and Timestamp Functions' section. The advice 'Check the documented function signatures before translating' was not scored.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 28, "partly": 4, "unsupported": 1, "unverified": 0, "engine": 4 }
+}

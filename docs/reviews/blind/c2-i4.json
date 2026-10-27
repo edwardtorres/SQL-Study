@@ -1,0 +1,26 @@
+{
+  "id": "c2-i4",
+  "solutionSql": "SELECT id, shipment_id, amount\nFROM invoices\nWHERE paid_at IS NULL\nORDER BY id ASC;",
+  "sampleRowCount": 68,
+  "sampleFirstRows": [
+    [
+      3,
+      4,
+      "125.00"
+    ],
+    [
+      6,
+      7,
+      "150.00"
+    ],
+    [
+      8,
+      10,
+      "225.00"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "68 of 205 invoices have no paid_at. Several amounts are exactly 90071992.01, far above the usual 100 to 275 range. The schema says repeated amounts are legitimate, so they are kept as data; they would dominate any sum."
+}

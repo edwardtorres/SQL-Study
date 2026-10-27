@@ -1,0 +1,26 @@
+{
+  "id": "dispatch",
+  "solutionSql": "SELECT id, tracking_code, weight_kg\nFROM shipments\nWHERE status = 'queued'\n  AND weight_kg >= 500\nORDER BY weight_kg DESC, id ASC\nLIMIT 5;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    [
+      13,
+      "JF-104729-0013",
+      1986
+    ],
+    [
+      165,
+      "JF-104729-0165",
+      1943
+    ],
+    [
+      203,
+      "JF-104729-0203",
+      1903
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "A filter, sort and LIMIT with no grouping. The starter is only a column skeleton, and the wording gives the filter, the tie-break and the row cap explicitly."
+}

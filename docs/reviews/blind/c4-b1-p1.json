@@ -1,0 +1,29 @@
+{
+  "id": "c4-b1-p1",
+  "solutionSql": "SELECT s.id,\n       c.name AS customer_name,\n       w.city AS origin_city,\n       d.name AS driver_name\nFROM shipments s\nJOIN customers c ON c.id = s.customer_id\nJOIN routes r ON r.id = s.route_id\nJOIN warehouses w ON w.id = r.origin_id\nLEFT JOIN drivers d ON d.id = s.driver_id\nWHERE s.id BETWEEN 1 AND 12\nORDER BY s.id;",
+  "sampleRowCount": 12,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks",
+      "Valehaven",
+      null
+    ],
+    [
+      2,
+      "Brindle Pantry",
+      "Mossreach",
+      "Pella Reed"
+    ],
+    [
+      3,
+      "Cobalt Paperworks",
+      "Cloudmere",
+      "Nera Vale"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Shipments 1 and 8 have no driver, so driver_name is NULL and the LEFT JOIN keeps them. Origin city comes from the route's origin warehouse, as in c4-i4."
+}

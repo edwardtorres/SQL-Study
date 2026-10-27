@@ -1,0 +1,528 @@
+{
+  "comparedAt": "2026-10-27T20:50:21.078Z",
+  "total": 47,
+  "agreeing": 47,
+  "results": [
+    {
+      "id": "dispatch",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "unbilled",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "empty"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-b1-p1",
+      "datasets": [
+        "sample",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-b1-p2",
+      "datasets": [
+        "sample",
+        "empty",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c1-b1-p3",
+      "datasets": [
+        "sample",
+        "ties",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-i1",
+      "datasets": [
+        "sample",
+        "boundary",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c2-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-i3",
+      "datasets": [
+        "sample",
+        "boundary",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c3-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i5",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i6",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-i7",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "empty"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c4-b1-p3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-i3",
+      "datasets": [
+        "sample",
+        "ties",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-i5",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties",
+        "boundary",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c5-b1-p3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "empty"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-i5",
+      "datasets": [
+        "sample",
+        "nulls",
+        "nulltext"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c6-b1-p3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    }
+  ]
+}

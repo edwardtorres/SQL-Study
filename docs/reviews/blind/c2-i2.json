@@ -1,0 +1,14 @@
+{
+  "id": "c2-i2",
+  "solutionSql": "SELECT ROUND(AVG(weight_kg), 1) AS avg_weight_kg\nFROM shipments;",
+  "sampleRowCount": 1,
+  "sampleFirstRows": [
+    [
+      "1032.0"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "AVG skips NULL weights, so one aggregate row is the whole answer. The numeric result carries a trailing zero (1032.0) because ROUND to one place keeps the scale."
+}

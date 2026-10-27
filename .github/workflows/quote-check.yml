@@ -1,0 +1,27 @@
+name: Lesson quote check
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/data/citations.json', 'src/data/lessons/**', 'scripts/verify-quotes.mjs']
+  schedule:
+    # Weekly, so a changed PostgreSQL page is noticed even when no lesson changes.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quotes:
+    name: Every lesson quote appears verbatim on its live page
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      # The script uses only Node built-ins (fetch), so no install step is needed.
+      - name: Verify quotes against live pages
+        run: node scripts/verify-quotes.mjs

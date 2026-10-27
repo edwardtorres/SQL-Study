@@ -1,0 +1,23 @@
+{
+  "id": "c6-i1",
+  "solutionSql": "SELECT id,\n       CASE\n         WHEN weight_kg IS NULL THEN 'unweighed'\n         WHEN weight_kg >= 1000 THEN 'heavy'\n         ELSE 'light'\n       END AS weight_label\nFROM shipments\nWHERE id BETWEEN 1 AND 40\nORDER BY id;",
+  "sampleRowCount": 40,
+  "sampleFirstRows": [
+    [
+      1,
+      "light"
+    ],
+    [
+      2,
+      "light"
+    ],
+    [
+      3,
+      "light"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The three bands are stated explicitly. The CASE tests for NULL first, so a missing weight can never fall through to light."
+}

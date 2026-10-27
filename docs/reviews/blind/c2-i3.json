@@ -1,0 +1,15 @@
+{
+  "id": "c2-i3",
+  "solutionSql": "SELECT c.id, c.name\nFROM customers c\nWHERE c.region IS NULL\n  AND NOT EXISTS (\n    SELECT 1\n    FROM shipments s\n    WHERE s.customer_id = c.id\n  )\nORDER BY c.id ASC;",
+  "sampleRowCount": 1,
+  "sampleFirstRows": [
+    [
+      7,
+      "Glimmer Clayworks"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Only customer 7 meets both conditions. Customer 8 also has no shipments, but its region is South, so it is excluded. NOT EXISTS is the clear form for the no-shipments condition."
+}

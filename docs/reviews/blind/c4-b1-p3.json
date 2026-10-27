@@ -1,0 +1,23 @@
+{
+  "id": "c4-b1-p3",
+  "solutionSql": "SELECT w.city AS city,\n       COUNT(e.id)::integer AS events\nFROM warehouses w\nLEFT JOIN routes r ON r.origin_id = w.id\nLEFT JOIN shipments s ON s.route_id = r.id\nLEFT JOIN shipment_events e ON e.shipment_id = s.id\nGROUP BY w.city\nORDER BY w.city;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "Cloudmere",
+      111
+    ],
+    [
+      "Mossreach",
+      219
+    ],
+    [
+      "Reedford",
+      120
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Each origin city has events in the sample: Valehaven 228, Mossreach 219, Reedford 120 and Cloudmere 111, which totals the 678 shipment_events rows. Counting COUNT(e.id) after the joins counts events, not shipments."
+}

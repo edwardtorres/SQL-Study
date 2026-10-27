@@ -1,0 +1,29 @@
+{
+  "id": "c2-b1-p2",
+  "solutionSql": "SELECT id,\n       COALESCE(paid_at, issued_at) AS settled_at\nFROM invoices\nORDER BY id ASC;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      1,
+      "2025-12-28T22:00:00.000Z"
+    ],
+    [
+      2,
+      "2025-12-29T00:00:00.000Z"
+    ],
+    [
+      3,
+      "2025-12-28T09:00:00.000Z"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "For every invoice return id and settled_at: the paid_at date when the invoice is paid, otherwise the issued_at date.",
+      "readingChosen": "Return the timestamptz value unchanged with COALESCE(paid_at, issued_at), which matches the declared column type.",
+      "alternativeReading": "Cast to a calendar date, because the wording says date and the aging report may want whole days."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ticket declares settled_at as timestamptz, which settles the type question. The result has one row per invoice (205 in the sample), and NULL paid_at falls back to issued_at."
+}

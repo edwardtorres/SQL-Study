@@ -1,0 +1,231 @@
+{
+  "chapterId": 4,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c4-s1",
+      "claim": "A join puts columns from two tables side by side, using a condition that links their keys.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'the joined table will contain a row consisting of all columns in T1 followed by all columns in T2.' and 'The join condition determines which rows from the two source tables are considered to match'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s1",
+      "claim": "An inner join keeps only the pairs where the condition holds. (Also in the predict explanation.)",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'For each row R1 of T1, the joined table has a row for each row in T2 that satisfies the join condition with R1.' and 'A pair of rows from T1 and T2 match if the ON expression evaluates to true.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s1",
+      "claim": "A join with no matching row returns nothing for that pair.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (INNER JOIN): a row is produced only for each T2 row that satisfies the join condition. The sentence 'Name the key columns on both sides of ON' is advice and was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s1",
+      "claim": "predict explanation and stem: 'Customer 7 has no shipments, so there is no pair to keep.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a data fact about the visible sample (customer 7 has no shipments). Run the example and confirm before publishing. The inner-join logic itself is supported on https://www.postgresql.org/docs/18/queries-table-expressions.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s1",
+      "claim": "predict explanation: 'A LEFT JOIN would keep the customer.'",
+      "verdict": "unsupported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'Then, for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.' In the example the query is FROM shipments s JOIN customers c, so shipments is the left table. A LEFT JOIN written this way keeps shipments, not customer 7. Only a RIGHT JOIN, or a LEFT JOIN with customers as the left table, keeps customer 7.",
+      "suggestedFix": "A RIGHT JOIN, or a LEFT JOIN with customers written first, would keep customer 7."
+    },
+    {
+      "where": "c4-s1",
+      "claim": "commonMistakes LEFT_TO_INNER: 'An inner join silently drops rows with no match.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (INNER JOIN): a row is produced only for matching pairs, so unmatched rows are not in the result. The advice 'use a LEFT JOIN' follows from the LEFT JOIN rule on the same page.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s1",
+      "claim": "commonMistakes JOIN_KEY: 'Joining on the wrong pair of columns matches unrelated rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'A pair of rows from T1 and T2 match if the ON expression evaluates to true.' The ON condition defines which rows match, so a wrong ON pair matches the wrong rows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "A LEFT JOIN keeps every row from the left table.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'Thus, the joined table always has at least one row for each row in T1.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "A row with no match gets NULL in the right-hand columns.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'a joined row is added with null values in columns of T2.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "RIGHT JOIN is the mirror image of LEFT JOIN.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'This is the converse of a left join: the result table will always have a row for each row in T2.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "FULL JOIN keeps both sides.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (FULL OUTER JOIN): 'Also, for each row of T2 that does not satisfy the join condition with any row in T1, a joined row with null values in the columns of T1 is added.' The section's attached citation (pg-outer-first) is only 'First, an inner join is performed.' and does not cover FULL.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "A WHERE test on a right-hand column turns the NULL rows into unknowns, which drops them.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Ordinary comparison operators yield null (signifying unknown), not true or false, when either input is null.' WHERE keeps only true rows (https://www.postgresql.org/docs/18/tutorial-select.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "The outer join is then undone, so put that test in the ON clause or test for IS NULL on purpose.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'a restriction placed in the ON clause is processed before the join, while a restriction placed in the WHERE clause is processed after the join. That does not matter with inner joins, but it matters a lot with outer joins.' The page supports moving the test to ON and shows the WHERE version giving a different result. It does not say the outer join is undone; that is an interpretation.",
+      "suggestedFix": "A WHERE test on a right-hand column is not true for the NULL-extended rows, so WHERE drops them. Put the test in the ON clause, which is applied before the join, or test IS NULL on purpose."
+    },
+    {
+      "where": "c4-s2",
+      "claim": "predict stem: 'Customers 7 and 8 both have no shipments.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a data fact about the visible sample. Confirm against the seed before publishing.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "predict explanation: 'The LEFT JOIN keeps each customer even without a match.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.' This holds when customers is T1, as in the example's FROM customers c LEFT JOIN shipments s.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "predict explanation: 'Each unmatched customer gets one row with NULL in the shipment columns.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'a joined row is added with null values in columns of T2.' This is a rule for each unmatched row; it does not state the result count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "commonMistakes LEFT_TO_INNER: 'A WHERE test such as s.id > 0 on the right table removes the NULL rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Ordinary comparison operators yield null ... when either input is null.' and https://www.postgresql.org/docs/18/tutorial-select.html : 'only rows for which the Boolean expression is true are returned.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "commonMistakes LEFT_TO_INNER: 'The LEFT JOIN then behaves like an inner join.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'Notice that placing the restriction in the WHERE clause produces a different result' and 'it matters a lot with outer joins.' The page does not say the LEFT JOIN behaves like an inner join. The conclusion is a derivation from the NULL rule and the WHERE rule.",
+      "suggestedFix": "The WHERE test on the right-hand table is not true for the NULL-extended rows, so those rows are dropped and only the matched rows remain."
+    },
+    {
+      "where": "c4-s2",
+      "claim": "commonMistakes NULL_EQUALS: 'To find unmatched rows, test IS NULL.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'To check whether a value is or is not null, use the predicates: expression IS NULL'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s2",
+      "claim": "commonMistakes NULL_EQUALS: 's.id = NULL never matches anything.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Do not write expression = NULL because NULL is not equal to NULL.' and '7 = NULL yields null'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "An anti-join finds rows with no match.",
+      "verdict": "partly",
+      "evidence": "The term 'anti-join' does not appear on the cited PostgreSQL pages (queries-table-expressions.html, functions-subquery.html). The definition is in the Spark reference, https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-join.html : 'An anti join returns values from the left relation that has no match with the right.' Cite Spark for the term or define it in the lesson without relying on the PostgreSQL pages.",
+      "suggestedFix": "A query that finds rows with no match is an anti-join (a standard term; the PostgreSQL manual describes the pattern through LEFT JOIN with IS NULL and NOT EXISTS)."
+    },
+    {
+      "where": "c4-s3",
+      "claim": "Use a LEFT JOIN with a test that the right side is NULL, or use NOT EXISTS, which asks whether a matching row exists at all.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (EXISTS): 'The subquery is evaluated to determine whether it returns any rows. If it returns at least one row, the result of EXISTS is true; if the subquery returns no rows, the result of EXISTS is false.' LEFT JOIN NULL rows: https://www.postgresql.org/docs/18/queries-table-expressions.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "A join to a table with several matches per row repeats the left row once for each match.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'For each row R1 of T1, the joined table has a row for each row in T2 that satisfies the join condition with R1.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "COUNT(*) after a one-to-many join counts the repeats too.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'count(*) yields the total number of input rows'. Combined with the join rule above, the joined rows are the input rows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "predict explanation: 'GROUP BY gives one row per customer.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'combine each set of rows having common values into one group row that represents all rows in the group.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "predict explanation: 'The count is of joined rows, one per event.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'For each row R1 of T1, the joined table has a row for each row in T2 that satisfies the join condition with R1.' The count is over joined rows, as stated.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "predict explanation: 'a shipment with four events counts four times.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a data fact that a shipment in the sample has four events. The join rule is supported on https://www.postgresql.org/docs/18/queries-table-expressions.html, but the data must be confirmed against the seed.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "predict explanation: 'That is row explosion, and the number is not a count of shipments.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'a joined row for each row in T2 that satisfies the join condition'. With one joined row per event, the total counts events, not shipments.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "commonMistakes JOIN_FANOUT: 'A join to a one-to-many table repeats the rows on the other side. Counting after the join then counts the repeats.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'For each row R1 of T1, the joined table has a row for each row in T2 that satisfies the join condition with R1.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c4-s3",
+      "claim": "commonMistakes NULL_EQUALS: 'An anti-join written as = NULL returns no rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : '7 = NULL yields null, as does 7 <> NULL', and WHERE keeps only rows whose condition is true. The advice 'Use IS NULL, or NOT EXISTS' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL supports INNER joins and LEFT, RIGHT and FULL outer joins, the join types taught in this chapter.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/relational-databases/performance/joins : section headings 'Inner joins' and 'Left, right, and full outer joins'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark also has a direct LEFT ANTI JOIN syntax; this game teaches PostgreSQL NOT EXISTS and LEFT JOIN alternatives.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-join.html : join types '[ LEFT ] ANTI' and 'Anti Join: An anti join returns values from the left relation that has no match with the right. It is also referred to as a left anti join.' The second half describes this game and was not scored.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 25, "partly": 3, "unsupported": 1, "unverified": 0, "engine": 3 }
+}

@@ -1,0 +1,250 @@
+import type { Challenge } from '../../core/types';
+import { datasetsFor } from '../datasets';
+
+const SUBQUERY = 'https://www.postgresql.org/docs/18/functions-subquery.html';
+const SCALAR = 'https://www.postgresql.org/docs/18/sql-expressions.html';
+const WITH = 'https://www.postgresql.org/docs/18/queries-with.html';
+const AGGREGATE = 'https://www.postgresql.org/docs/18/functions-aggregate.html';
+const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator' };
+const PIPELINE = { colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer' };
+const BILLING = { colleague: 'Pella Reed', colleagueRole: 'Billing analyst' };
+const ROUTES = { colleague: 'Ravi Okafor', colleagueRole: 'Route planner' };
+const CUSTOMERS = { colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead' };
+
+// Chapter 5: Queries within queries. A nested query answers one question inside another; check which row it belongs to.
+export const chapter5Items: readonly Challenge[] = [
+  {
+    id: 'c5-g1', chapterId: 5, role: 'guided', kind: 'guided', title: 'Shipments heavier than average',
+    ...DISPATCH,
+    summary: 'Compare early shipments with the average weight of the whole table.',
+    instructions: 'Return id and weight_kg for shipments with ids 1 through 12 that weigh more than the average weight of all shipments. A missing weight is never greater than anything, so that shipment is left out. Order by id. Column names and types: id (integer), weight_kg (integer).',
+    starterSql: 'SELECT s.id, s.weight_kg\nFROM shipments s\nWHERE s.id <= 12\n  AND s.weight_kg > (SELECT ____(weight_kg) FROM shipments)\nORDER BY s.id;',
+    referenceSql: 'SELECT s.id, s.weight_kg FROM shipments s WHERE s.id <= 12 AND s.weight_kg > (SELECT AVG(weight_kg) FROM shipments) ORDER BY s.id;',
+    wrongVariants: [
+      { id: 'g1-min', mistake: 'AGGREGATE_CHOICE', sql: 'SELECT s.id, s.weight_kg FROM shipments s WHERE s.id <= 12 AND s.weight_kg > (SELECT MIN(weight_kg) FROM shipments) ORDER BY s.id;', explanation: 'It looks like MIN was used where the ticket wants the average. The lightest shipment sets a very low bar, so almost every early shipment passes.' },
+      { id: 'g1-or', mistake: 'AND_OR_PRECEDENCE', sql: 'SELECT s.id, s.weight_kg FROM shipments s WHERE s.id <= 12 OR s.weight_kg > (SELECT AVG(weight_kg) FROM shipments) ORDER BY s.id;', explanation: 'It looks like OR was written where AND is needed. Every shipment with an id up to 12 passes, whatever its weight.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    hints: [
+      'The average of the whole table is a single value. Which kind of subquery returns exactly one value?',
+      'Put the average in a subquery on the right side of the weight comparison. Keep both conditions joined with AND.',
+      'WHERE s.id <= 12\n  AND s.weight_kg > (SELECT AVG(weight_kg) FROM shipments)',
+    ],
+    docs: [{ label: 'PostgreSQL scalar subqueries', url: SCALAR }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
+    id: 'c5-g2', chapterId: 5, role: 'guided', kind: 'guided', title: 'Customers who have shipments',
+    ...CUSTOMERS,
+    summary: 'Keep the customers who have booked at least one shipment, each listed once.',
+    instructions: 'Return id and name for each customer who has at least one shipment. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
+    starterSql: 'SELECT c.id, c.name\nFROM customers c\nWHERE c.id ____ (SELECT customer_id FROM shipments)\nORDER BY c.id;',
+    referenceSql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT customer_id FROM shipments) ORDER BY c.id;',
+    wrongVariants: [
+      { id: 'g2-join', mistake: 'JOIN_FANOUT', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id ORDER BY c.id;', explanation: 'It looks like a JOIN was used where IN is needed. A customer with many shipments appears once for each shipment, so the list is not one row per customer.' },
+      { id: 'g2-shipment-id', mistake: 'JOIN_KEY', sql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT id FROM shipments) ORDER BY c.id;', explanation: 'It looks like the customer id was compared with the shipment id. The link is shipments.customer_id, so customers with no shipments can appear.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'Each shipment names the customer who booked it. Which column holds that link?',
+      'Test whether each customer id appears in the list of customer ids on shipments. A membership test does not repeat the customer.',
+      'WHERE c.id IN (SELECT customer_id FROM shipments)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }],
+    datasets: datasetsFor(['nulls', 'ties']),
+  },
+  {
+    id: 'c5-g3', chapterId: 5, role: 'guided', kind: 'guided', title: 'Name the early shipments in a WITH clause',
+    ...PIPELINE,
+    summary: 'Name the first thirty shipments as an intermediate result, then keep the heavy ones.',
+    instructions: 'Use a WITH clause named early that holds id and weight_kg for shipments with ids up to 30. Then, from early, return id and weight_kg for shipments weighing at least 500 kg, ordered by id. Column names and types: id (integer), weight_kg (integer).',
+    starterSql: 'WITH early AS (\n  SELECT id, weight_kg FROM shipments WHERE id ____ 30\n)\nSELECT id, weight_kg FROM early WHERE weight_kg ____ 500 ORDER BY id;',
+    referenceSql: 'WITH early AS (SELECT id, weight_kg FROM shipments WHERE id <= 30) SELECT id, weight_kg FROM early WHERE weight_kg >= 500 ORDER BY id;',
+    wrongVariants: [
+      { id: 'g3-gt', mistake: 'GE_VS_GT', sql: 'WITH early AS (SELECT id, weight_kg FROM shipments WHERE id <= 30) SELECT id, weight_kg FROM early WHERE weight_kg > 500 ORDER BY id;', explanation: 'It looks like > was used where >= is needed. The ticket says a shipment of exactly 500 kg still counts.' },
+      { id: 'g3-or', mistake: 'AND_OR_PRECEDENCE', sql: 'WITH early AS (SELECT id, weight_kg FROM shipments WHERE id <= 30 OR weight_kg >= 500) SELECT id, weight_kg FROM early WHERE weight_kg >= 500 ORDER BY id;', explanation: 'It looks like OR was written where AND is needed inside the WITH clause. Every heavy shipment passes the first test, so ids above 30 leak in.' },
+    ],
+    ordered: true,
+    structure: 'cte',
+    columns: [{ name: 'id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    hints: [
+      'A WITH clause names an intermediate result that the main query can read. Here the name is early.',
+      'Filter the ids inside the WITH clause, then filter the weight in the outer query. Both tests must hold.',
+      'WITH early AS (\n  SELECT id, weight_kg FROM shipments WHERE id <= 30\n)',
+    ],
+    docs: [{ label: 'PostgreSQL WITH queries', url: WITH }],
+    datasets: datasetsFor(['nulls', 'ties']),
+  },
+  {
+    id: 'c5-i1', chapterId: 5, role: 'independent', kind: 'write', title: 'Drivers who supervise nobody',
+    ...PIPELINE,
+    summary: 'List the drivers that no other driver names as a supervisor, for the staffing review.',
+    instructions: 'Return id and name for each driver whose id does not appear as supervisor_id on any driver. Some drivers have no supervisor_id, which is a missing value. Order by id. Column names and types: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM drivers;\n',
+    referenceSql: 'SELECT d.id, d.name FROM drivers d WHERE NOT EXISTS (SELECT 1 FROM drivers s WHERE s.supervisor_id = d.id) ORDER BY d.id;',
+    wrongVariants: [
+      { id: 'i1-not-in', mistake: 'NOT_IN_NULL', sql: 'SELECT d.id, d.name FROM drivers d WHERE d.id NOT IN (SELECT supervisor_id FROM drivers) ORDER BY d.id;', explanation: 'It looks like NOT IN was used. The list of supervisor ids contains a NULL, so NOT IN is never true and the result is empty.' },
+      { id: 'i1-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT d.id, d.name FROM drivers d LEFT JOIN drivers s ON s.supervisor_id = d.id WHERE s.id = NULL ORDER BY d.id;', explanation: 'It looks like s.id = NULL was used to find drivers with no match. That is never true, so nothing is returned. Use IS NULL, or NOT EXISTS.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'Some drivers have no supervisor. What happens to a NOT IN test when the list has a missing value?',
+      'For each driver, ask whether any other driver names it as a supervisor. A correlated NOT EXISTS asks that question.',
+      'WHERE NOT EXISTS (\n  SELECT 1 FROM drivers s WHERE s.supervisor_id = d.id\n)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+  {
+    id: 'c5-i2', chapterId: 5, role: 'independent', kind: 'write', title: 'Heavier than the customer’s own average',
+    ...CUSTOMERS,
+    summary: 'Flag early shipments that are heavier than the average for the same customer.',
+    instructions: 'For shipments with ids 1 through 40, return id, customer_id and weight_kg for each shipment whose weight is greater than the average weight of all shipments with the same customer_id. Missing weights are excluded. Order by id. Column names and types: id (integer), customer_id (integer), weight_kg (integer).',
+    starterSql: 'SELECT id, customer_id, weight_kg\nFROM shipments;\n',
+    referenceSql: 'SELECT s.id, s.customer_id, s.weight_kg FROM shipments s WHERE s.id <= 40 AND s.weight_kg > (SELECT AVG(t.weight_kg) FROM shipments t WHERE t.customer_id = s.customer_id) ORDER BY s.id;',
+    wrongVariants: [
+      { id: 'i2-scope', mistake: 'CORRELATED_SCOPE', sql: 'SELECT s.id, s.customer_id, s.weight_kg FROM shipments s WHERE s.id <= 40 AND s.weight_kg > (SELECT AVG(weight_kg) FROM shipments WHERE customer_id = customer_id) ORDER BY s.id;', explanation: 'It looks like the inner customer_id was compared with itself, so the average covers every shipment. Give the inner table an alias and compare with the outer row.' },
+      { id: 'i2-max', mistake: 'AGGREGATE_CHOICE', sql: 'SELECT s.id, s.customer_id, s.weight_kg FROM shipments s WHERE s.id <= 40 AND s.weight_kg > (SELECT MAX(t.weight_kg) FROM shipments t WHERE t.customer_id = s.customer_id) ORDER BY s.id;', explanation: 'It looks like MAX was used where the ticket wants the average. Nothing is heavier than the heaviest shipment, so the result is empty.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'customer_id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    hints: [
+      'The average must cover only the same customer. Which value links the inner rows to the outer row?',
+      'Give the inner copy of shipments its own alias, such as t, so the subquery can compare t.customer_id with s.customer_id.',
+      'WHERE s.weight_kg > (\n  SELECT AVG(t.weight_kg) FROM shipments t WHERE t.customer_id = s.customer_id\n)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
+    id: 'c5-i3', chapterId: 5, role: 'independent', kind: 'write', title: 'Name the customer volume step',
+    ...CUSTOMERS,
+    summary: 'Rewrite the customer volume count as a named step, so the review can reuse it.',
+    instructions: 'Use a WITH clause named per_customer that counts shipments for each customer_id. Then return customer_id and shipments for customers with 30 or more shipments, ordered by customer_id. Column names and types: customer_id (integer), shipments (integer).',
+    starterSql: 'SELECT customer_id\nFROM shipments;\n',
+    referenceSql: 'WITH per_customer AS (SELECT customer_id, COUNT(*)::integer AS shipments FROM shipments GROUP BY customer_id) SELECT customer_id, shipments FROM per_customer WHERE shipments >= 30 ORDER BY customer_id;',
+    wrongVariants: [
+      { id: 'i3-gt', mistake: 'GE_VS_GT', sql: 'WITH per_customer AS (SELECT customer_id, COUNT(*)::integer AS shipments FROM shipments GROUP BY customer_id) SELECT customer_id, shipments FROM per_customer WHERE shipments > 30 ORDER BY customer_id;', explanation: 'It looks like > was used where >= is needed. A customer with exactly 30 shipments meets the ticket and must be listed.' },
+      { id: 'i3-distinct-drivers', mistake: 'AGGREGATE_CHOICE', sql: 'WITH per_customer AS (SELECT customer_id, COUNT(DISTINCT driver_id)::integer AS shipments FROM shipments GROUP BY customer_id) SELECT customer_id, shipments FROM per_customer WHERE shipments >= 30 ORDER BY customer_id;', explanation: 'It looks like the count is of distinct drivers, not shipments. Only four drivers exist, so no customer can reach 30.' },
+    ],
+    ordered: true,
+    structure: 'cte',
+    columns: [{ name: 'customer_id', type: 23 }, { name: 'shipments', type: 23 }],
+    hints: [
+      'The count is the first step, and the threshold is the second. Name the count with WITH.',
+      'Count rows per customer_id inside the WITH clause, then keep the customers whose count is 30 or more in the outer query.',
+      'WITH per_customer AS (\n  SELECT customer_id, COUNT(*)::integer AS shipments\n  FROM shipments GROUP BY customer_id\n)',
+    ],
+    docs: [{ label: 'PostgreSQL WITH queries', url: WITH }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['ties', 'nulltext']),
+  },
+  {
+    id: 'c5-i4', chapterId: 5, role: 'independent', kind: 'write', title: 'Customers with an invoiced shipment',
+    ...BILLING,
+    summary: 'Build the billing contact list: customers with at least one invoiced shipment, once each.',
+    instructions: 'Return id and name for each customer that has at least one shipment with an invoice. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM customers;\n',
+    referenceSql: 'SELECT c.id, c.name FROM customers c WHERE EXISTS (SELECT 1 FROM shipments s JOIN invoices i ON i.shipment_id = s.id WHERE s.customer_id = c.id) ORDER BY c.id;',
+    wrongVariants: [
+      { id: 'i4-join', mistake: 'JOIN_FANOUT', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id JOIN invoices i ON i.shipment_id = s.id ORDER BY c.id;', explanation: 'It looks like the joins were left in the outer query. A customer with several invoiced shipments appears once for each invoice.' },
+      { id: 'i4-invoice-shipment', mistake: 'JOIN_KEY', sql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT i.shipment_id FROM invoices i) ORDER BY c.id;', explanation: 'It looks like an invoice’s shipment_id was compared with the customer id. The link from invoices to customers runs through shipments.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'The customer has no invoice column. An invoice belongs to a shipment, and a shipment belongs to a customer.',
+      'Use EXISTS with a subquery that joins shipments to invoices and matches the outer customer id.',
+      'WHERE EXISTS (\n  SELECT 1 FROM shipments s\n  JOIN invoices i ON i.shipment_id = s.id\n  WHERE s.customer_id = c.id\n)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }],
+    datasets: datasetsFor(['nulls', 'ties']),
+  },
+  {
+    id: 'c5-i5', chapterId: 5, role: 'independent', kind: 'write', title: 'Customers heavier than the table average',
+    ...DISPATCH,
+    summary: 'Find the customers whose shipments are heavier on average than the average shipment in the table.',
+    instructions: 'Return id and name for each customer whose average shipment weight is greater than the average weight of all shipments. Missing weights are ignored by both averages. Order by id. Column names and types: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM customers;\n',
+    referenceSql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT customer_id FROM shipments GROUP BY customer_id HAVING AVG(weight_kg) > (SELECT AVG(weight_kg) FROM shipments)) ORDER BY c.id;',
+    wrongVariants: [
+      { id: 'i5-min', mistake: 'AGGREGATE_CHOICE', sql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT customer_id FROM shipments GROUP BY customer_id HAVING MIN(weight_kg) > (SELECT AVG(weight_kg) FROM shipments)) ORDER BY c.id;', explanation: 'It looks like MIN was used where the ticket wants the average. The lightest shipment of a customer is rarely above the table average, so the list is wrong.' },
+      { id: 'i5-sum-divide', mistake: 'INTEGER_DIVISION', sql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT customer_id FROM shipments GROUP BY customer_id HAVING SUM(weight_kg) / COUNT(*) > (SELECT AVG(weight_kg) FROM shipments)) ORDER BY c.id;', explanation: 'It looks like SUM divided by COUNT(*) was used. On integers the division truncates, and COUNT(*) counts shipments with a missing weight, which AVG ignores.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'Two averages: one for each customer, one for the whole table. Which one does the HAVING clause compare?',
+      'Put the per-customer average in a HAVING clause on a grouped subquery, and the table average in a scalar subquery.',
+      'HAVING AVG(weight_kg) > (SELECT AVG(weight_kg) FROM shipments)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary', 'ties', 'nulltext']),
+  },
+  {
+    id: 'c5-b1-p1', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 1: queued shipments above the queued average',
+    ...DISPATCH,
+    summary: 'Find the early queued shipments that outweigh the typical queued load. Part 1 of 3.',
+    instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight of all queued shipments. Order by id. Column names and types: id (integer), weight_kg (integer).",
+    starterSql: 'SELECT id, weight_kg\nFROM shipments;\n',
+    referenceSql: "SELECT s.id, s.weight_kg FROM shipments s WHERE s.status = 'queued' AND s.id <= 60 AND s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q WHERE q.status = 'queued') ORDER BY s.id;",
+    wrongVariants: [
+      { id: 'b5p1-all-average', mistake: 'AGGREGATE_CHOICE', sql: "SELECT s.id, s.weight_kg FROM shipments s WHERE s.status = 'queued' AND s.id <= 60 AND s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q) ORDER BY s.id;", explanation: 'It looks like the average covers every status. The ticket compares queued shipments with the average of queued shipments.' },
+      { id: 'b5p1-precedence', mistake: 'AND_OR_PRECEDENCE', sql: "SELECT s.id, s.weight_kg FROM shipments s WHERE s.status = 'queued' AND s.id <= 60 OR s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q WHERE q.status = 'queued') ORDER BY s.id;", explanation: 'It looks like the OR was not grouped. AND binds tighter than OR, so any heavy shipment passes, whatever its status.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    hints: [
+      'Two filters on the shipment and one subquery for the average. Which average does the ticket name?',
+      'Keep the average inside a subquery that filters to queued shipments. Keep every condition on the same row with AND.',
+      "WHERE s.status = 'queued' AND s.id <= 60\n  AND s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q WHERE q.status = 'queued')",
+    ],
+    docs: [{ label: 'PostgreSQL scalar subqueries', url: SCALAR }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
+    id: 'c5-b1-p2', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 2: customers with a heavy shipment',
+    ...CUSTOMERS,
+    summary: 'Find the customers who have booked at least one shipment of 900 kg or more. Part 2 of 3.',
+    instructions: 'Part 2 of 3. Return id and name for each customer with at least one shipment of 900 kg or more. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM customers;\n',
+    referenceSql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT s.customer_id FROM shipments s WHERE s.weight_kg >= 900) ORDER BY c.id;',
+    wrongVariants: [
+      { id: 'b5p2-join', mistake: 'JOIN_FANOUT', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.weight_kg >= 900 ORDER BY c.id;', explanation: 'It looks like a JOIN was used where IN is needed. A customer with several heavy shipments is listed once for each one.' },
+      { id: 'b5p2-shipment-id', mistake: 'JOIN_KEY', sql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT s.id FROM shipments s WHERE s.weight_kg >= 900) ORDER BY c.id;', explanation: 'It looks like the customer id was compared with the shipment id. The heavy shipment belongs to a customer through customer_id.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'The customer list is a membership question. Which subquery returns the customer ids of heavy shipments?',
+      'Select customer_id from the heavy shipments and test membership with IN.',
+      'WHERE c.id IN (\n  SELECT s.customer_id FROM shipments s WHERE s.weight_kg >= 900\n)',
+    ],
+    docs: [{ label: 'PostgreSQL subquery expressions', url: SUBQUERY }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
+    id: 'c5-b1-p3', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 3: heavy queued load per driver',
+    ...ROUTES,
+    summary: 'Count each driver’s heavy queued shipments, showing zero for drivers with none. Part 3 of 3.',
+    instructions: 'Part 3 of 3. Use a WITH clause named heavy that counts queued shipments of at least 1500 kg for each driver_id. Return driver_id for every driver and heavy_queued, the count, with 0 when the driver has none. Order by driver_id. Column names and types: driver_id (integer), heavy_queued (integer).',
+    starterSql: 'SELECT id AS driver_id\nFROM drivers;\n',
+    referenceSql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;",
+    wrongVariants: [
+      { id: 'b5p3-inner', mistake: 'LEFT_TO_INNER', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like the join became an inner join. A driver with no heavy queued shipments has no row in heavy, so the driver disappears.' },
+      { id: 'b5p3-no-fallback', mistake: 'NULL_NO_FALLBACK', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, h.n::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like COALESCE was left out. The unmatched driver gets NULL, but the ticket asks for 0.' },
+    ],
+    ordered: true,
+    structure: 'cte',
+    columns: [{ name: 'driver_id', type: 23 }, { name: 'heavy_queued', type: 23 }],
+    hints: [
+      'Two steps: count the heavy queued shipments per driver, then attach that count to every driver.',
+      'A LEFT JOIN from drivers keeps the drivers with no count. COALESCE turns the missing count into 0.',
+      'LEFT JOIN heavy h ON h.driver_id = d.id\n-- COALESCE(h.n, 0)::integer AS heavy_queued',
+    ],
+    docs: [{ label: 'PostgreSQL WITH queries', url: WITH }, { label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+];

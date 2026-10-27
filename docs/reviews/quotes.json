@@ -1,0 +1,313 @@
+{
+  "checkedAt": "2026-10-27T20:52:41.959Z",
+  "total": 51,
+  "verified": 51,
+  "results": [
+    {
+      "id": "pg-select-where",
+      "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-select-structure",
+      "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-limit",
+      "url": "https://www.postgresql.org/docs/18/queries-limit.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-order-direction",
+      "url": "https://www.postgresql.org/docs/18/queries-order.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-distinct",
+      "url": "https://www.postgresql.org/docs/18/queries-select-lists.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-between",
+      "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-like-wildcards",
+      "url": "https://www.postgresql.org/docs/18/functions-matching.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-left-function",
+      "url": "https://www.postgresql.org/docs/18/functions-string.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-is-null",
+      "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-null-unknown",
+      "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-equals-null-tip",
+      "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-three-valued",
+      "url": "https://www.postgresql.org/docs/18/functions-logical.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-coalesce",
+      "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-count-col",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-count-star",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-left-join",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-in-null",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-sum-nonnull",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-min",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-max",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-n-nonnull",
+      "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-group-having",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-where-having",
+      "url": "https://www.postgresql.org/docs/18/tutorial-agg.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-int-division",
+      "url": "https://www.postgresql.org/docs/18/functions-math.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-joined-table",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-self-join",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-right-join",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-outer-first",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-exists",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-exists-true",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-scalar-subquery",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-scalar-error",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-scalar-null",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-correlated",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-in-subquery",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-exists-semijoin",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-not-in-null",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-with-intro",
+      "url": "https://www.postgresql.org/docs/18/queries-with.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-cte-temp",
+      "url": "https://www.postgresql.org/docs/18/queries-with.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-cte-once",
+      "url": "https://www.postgresql.org/docs/18/queries-with.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-case-generic",
+      "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-case-else-null",
+      "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-upper",
+      "url": "https://www.postgresql.org/docs/18/functions-string.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-substring-start",
+      "url": "https://www.postgresql.org/docs/18/functions-string.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-concat-operator",
+      "url": "https://www.postgresql.org/docs/18/functions-string.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-concat-ignores",
+      "url": "https://www.postgresql.org/docs/18/functions-string.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-round-ties",
+      "url": "https://www.postgresql.org/docs/18/functions-math.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-at-time-zone",
+      "url": "https://www.postgresql.org/docs/18/functions-datetime.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-at-time-zone-out",
+      "url": "https://www.postgresql.org/docs/18/functions-datetime.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-full-both",
+      "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-timezone-assumed",
+      "url": "https://www.postgresql.org/docs/18/datatype-datetime.html",
+      "status": "verified",
+      "httpStatus": 200
+    }
+  ]
+}

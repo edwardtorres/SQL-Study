@@ -1,0 +1,29 @@
+{
+  "id": "c1-i1",
+  "solutionSql": "SELECT id, name\nFROM customers\nWHERE UPPER(LEFT(name, 1)) BETWEEN 'B' AND 'D'\nORDER BY name ASC;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      3,
+      "Cobalt Paperworks"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return id and name for customers whose name starts with a letter from B to D, inclusive.",
+      "readingChosen": "The first letter is compared case-insensitively, so lowercase b, c and d also match.",
+      "alternativeReading": "A case-sensitive ASCII range, so only capitalised initials match."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No sample name starts with a lowercase letter, so the case choice does not change the sample result. Dovetail Lanterns, the boundary the ticket names, is included."
+}

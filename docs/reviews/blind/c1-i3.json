@@ -1,0 +1,21 @@
+{
+  "id": "c1-i3",
+  "solutionSql": "SELECT id, origin_id, distance_km\nFROM routes\nWHERE origin_id IN (1, 2)\n  AND distance_km > 300\nORDER BY distance_km DESC, id ASC;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      2,
+      2,
+      566
+    ],
+    [
+      6,
+      2,
+      439
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Routes 1 and 5 are both 1 to 2, and routes 2 and 6 are both 2 to 3, so the lanes are duplicated. Only routes 2 and 6 pass the distance filter. The ticket is explicit about the filters and the sort."
+}

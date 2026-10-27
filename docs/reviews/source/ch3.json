@@ -1,0 +1,175 @@
+{
+  "chapterId": 3,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c3-s1",
+      "claim": "COUNT, SUM, AVG, MIN and MAX read many rows and return one value.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-agg.html : 'An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "SUM, AVG, MIN and MAX skip NULL inputs.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the sum of the non-null input values.' 'Computes the average (arithmetic mean) of all the non-null input values.' 'Computes the minimum of the non-null input values.' 'Computes the maximum of the non-null input values.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "COUNT(*) counts every row, and COUNT(column) counts only the rows where that column is not NULL.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'For example, count(*) yields the total number of input rows; count(f1) yields the number of input rows in which f1 is non-null'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "Without GROUP BY, the whole table is one group, so the query returns one row.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'If a query contains aggregate function calls, but no GROUP BY clause, grouping still occurs: the result is a single group row (or perhaps no rows at all, if the single row is then eliminated by HAVING).' The sentence omits the HAVING exception.",
+      "suggestedFix": "Without GROUP BY, the whole table is one group, so the query returns one row unless a HAVING clause eliminates it."
+    },
+    {
+      "where": "c3-s1",
+      "claim": "predict explanation: 'With no GROUP BY, every row belongs to one group, and an aggregate query returns one row for that group, however many shipments there are.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'the result is a single group row'. The example has no HAVING clause, so the HAVING exception does not apply here.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "commonMistakes COUNT_STAR_VS_COL: 'COUNT(*) counts rows with missing values too.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'count(*) yields the total number of input rows'. Dialect confirmation: https://learn.microsoft.com/en-us/sql/t-sql/functions/count-transact-sql : 'It counts each row separately, including rows that contain null values.' (Advice 'Use COUNT(column) when...' was not scored.)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "commonMistakes AGGREGATE_CHOICE: 'MIN and MAX give the smallest and largest values.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the minimum of the non-null input values.' and 'Computes the maximum of the non-null input values.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s1",
+      "claim": "commonMistakes AGGREGATE_CHOICE: 'Swapping them, or using AVG where the ticket wants a total, changes the answer.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the average (arithmetic mean) of all the non-null input values.' versus 'Computes the sum of the non-null input values.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "GROUP BY makes one group for each distinct value of the grouped columns.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'The effect is to combine each set of rows having common values into one group row that represents all rows in the group.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "Every column in the select list must either be grouped or be inside an aggregate.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'In general, if a table is grouped, columns that are not listed in GROUP BY cannot be referenced except in aggregate expressions.' The page conditions this on the table being grouped, which the lesson's sentence implies.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "WHERE filters the rows before grouping.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-agg.html : 'WHERE selects input rows before groups and aggregates are computed (thus, it controls which rows go into the aggregate computation)'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "HAVING filters the groups after they have been counted, so a condition on COUNT(*) belongs in HAVING.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-agg.html : 'whereas HAVING selects group rows after groups and aggregates are computed.' and 'the HAVING clause always contains aggregate functions.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "predict explanation: 'GROUP BY counts the shipments for each customer first. HAVING then keeps only the groups that pass its test.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'After passing the WHERE filter, the derived input table might be subject to grouping, using the GROUP BY clause, and elimination of group rows using the HAVING clause.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "predict explanation: 'The condition cannot go in WHERE, because a row does not yet know its group's count.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-agg.html : 'Thus, the WHERE clause must not contain aggregate functions; it makes no sense to try to use an aggregate to determine which rows will be inputs to the aggregates.' The 'does not yet know its group's count' reason is a paraphrase of 'WHERE selects input rows before groups and aggregates are computed'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "commonMistakes MISSING_GROUP_COL: 'Grouping by the wrong column, or by an extra one, changes the grain.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'combine each set of rows having common values into one group row'. Since the groups are defined by the grouped columns, a different column set gives different groups. The advice 'Each output row must match one group in the ticket' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s2",
+      "claim": "commonMistakes WHERE_VS_HAVING: 'A threshold on a count needs HAVING. Leaving it out keeps every group, not only the large ones.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'the HAVING clause can be used, much like a WHERE clause, to eliminate groups from the result.' Without HAVING no group is eliminated.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "AVG and SUM skip NULL values, so a missing weight is not counted as zero.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html : 'Computes the sum of the non-null input values.' and 'Computes the average (arithmetic mean) of all the non-null input values.' (Advice 'Use COALESCE only when a zero really is the value you want' was not scored.)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "Dividing one integer by another truncates the fraction before any ROUND runs.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'Division (for integral types, division truncates the result towards zero)' and 'Integer quotient of y / x (truncates towards zero)'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "Multiply by 100.0, or divide numeric values, to keep the decimals.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-syntax-lexical.html (4.1.2 constants): 'Constants that contain decimal points and/or exponents are always initially presumed to be type numeric.' The result type of integer times numeric follows from the type-resolution rules, which this page does not spell out for that operator pair.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "predict explanation: 'The query groups by route, so each route gets one output row with its average and its percentage weighed.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'combine each set of rows having common values into one group row that represents all rows in the group.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "commonMistakes INTEGER_DIVISION: 'COUNT(weight_kg) / COUNT(*) returns 0 for any ratio below one.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-math.html : 'Division (for integral types, division truncates the result towards zero)'. COUNT returns an integer, so a positive ratio below one truncates to 0.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c3-s3",
+      "claim": "commonMistakes NULL_AS_DEFAULT: 'AVG(COALESCE(weight_kg, 0)) counts each missing weight as zero and drags the average down.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html : 'The COALESCE function returns the first of its arguments that is not null.' AVG then averages the zeros in, as stated on https://www.postgresql.org/docs/18/functions-aggregate.html. 'Drags the average down' is arithmetic for positive weights.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "COUNT(*) counts rows, while COUNT(expression) counts non-NULL values in T-SQL too.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/functions/count-transact-sql : 'COUNT(*) ... counts each row separately, including rows that contain null values.' and 'COUNT(ALL <expression>) evaluates expression for each row in a group, and returns the number of non-null values.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark aggregate functions also distinguish row counts from non-NULL expression counts.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-null-semantics.html (Builtin Aggregate Expressions): 'NULL values are ignored from processing by all the aggregate functions. Only exception to this rule is COUNT(*) function.' The page also shows 'count(*) does not skip NULL values'.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 23, "partly": 1, "unsupported": 0, "unverified": 0, "engine": 0 }
+}

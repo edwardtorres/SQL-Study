@@ -99,6 +99,7 @@ export function generateSeed(seed: number, variant: Variant = 'sample'): Freight
     data.routes.push({ id: index + 1, origin_id: origin, destination_id: origin % 4 + 1, distance_km: 80 + integer(600) });
   }
   const count = variant === 'sample' ? 240 : variant === 'nulls' ? 120 : 180;
+  const nullText = variant === 'nulltext';
   const statuses = ['queued', 'in_transit', 'delivered', 'cancelled'];
   for (let index = 0; index < count; index += 1) {
     const id = index + 1;
@@ -115,7 +116,7 @@ export function generateSeed(seed: number, variant: Variant = 'sample'): Freight
       status, weight_kg: weight, booked_at: timestamp(index * 2), delivery_due: dateAfter(3 + index % 12),
     });
     // At least one unbilled shipment for every active customer; others have invoices.
-    const invoiceExists = variant === 'nulls' ? index % 4 === 0 : index % 7 !== 0;
+    const invoiceExists = variant === 'empty' ? false : variant === 'nulls' ? index % 4 === 0 : index % 7 !== 0;
     if (invoiceExists) {
       data.invoices.push({ id: data.invoices.length + 1, shipment_id: id, amount: index % 5 === 0 ? '90071992.01' : `${100 + integer(8) * 25}.00`, issued_at: timestamp(index * 2 + 3), paid_at: index % 3 === 0 ? null : timestamp(index * 2 + 20) });
     }
@@ -125,13 +126,35 @@ export function generateSeed(seed: number, variant: Variant = 'sample'): Freight
     const latest = timestamp(index * 2 + 8);
     // Intentionally insert the latest event before the middle one: row order is not chronology.
     data.shipment_events.push({ id: first, shipment_id: id, status: 'booked', occurred_at: created, note: null });
-    data.shipment_events.push({ id: first + 1, shipment_id: id, status: 'arrived', occurred_at: latest, note: index % 2 === 0 ? null : 'Synthetic scan' });
-    data.shipment_events.push({ id: first + 2, shipment_id: id, status: 'loaded', occurred_at: timestamp(index * 2 + 4), note: 'Synthetic scan' });
+    data.shipment_events.push({ id: first + 1, shipment_id: id, status: 'arrived', occurred_at: latest, note: nullText || index % 2 === 0 ? null : 'Synthetic scan' });
+    data.shipment_events.push({ id: first + 2, shipment_id: id, status: 'loaded', occurred_at: timestamp(index * 2 + 4), note: nullText ? null : 'Synthetic scan' });
     if (variant === 'ties' || index % 9 === 0) {
       data.shipment_events.push({ id: first + 3, shipment_id: id, status: 'delivered', occurred_at: latest, note: null });
     }
   }
+  if (nullText) {
+    for (const customer of data.customers) customer.region = null;
+    for (const driver of data.drivers) driver.supervisor_id = null;
+  }
+  // Shared boundary timestamps: BETWEEN with a date-only end misses the last instant of a day.
+  data.shipments[0]!.booked_at = '2026-01-31T00:00:00.000Z';
+  data.shipments[1]!.booked_at = '2026-01-31T23:59:59.999Z';
+  if (variant === 'boundary') applyBoundary(data);
   return data;
+}
+
+// Boundary dataset: the first five queued shipments weigh 1200, 900, 700, 501 and exactly 500 kg,
+// and every other queued shipment weighs under 500 kg. Two shipments have boundary timestamps and one
+// has the leap-day due date.
+function applyBoundary(data: FreightData): void {
+  const heavy = [1200, 900, 700, 501, 500];
+  let next = 0;
+  data.shipments.forEach((shipment, index) => {
+    if (shipment.status !== 'queued') return;
+    shipment.weight_kg = next < heavy.length ? heavy[next]! : 100 + ((index * 37) % 400);
+    next += 1;
+  });
+  data.shipments[2]!.delivery_due = '2028-02-29';
 }
 
 const tableConstraints: Partial<Record<TableName, readonly string[]>> = {
@@ -157,6 +180,8 @@ export function seedSql(seed: number, variant: Variant = 'sample'): string {
     const columns = table.columns.map((column) => `${column.name} ${column.type}${column.nullable ? '' : ' NOT NULL'}${column.primaryKey ? ' PRIMARY KEY' : ''}${column.references ? ` REFERENCES ${column.references.replace('.', '(')})` : ''}`);
     const ddl = `CREATE TABLE ${name} (${[...columns, ...(tableConstraints[name] ?? [])].join(', ')});`;
     const rows = data[name];
+    // An empty table (the Step 2 'empty' dataset) keeps its CREATE TABLE; a VALUES list needs at least one row.
+    if (rows.length === 0) return ddl;
     const values = rows.map((row) => `(${table.columns.map((column) => literal(row[column.name] ?? null)).join(', ')})`).join(',\n');
     return `${ddl}\nINSERT INTO ${name} (${table.columns.map((column) => column.name).join(', ')}) VALUES\n${values};`;
   }).join('\n');

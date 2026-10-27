@@ -57,6 +57,22 @@ function previewCell(value: unknown): unknown {
 function previewRow(row: unknown[]): unknown[] { return row.slice(0, 20).map(previewCell); }
 function failure(message: string): ResultDiff { return { passed: false, message, missing: [], extra: [] }; }
 
+/** True when two results hold the same rows: exact order when ordered, otherwise the same multiset. */
+export function sameRows(actual: QueryResult, expected: QueryResult, ordered: boolean): boolean {
+  try {
+    const actualKeys = actual.rows.map((row) => rowKey(row, actual));
+    const expectedKeys = expected.rows.map((row) => rowKey(row, expected));
+    if (actualKeys.length !== expectedKeys.length) return false;
+    if (!ordered) {
+      actualKeys.sort();
+      expectedKeys.sort();
+    }
+    return actualKeys.every((key, index) => key === expectedKeys[index]);
+  } catch {
+    return false;
+  }
+}
+
 export function compareResults(actual: QueryResult, expected: QueryResult, options: { ordered: boolean; columns: readonly ColumnRule[] }): ResultDiff {
   const validColumns = (result: QueryResult): boolean => result.fields.length === options.columns.length && result.fields.every((field, index) => {
     const rule = options.columns[index];

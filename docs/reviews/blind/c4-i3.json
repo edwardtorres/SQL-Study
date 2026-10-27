@@ -1,0 +1,23 @@
+{
+  "id": "c4-i3",
+  "solutionSql": "SELECT r.id AS route_id,\n       w.city AS destination_city\nFROM routes r\nLEFT JOIN warehouses w ON w.id = r.destination_id\nORDER BY r.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "Mossreach"
+    ],
+    [
+      2,
+      "Cloudmere"
+    ],
+    [
+      3,
+      "Reedford"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Routes join to warehouses on destination_id. Every route resolves to a city, and the LEFT JOIN keeps all six routes. Routes 1 and 5 both end in Mossreach, which is correct for the duplicated lane."
+}

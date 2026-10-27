@@ -1,0 +1,23 @@
+{
+  "id": "c1-b1-p3",
+  "solutionSql": "SELECT id, weight_kg\nFROM shipments\nWHERE status = 'in_transit'\n  AND weight_kg IS NOT NULL\nORDER BY weight_kg DESC, id ASC\nLIMIT 3;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      154,
+      1930
+    ],
+    [
+      14,
+      1894
+    ],
+    [
+      50,
+      1828
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "PostgreSQL sorts NULLs first under DESC, so a NULL-weight in_transit row would take a top-three slot. The query excludes NULL weights explicitly. None of the NULL-weight sample rows is in_transit, so the sample result does not depend on that guard."
+}

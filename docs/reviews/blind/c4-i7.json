@@ -1,0 +1,29 @@
+{
+  "id": "c4-i7",
+  "solutionSql": "SELECT d.id,\n       d.name\nFROM drivers d\nWHERE EXISTS (\n  SELECT 1\n  FROM shipments s\n  WHERE s.driver_id = d.id\n    AND s.status = 'delivered'\n    AND s.route_id IN (1, 2)\n)\nORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      "Nera Vale"
+    ],
+    [
+      2,
+      "Olin Moss"
+    ],
+    [
+      3,
+      "Pella Reed"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return id and name for each driver who carries at least one shipment with status delivered on route 1 or route 2.",
+      "readingChosen": "Route means shipments.route_id, the route number 1 or 2.",
+      "alternativeReading": "Route 1 or 2 means a warehouse id, since the warehouses are also numbered 1 to 4."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The routes table uses route ids 1 to 6, and the schema's route_id is the natural match for the word route. All four drivers qualify, and EXISTS returns each once."
+}

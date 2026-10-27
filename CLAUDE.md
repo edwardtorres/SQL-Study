@@ -78,6 +78,23 @@ statement_timeout. Use main-thread worker deadlines and row caps. Show bounded d
 hidden datasets. All references must pass and all test sets must catch a
 deliberately wrong variant. Fixtures are deterministic and small.
 
+Step 2 rules (enforced by the content check and its Vitest suite):
+- Every wrong variant must be caught by at least two datasets, not one.
+- Every graded item has at least two wrong variants, each tagged with a mistake
+  from the taxonomy in `src/core/types.ts` (`mistakeTags`). Each tag has a targeted
+  explanation that appears when a submission returns exactly that variant's rows.
+- Write-query tickets (independent, boss, and the Step 1 write and window samples)
+  get a bare skeleton starter at most. Only fix-the-bug tickets get a broken
+  starter. The check parses the starter and rejects WHERE, JOIN, GROUP, ORDER,
+  LIMIT, WITH, OVER, CASE, and aggregates.
+- Every item has three hint tiers (nudge, approach, partial query).
+- Lesson claims are checked against the cited pages. Quotes in `src/data/citations.json`
+  must appear verbatim on the live page; `scripts/verify-quotes.mjs` checks this.
+
+Step 3 plan note (recorded, not built): chapters 9 and 11 need a per-ticket
+statement policy that allows DDL and DML. Grading will run the learner's statements,
+then query the resulting table state, all inside the same rolled-back transaction.
+
 ## Execution findings and cross-browser checks
 
 - PGlite is the PostgreSQL engine. No optional extension archives are shipped.

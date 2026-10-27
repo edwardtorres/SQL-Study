@@ -1,0 +1,203 @@
+{
+  "chapterId": 1,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c1-s1",
+      "claim": "A query names the columns it wants and the table they come from. SELECT lists the columns; FROM names the table.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-select.html : 'The statement is divided into a select list (the part that lists the columns to be returned), a table list (the part that lists the tables from which to retrieve the data), and an optional qualification (the part that specifies any restrictions).'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "Each row of the table becomes one row of the result.",
+      "verdict": "partly",
+      "evidence": "This holds only for a plain SELECT with no WHERE, join or GROUP BY. https://www.postgresql.org/docs/18/queries-table-expressions.html : 'All these transformations produce a virtual table that provides the rows that are passed to the select list to compute the output rows of the query.' The tutorial page (tutorial-select.html) says a WHERE clause specifies 'which rows are wanted', so the row count can change. The cited quote for this section (pg-select-structure) does not cover row counts.",
+      "suggestedFix": "With no WHERE, join or GROUP BY, each row of the table becomes one row of the result. WHERE keeps only the rows that pass its test, and joins and GROUP BY change the row count."
+    },
+    {
+      "where": "c1-s1",
+      "claim": "LIMIT caps how many rows come back.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-limit.html : 'If a limit count is given, no more than that many rows will be returned (but possibly fewer, if the query itself yields fewer rows).'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "Sort first with ORDER BY, so the rows you keep are the ones you meant to keep.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-limit.html : 'When using LIMIT, it is important to use an ORDER BY clause that constrains the result rows into a unique order. Otherwise you will get an unpredictable subset of the query's rows.' This sentence is on the cited page but is not among the attached quotes (pg-limit covers only the count sentence). Consider attaching it.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "predict explanation: 'LIMIT 3 keeps the first three rows after sorting by id.'",
+      "verdict": "engine",
+      "evidence": "Engine check: the result row count (answerRows 3) is stated in lesson text. Row-count flag: lesson text must not state result rows. Reword to describe what LIMIT does without the count, e.g. 'LIMIT keeps the rows that come first after sorting by id, up to the count given.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "predict explanation: 'The manual says LIMIT returns no more rows than its count, and fewer only when the query yields fewer.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-limit.html : 'If a limit count is given, no more than that many rows will be returned (but possibly fewer, if the query itself yields fewer rows).'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "commonMistakes TIE_NONDETERMINISTIC: 'Leaving out ORDER BY before LIMIT returns whichever rows come out first.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-limit.html : 'Otherwise you will get an unpredictable subset of the query's rows.' and 'The ordering is unknown, unless you specified ORDER BY.' The lesson's 'whichever rows come out first' is a paraphrase of this.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s1",
+      "claim": "commonMistakes ORDER_DIRECTION: 'ORDER BY sorts ascending by default. Write DESC when the largest value should come first.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-order.html : 'ASC order is the default.' and 'Each expression can be followed by an optional ASC or DESC keyword to set the sort direction to ascending or descending.' (The DESC advice follows from the same sentence.)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "WHERE keeps only the rows whose condition is true. Rows where the condition is false are dropped.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-select.html : 'The WHERE clause contains a Boolean (truth value) expression, and only rows for which the Boolean expression is true are returned.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "AND needs both conditions to hold. OR needs at least one.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-logical.html : 'The usual logical operators are available: boolean AND boolean and boolean OR boolean', with truth tables (TRUE AND FALSE gives FALSE; TRUE OR FALSE gives TRUE). The section's citation list does not include this page, so consider adding it.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "When you mix AND and OR, add parentheses so the grouping says what you mean.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-syntax-lexical.html (4.1.6 Operator Precedence): 'Add parentheses if you want an expression with multiple operators to be parsed in some other way than what the precedence rules imply.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "predict explanation: 'AND needs both conditions: queued, and at least 1500 kg. Heavy shipments in other statuses and light queued shipments both fall out.'",
+      "verdict": "supported",
+      "evidence": "Follows from the AND truth table on https://www.postgresql.org/docs/18/functions-logical.html (TRUE AND FALSE gives FALSE). The sentence states no row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "predict explanation: 'Replace AND with OR and far more rows match.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a comparative result-size claim about the example's output. Row-count flag: lesson text must not state result rows. Run the OR variant against the sample and either cite the count in the engine record or drop the sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "commonMistakes AND_OR_PRECEDENCE: 'A OR B AND C does not mean (A OR B) AND C. AND binds first.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-syntax-lexical.html (Table 4.2, Operator Precedence, highest to lowest): 'AND | left | logical conjunction' is listed above 'OR | left | logical disjunction', so AND binds first. The section's citation list does not include this page.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s2",
+      "claim": "commonMistakes GE_VS_GT: '>= keeps the boundary value, > drops it.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html (Table 9.1): '>' is 'Greater than' and '>=' is 'Greater than or equal to'. The sentence 'Check the ticket wording for exactly-at-the-limit cases.' is advice and was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "LIKE matches text against a pattern.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html : 'LIKE pattern matching always covers the entire string.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "% stands for any run of characters, and _ stands for exactly one character.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html : 'An underscore ( _ ) in pattern stands for (matches) any single character; a percent sign ( % ) matches any sequence of zero or more characters.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "IN checks membership in a list.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-syntax-lexical.html (Table 4.2): 'BETWEEN IN LIKE ILIKE SIMILAR | range containment, set membership, string matching'. The subquery form is on https://www.postgresql.org/docs/18/functions-subquery.html : 'The result of IN is true if any equal subquery row is found.' No section citation covers IN.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "BETWEEN checks a range and includes both ends.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Notice that BETWEEN treats the endpoint values as included in the range.' and 'Between (inclusive of the range endpoints).'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "DISTINCT removes duplicate rows from the result. (Also in the predict explanation.)",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html : 'After the select list has been processed, the result table can optionally be subject to the elimination of duplicate rows.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "predict explanation: 'Every shipment repeats one of the statuses, so each status appears once.'",
+      "verdict": "engine",
+      "evidence": "Engine check: depends on the sample's status values, and it describes the result set's shape. Row-count flag: lesson text must not state result rows. Confirm against the engine output (answerRows 4) and reword to describe DISTINCT without describing the result.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "commonMistakes DISTINCT_MISUSE: 'Without DISTINCT, a column with repeated values returns each value once for every row that has it.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html : '(Instead of DISTINCT the key word ALL can be used to specify the default behavior of retaining all rows.)'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "commonMistakes LIKE_WILDCARD: 'A pattern without a leading % only matches text that begins with that pattern.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html : 'LIKE pattern matching always covers the entire string.' and 'If pattern does not contain percent signs or underscores, then the pattern only represents the string itself; in that case LIKE acts like the equals operator.' Without a leading %, the match must start at the first character, and without a trailing % it must also end at the last character, so 'begins with' is only half the rule.",
+      "suggestedFix": "LIKE must match the entire string. With no leading %, the match must start at the first character; with no trailing %, it must reach the last character."
+    },
+    {
+      "where": "c1-s3",
+      "claim": "commonMistakes LIKE_WILDCARD: 'Add % at the front to match anywhere.'",
+      "verdict": "unsupported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html : 'Therefore, if it's desired to match a sequence anywhere within a string, the pattern must start and end with a percent sign.' A leading % alone does not match anywhere: '%Dock' matches only text that ends with 'Dock'.",
+      "suggestedFix": "Put % at both ends (for example '%Dock%') to match anywhere within the text."
+    },
+    {
+      "where": "c1-s3",
+      "claim": "commonMistakes BETWEEN_END_BOUND: 'BETWEEN includes its end value.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html : 'Notice that BETWEEN treats the endpoint values as included in the range.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c1-s3",
+      "claim": "commonMistakes BETWEEN_END_BOUND: 'A plain date as the end of a timestamp range means midnight, so the rest of that day falls outside the range.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html : 'Similarly, a date value is assumed to represent midnight in the TimeZone zone when comparing it to a timestamp.' The page adds the TimeZone detail, which the lesson omits. No section citation covers this sentence, so add functions-datetime.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL uses TOP for a simple row cap; PostgreSQL uses LIMIT. Use ORDER BY when selecting a predictable subset.",
+      "verdict": "partly",
+      "evidence": "The T-SQL half is supported by https://learn.microsoft.com/en-us/sql/t-sql/queries/top-transact-sql : 'Otherwise, TOP returns the first n number of rows in an undefined order.' and 'In a SELECT statement, always use an ORDER BY clause with the TOP clause. This is the only way to predictably indicate which rows are affected by TOP.' The PostgreSQL LIMIT half is not on the cited Microsoft page; it is on https://www.postgresql.org/docs/18/queries-limit.html.",
+      "suggestedFix": "T-SQL uses TOP for a simple row cap, and TOP returns rows in an undefined order unless you add ORDER BY. PostgreSQL uses LIMIT (https://www.postgresql.org/docs/18/queries-limit.html). Use ORDER BY when selecting a predictable subset."
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark SQL also supports LIMIT. Its reference pairs LIMIT with ORDER BY to make the returned rows deterministic.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-limit.html (Spark 4.2.0 docs): 'The LIMIT clause is used to constrain the number of rows returned by the query ... is used in conjunction with ORDER BY to ensure that the results are deterministic.'",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 21, "partly": 3, "unsupported": 1, "unverified": 0, "engine": 3 }
+}

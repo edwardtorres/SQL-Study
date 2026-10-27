@@ -1,0 +1,210 @@
+{
+  "chapterId": 5,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c5-s1",
+      "claim": "A scalar subquery is a SELECT in parentheses that returns one row with one column.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'A scalar subquery is an ordinary SELECT query in parentheses that returns exactly one row with one column.' The same paragraph says that a subquery returning no rows is not an error and gives a null result.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "It can stand anywhere a single value can, such as a column in the select list or one side of a comparison.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'The SELECT query is executed and the single returned value is used in the surrounding value expression.' A select-list item and a comparison operand are both value expressions.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "A subquery that refers to a column of the outer query is correlated.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'The subquery can refer to variables from the surrounding query, which will act as constants during any one evaluation of the subquery.' The term 'correlated' does not appear on the fetched PostgreSQL pages. The concept is in this sentence, so cite it.",
+      "suggestedFix": "A subquery that refers to variables of the surrounding query is called a correlated subquery. The subquery can refer to variables from the surrounding query."
+    },
+    {
+      "where": "c5-s1",
+      "claim": "It is worked out again for each outer row, so the outer row keeps its own value.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'which will act as constants during any one evaluation of the subquery.' The page implies one evaluation per outer-row context but does not say 'for each outer row'. How often PostgreSQL executes it is an execution detail, so the 'each outer row' wording goes beyond the page.",
+      "suggestedFix": "The subquery can refer to variables of the outer query. Those variables act as constants during one evaluation of the subquery, so each outer row gets its own value."
+    },
+    {
+      "where": "c5-s1",
+      "claim": "predict stem: 'The subquery runs once for each shipment.'",
+      "verdict": "engine",
+      "evidence": "Engine check: how often PostgreSQL executes a correlated scalar subquery is a runtime detail that the manual does not fix. Run it with EXPLAIN ANALYZE or an instrumented count before keeping this sentence as a fact.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "predict explanation: 'A scalar subquery in the select list adds a column; it does not reduce or multiply rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : 'A scalar subquery is an ordinary SELECT query in parentheses that returns exactly one row with one column.' A query that always returns one row cannot multiply the outer rows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "predict explanation: 'Each selected shipment keeps its own row and its own count.'",
+      "verdict": "supported",
+      "evidence": "Follows from the scalar-subquery definition and the rule that outer variables act as constants during one evaluation, on https://www.postgresql.org/docs/18/sql-expressions.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "commonMistakes CORRELATED_SCOPE: 'Inside a subquery, an unqualified column name refers to the nearest table that has it.'",
+      "verdict": "engine",
+      "evidence": "Engine check: the cited page covers only uniqueness: 'The correlation name and separating dot can be omitted if the column name is unique across all the tables being used in the current query.' (https://www.postgresql.org/docs/18/sql-expressions.html, 4.2.1). The 'nearest table' resolution rule is not on the page. Test it against the engine with a duplicated column name before keeping the sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s1",
+      "claim": "commonMistakes NULL_NO_FALLBACK: 'A scalar subquery over no rows gives NULL.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html : '(But if, during a particular execution, the subquery returns no rows, there is no error; the scalar result is taken to be null.)' The COALESCE advice was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "IN (subquery) asks whether a value appears in the list the subquery returns.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (IN): 'The left-hand expression is evaluated and compared to each row of the subquery result. The result of IN is true if any equal subquery row is found.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "Each outer row is kept at most once, however many matching rows the subquery holds.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (IN): 'The result of IN is true if any equal subquery row is found.' This gives one boolean per outer row, so a row cannot repeat. Citation gap: the attached quote pg-exists-semijoin ('it produces at most one output row for each tab1 row') describes EXISTS, not IN. Attach the IN sentence instead.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "EXISTS asks whether any matching row exists, and it does not need the matches themselves.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (EXISTS): 'If it returns at least one row, the result of EXISTS is true' and 'Since the result depends only on whether any rows are returned, and not on the contents of those rows, the output list of the subquery is normally unimportant.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "A NOT IN test over a list that contains NULL can never be TRUE.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (NOT IN): 'if there are no equal right-hand values and at least one right-hand row yields null, the result of the NOT IN construct will be null, not true.' If an equal value exists, the result is false, so it is never true.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "predict stem: 'Customers 7 and 8 have no shipments.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a data fact about the visible sample. Confirm against the seed before publishing.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "predict explanation: 'IN keeps each customer whose id appears in the subquery list. Customers with no shipments are left out, and no customer is repeated.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (IN): 'The result of IN is true if any equal subquery row is found. The result is false if no equal row is found.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "commonMistakes JOIN_FANOUT: 'Joining to shipments instead of testing membership repeats each customer once per shipment. IN or EXISTS keeps one row per customer.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html : 'For each row R1 of T1, the joined table has a row for each row in T2 that satisfies the join condition with R1.' For EXISTS: 'it produces at most one output row for each tab1 row, even if there are several matching tab2 rows' (https://www.postgresql.org/docs/18/functions-subquery.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s2",
+      "claim": "commonMistakes NOT_IN_NULL: 'NOT IN returns no rows when the list contains a NULL, because the test is never TRUE.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html (NOT IN): 'the result of the NOT IN construct will be null, not true.' This is a general statement about the construct, not a row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "A WITH clause names an intermediate result.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-with.html : 'The WITH clause defines two auxiliary statements named regional_sales and top_regions, where the output of regional_sales is used in top_regions and the output of top_regions is used in the primary SELECT query.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "The main query reads it like a table.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-with.html : 'can be thought of as defining temporary tables that exist just for one query.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "A long nested query reads top to bottom: first the step, then the filter that uses it.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-with.html : 'This example could have been written without WITH, but we'd have needed two levels of nested sub-SELECTs. It's a bit easier to follow this way.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "Each selected column of the named step must be grouped or aggregated inside it.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'In general, if a table is grouped, columns that are not listed in GROUP BY cannot be referenced except in aggregate expressions.' The rule applies to a step that uses GROUP BY. A step with no grouping or aggregates has no such requirement, so the sentence is stated too broadly.",
+      "suggestedFix": "When the named step uses GROUP BY, each selected column must be grouped or aggregated inside it."
+    },
+    {
+      "where": "c5-s3",
+      "claim": "The outer query can only use the columns the step returns.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-with.html : 'can be thought of as defining temporary tables that exist just for one query.' A temporary table exposes only its columns.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "predict stem: 'The count is taken once per customer inside the WITH clause.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'The effect is to combine each set of rows having common values into one group row that represents all rows in the group.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "predict explanation: 'The WITH clause counts shipments per customer, and the outer WHERE keeps only the counts of 50 or more.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): grouping and the rule that WHERE filters input rows before grouping, while HAVING filters groups (https://www.postgresql.org/docs/18/tutorial-agg.html). The outer WHERE acts on the CTE's output column.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "predict explanation: 'No customer's count reaches 50 in the visible sample's data, so the WHERE test rejects every row.'",
+      "verdict": "engine",
+      "evidence": "Engine check: a data fact about the visible sample, and a result claim (every row rejected, answerRows 0). Row-count flag: lesson text must not state result rows. Confirm the counts with the engine, and reword to explain the threshold logic without stating the result.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c5-s3",
+      "claim": "commonMistakes MISSING_GROUP_COL: 'A column selected in the WITH clause must appear in GROUP BY, or sit inside an aggregate. Otherwise the step has no single value per group.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): 'if a table is grouped, columns that are not listed in GROUP BY cannot be referenced except in aggregate expressions' and 'there is no single value for the column y that could be associated with each group'. The requirement applies only to a grouped step, as in the first finding for this section.",
+      "suggestedFix": "In a step that uses GROUP BY, a selected column must appear in GROUP BY or sit inside an aggregate. Otherwise the step has no single value per group."
+    },
+    {
+      "where": "c5-s3",
+      "claim": "commonMistakes GE_VS_GT: 'Read the ticket: 30 or more means >= 30.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html (Table 9.1): '>=' is 'Greater than or equal to'. The advice 'Thresholds in a step are easy to shift by one' was not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL supports WITH CTEs; a preceding statement in a batch must end with a semicolon.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/queries/with-common-table-expression-transact-sql : 'When a CTE is used in a statement that is part of a batch, the statement before it must be followed by a semicolon.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark supports common table expressions with WITH as temporary named results within a statement.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-cte.html : 'A common table expression (CTE) defines a temporary result set that a user can reference possibly multiple times within the scope of a SQL statement.'",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 21, "partly": 4, "unsupported": 0, "unverified": 0, "engine": 4 }
+}

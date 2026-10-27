@@ -19,10 +19,12 @@ describe('real freight datasets on one warm engine', () => {
       const expected = await engine.run(dataset.id, challenge.referenceSql);
       const options = { ordered: challenge.ordered, columns: challenge.columns };
       expect(compareResults(expected, expected, options).passed, `${challenge.id}/${dataset.id}: reference column/type contract`).toBe(true);
-      const wrong = await engine.run(dataset.id, challenge.wrongSql);
-      if (!compareResults(wrong, expected, options).passed) wrongFailures += 1;
+      for (const variant of challenge.wrongVariants) {
+        const wrong = await engine.run(dataset.id, variant.sql);
+        if (!compareResults(wrong, expected, options).passed) wrongFailures += 1;
+      }
     }
-    expect(wrongFailures, `${challenge.id}: wrong variant must fail at least one fixture`).toBeGreaterThan(0);
+    expect(wrongFailures, `${challenge.id}: wrong variants must fail on some fixture`).toBeGreaterThan(0);
   });
 
   test('one warm submission includes learner + reference across all three datasets', async () => {

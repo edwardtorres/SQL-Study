@@ -1,0 +1,15 @@
+{
+  "id": "c2-b1-p1",
+  "solutionSql": "SELECT id, name\nFROM drivers\nWHERE supervisor_id IS NULL\nORDER BY id ASC;",
+  "sampleRowCount": 1,
+  "sampleFirstRows": [
+    [
+      1,
+      "Nera Vale"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Only driver 1, Nera Vale, has a NULL supervisor_id. The ticket defines a missing supervisor by the column, so IS NULL on that column is the whole test."
+}

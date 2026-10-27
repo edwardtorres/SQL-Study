@@ -1,0 +1,257 @@
+[
+  {
+    "id": "pg-select-where",
+    "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+    "quote": "The WHERE clause contains a Boolean (truth value) expression, and only rows for which the Boolean expression is true are returned."
+  },
+  {
+    "id": "pg-select-structure",
+    "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+    "quote": "The statement is divided into a select list (the part that lists the columns to be returned), a table list (the part that lists the tables from which to retrieve the data), and an optional qualification (the part that specifies any restrictions)."
+  },
+  {
+    "id": "pg-limit",
+    "url": "https://www.postgresql.org/docs/18/queries-limit.html",
+    "quote": "If a limit count is given, no more than that many rows will be returned (but possibly fewer, if the query itself yields fewer rows)."
+  },
+  {
+    "id": "pg-order-direction",
+    "url": "https://www.postgresql.org/docs/18/queries-order.html",
+    "quote": "Each expression can be followed by an optional ASC or DESC keyword to set the sort direction to ascending or descending."
+  },
+  {
+    "id": "pg-distinct",
+    "url": "https://www.postgresql.org/docs/18/queries-select-lists.html",
+    "quote": "After the select list has been processed, the result table can optionally be subject to the elimination of duplicate rows."
+  },
+  {
+    "id": "pg-between",
+    "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+    "quote": "Between (inclusive of the range endpoints)."
+  },
+  {
+    "id": "pg-like-wildcards",
+    "url": "https://www.postgresql.org/docs/18/functions-matching.html",
+    "quote": "An underscore ( _ ) in pattern stands for (matches) any single character; a percent sign ( % ) matches any sequence of zero or more characters."
+  },
+  {
+    "id": "pg-left-function",
+    "url": "https://www.postgresql.org/docs/18/functions-string.html",
+    "quote": "Returns first n characters in the string"
+  },
+  {
+    "id": "pg-is-null",
+    "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+    "quote": "Test whether value is null."
+  },
+  {
+    "id": "pg-null-unknown",
+    "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+    "quote": "(The null value represents an unknown value, and it is not known whether two unknown values are equal.)"
+  },
+  {
+    "id": "pg-equals-null-tip",
+    "url": "https://www.postgresql.org/docs/18/functions-comparison.html",
+    "quote": "Some applications might expect that expression = NULL returns true if expression evaluates to the null value."
+  },
+  {
+    "id": "pg-three-valued",
+    "url": "https://www.postgresql.org/docs/18/functions-logical.html",
+    "quote": "SQL uses a three-valued logic system with true, false, and null"
+  },
+  {
+    "id": "pg-coalesce",
+    "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+    "quote": "The COALESCE function returns the first of its arguments that is not null."
+  },
+  {
+    "id": "pg-count-col",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Computes the number of input rows in which the input value is not null."
+  },
+  {
+    "id": "pg-count-star",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Computes the number of input rows."
+  },
+  {
+    "id": "pg-left-join",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "Then, for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2."
+  },
+  {
+    "id": "pg-in-null",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "Note that if the left-hand expression yields null, or if there are no equal right-hand values and at least one right-hand row yields null, the result of the IN construct will be null, not false."
+  },
+  {
+    "id": "pg-sum-nonnull",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Computes the sum of the non-null input values."
+  },
+  {
+    "id": "pg-min",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Computes the minimum of the non-null input values."
+  },
+  {
+    "id": "pg-max",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Computes the maximum of the non-null input values."
+  },
+  {
+    "id": "pg-n-nonnull",
+    "url": "https://www.postgresql.org/docs/18/functions-aggregate.html",
+    "quote": "Where the description mentions N , it means the number of input rows for which all the input expressions are non-null."
+  },
+  {
+    "id": "pg-group-having",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "After passing the WHERE filter, the derived input table might be subject to grouping, using the GROUP BY clause, and elimination of group rows using the HAVING clause."
+  },
+  {
+    "id": "pg-where-having",
+    "url": "https://www.postgresql.org/docs/18/tutorial-agg.html",
+    "quote": "The fundamental difference between WHERE and HAVING is this: WHERE selects input rows before groups and aggregates are computed (thus, it controls which rows go into the aggregate computation), whereas HAVING selects group rows after groups and aggregates are computed."
+  },
+  {
+    "id": "pg-int-division",
+    "url": "https://www.postgresql.org/docs/18/functions-math.html",
+    "quote": "Division (for integral types, division truncates the result towards zero)"
+  },
+  {
+    "id": "pg-joined-table",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "A joined table is a table derived from two other (real or derived) tables according to the rules of the particular join type."
+  },
+  {
+    "id": "pg-self-join",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "it is necessary to use them when joining a table to itself"
+  },
+  {
+    "id": "pg-right-join",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "Then, for each row in T2 that does not satisfy the join condition with any row in T1, a joined row is added with null values in columns of T1."
+  },
+  {
+    "id": "pg-outer-first",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "First, an inner join is performed."
+  },
+  {
+    "id": "pg-exists",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "The argument of EXISTS is an arbitrary SELECT statement, or subquery"
+  },
+  {
+    "id": "pg-exists-true",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "If it returns at least one row, the result of EXISTS is"
+  },
+  {
+    "id": "pg-scalar-subquery",
+    "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+    "quote": "A scalar subquery is an ordinary SELECT query in parentheses that returns exactly one row with one column."
+  },
+  {
+    "id": "pg-scalar-error",
+    "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+    "quote": "It is an error to use a query that returns more than one row or more than one column as a scalar subquery."
+  },
+  {
+    "id": "pg-scalar-null",
+    "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+    "quote": "the scalar result is taken to be null."
+  },
+  {
+    "id": "pg-correlated",
+    "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+    "quote": "The subquery can refer to variables from the surrounding query, which will act as constants during any one evaluation of the subquery."
+  },
+  {
+    "id": "pg-in-subquery",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "The right-hand side is a parenthesized subquery, which must return exactly one column."
+  },
+  {
+    "id": "pg-exists-semijoin",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "but it produces at most one output row for each tab1 row, even if there are several matching tab2 rows"
+  },
+  {
+    "id": "pg-not-in-null",
+    "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+    "quote": "Note that if the left-hand expression yields null, or if there are no equal right-hand values and at least one right-hand row yields null, the result of the NOT IN construct will be null, not true."
+  },
+  {
+    "id": "pg-with-intro",
+    "url": "https://www.postgresql.org/docs/18/queries-with.html",
+    "quote": "WITH provides a way to write auxiliary statements for use in a larger query."
+  },
+  {
+    "id": "pg-cte-temp",
+    "url": "https://www.postgresql.org/docs/18/queries-with.html",
+    "quote": "can be thought of as defining temporary tables that exist just for one query."
+  },
+  {
+    "id": "pg-cte-once",
+    "url": "https://www.postgresql.org/docs/18/queries-with.html",
+    "quote": "they are normally evaluated only once per execution of the parent query, even if they are referred to more than once by the parent query or sibling WITH queries."
+  },
+  {
+    "id": "pg-case-generic",
+    "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+    "quote": "The SQL CASE expression is a generic conditional expression, similar to if/else statements in other programming languages"
+  },
+  {
+    "id": "pg-case-else-null",
+    "url": "https://www.postgresql.org/docs/18/functions-conditional.html",
+    "quote": "If the ELSE clause is omitted and no condition is true, the result is null."
+  },
+  {
+    "id": "pg-upper",
+    "url": "https://www.postgresql.org/docs/18/functions-string.html",
+    "quote": "Converts the string to all upper case, according to the rules of the database's locale."
+  },
+  {
+    "id": "pg-substring-start",
+    "url": "https://www.postgresql.org/docs/18/functions-string.html",
+    "quote": "Extracts the substring of string starting at the start 'th character if that is specified"
+  },
+  {
+    "id": "pg-concat-operator",
+    "url": "https://www.postgresql.org/docs/18/functions-string.html",
+    "quote": "Concatenates the two strings."
+  },
+  {
+    "id": "pg-concat-ignores",
+    "url": "https://www.postgresql.org/docs/18/functions-string.html",
+    "quote": "Concatenates the text representations of all the arguments. NULL arguments are ignored."
+  },
+  {
+    "id": "pg-round-ties",
+    "url": "https://www.postgresql.org/docs/18/functions-math.html",
+    "quote": "Ties are broken by rounding away from zero."
+  },
+  {
+    "id": "pg-at-time-zone",
+    "url": "https://www.postgresql.org/docs/18/functions-datetime.html",
+    "quote": "The AT TIME ZONE operator converts time stamp without time zone to/from time stamp with time zone, and time with time zone values to different time zones."
+  },
+  {
+    "id": "pg-at-time-zone-out",
+    "url": "https://www.postgresql.org/docs/18/functions-datetime.html",
+    "quote": "Converts given time stamp with time zone to time stamp without time zone, as the time would appear in that zone."
+  },
+  {
+    "id": "pg-full-both",
+    "url": "https://www.postgresql.org/docs/18/queries-table-expressions.html",
+    "quote": "Also, for each row of T2 that does not satisfy the join condition with any row in T1, a joined row with null values in the columns of T1 is added."
+  },
+  {
+    "id": "pg-timezone-assumed",
+    "url": "https://www.postgresql.org/docs/18/datatype-datetime.html",
+    "quote": "If no time zone is stated in the input string, then it is assumed to be in the time zone indicated by the system's TimeZone parameter"
+  }
+]

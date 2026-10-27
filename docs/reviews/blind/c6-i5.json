@@ -1,0 +1,29 @@
+{
+  "id": "c6-i5",
+  "solutionSql": "SELECT id,\n       name || ' (' || COALESCE(region, 'unassigned') || ')' AS label\nFROM customers\nORDER BY id;",
+  "sampleRowCount": 8,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks (unassigned)"
+    ],
+    [
+      2,
+      "Brindle Pantry (South)"
+    ],
+    [
+      3,
+      "Cobalt Paperworks (West)"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Use unassigned inside the brackets when the region is missing, for example Aster Loomworks (North).",
+      "readingChosen": "The example is illustrative. Aster's current region is NULL, so the label is Aster Loomworks (unassigned).",
+      "alternativeReading": "The example means customer 1's region is North, which would come from its expired customer_versions row."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The explicit rule (missing region gives unassigned) is clear, but the example contradicts the current data. North is only the expired customer_versions row for customer 1, so the example is a wording problem."
+}

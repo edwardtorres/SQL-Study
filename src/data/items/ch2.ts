@@ -1,0 +1,201 @@
+import type { Challenge } from '../../core/types';
+import { datasetsFor } from '../datasets';
+
+const COMPARISON = 'https://www.postgresql.org/docs/18/functions-comparison.html';
+const CONDITIONAL = 'https://www.postgresql.org/docs/18/functions-conditional.html';
+const AGGREGATE = 'https://www.postgresql.org/docs/18/functions-aggregate.html';
+const TABLE_EXPR = 'https://www.postgresql.org/docs/18/queries-table-expressions.html';
+const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator' };
+
+// Chapter 2: Missing is meaningful. NULL means unknown, so = and <> never match it.
+export const chapter2Items: readonly Challenge[] = [
+  {
+    id: 'c2-g1', chapterId: 2, role: 'guided', kind: 'guided', title: 'Shipments without a driver',
+    ...DISPATCH,
+    summary: 'Find the shipments that have no driver assigned yet.',
+    instructions: 'Return id and tracking_code for shipments whose driver_id is missing (NULL). Order by id ascending. Column names and order: id (integer), tracking_code (text).',
+    starterSql: 'SELECT id, tracking_code\nFROM shipments\nWHERE driver_id ____ NULL\nORDER BY id;',
+    referenceSql: 'SELECT id, tracking_code FROM shipments WHERE driver_id IS NULL ORDER BY id;',
+    wrongVariants: [
+      { id: 'g1-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id = NULL ORDER BY id;', explanation: 'It looks like NULL was compared with =. Nothing equals NULL, not even NULL, so the test is never true and no rows return. Use IS NULL to find missing values.' },
+      { id: 'g1-not-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id <> NULL ORDER BY id;', explanation: 'It looks like NULL was compared with <>. A comparison with NULL is unknown, so the rows never match. Use IS NULL or IS NOT NULL.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'tracking_code', type: 25 }],
+    hints: [
+      'Comparing with = asks whether the value equals something. A missing value equals nothing.',
+      'Use the special test for missing values: IS NULL or IS NOT NULL.',
+      'WHERE driver_id IS NULL\nORDER BY id;',
+    ],
+    docs: [{ label: 'PostgreSQL comparison operators', url: COMPARISON }],
+    datasets: datasetsFor(['nulls', 'ties']),
+  },
+  {
+    id: 'c2-g2', chapterId: 2, role: 'guided', kind: 'guided', title: 'Region with a fallback',
+    ...DISPATCH,
+    summary: 'Show every customer’s region, with a clear label where it is missing.',
+    instructions: "Return id and region for every customer, ordered by id ascending. Where region is missing, return the text 'unassigned'. Column names and order: id (integer), region (text).",
+    starterSql: "SELECT id, ____(region, '____') AS region\nFROM customers\nORDER BY id;",
+    referenceSql: "SELECT id, COALESCE(region, 'unassigned') AS region FROM customers ORDER BY id;",
+    wrongVariants: [
+      { id: 'g2-case-equals', mistake: 'NULL_EQUALS', sql: "SELECT id, CASE WHEN region = NULL THEN 'unassigned' ELSE region END AS region FROM customers ORDER BY id;", explanation: 'It looks like the CASE tests region = NULL. That is never true, so missing regions stay missing. Use COALESCE, or CASE WHEN region IS NULL.' },
+      { id: 'g2-empty-text', mistake: 'NULL_AS_DEFAULT', sql: "SELECT id, COALESCE(region, '') AS region FROM customers ORDER BY id;", explanation: 'It looks like a missing region was replaced with empty text. The ticket asks for the label unassigned.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'region', type: 25 }],
+    hints: [
+      'Which function returns the first value that is not NULL?',
+      'COALESCE takes a value and a fallback. Put the fallback label second.',
+      "SELECT id, COALESCE(region, 'unassigned') AS region\nFROM customers\nORDER BY id;",
+    ],
+    docs: [{ label: 'PostgreSQL COALESCE', url: CONDITIONAL }],
+    datasets: datasetsFor(['nulltext', 'boundary']),
+  },
+  {
+    id: 'c2-g3', chapterId: 2, role: 'guided', kind: 'guided', title: 'Unassigned and weighed shipments',
+    ...DISPATCH,
+    summary: 'Count the unassigned shipments and the shipments that have a recorded weight.',
+    instructions: 'Return one row with two counts: unassigned_count is the number of shipments with no driver_id, and weighed_count is the number with a recorded weight_kg. Column names and types: unassigned_count (integer), weighed_count (integer).',
+    starterSql: "SELECT COUNT(*) FILTER (WHERE driver_id ____)::integer AS unassigned_count,\n       COUNT(____)::integer AS weighed_count\nFROM shipments;",
+    referenceSql: 'SELECT COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count, COUNT(weight_kg)::integer AS weighed_count FROM shipments;',
+    wrongVariants: [
+      { id: 'g3-count-star', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count, COUNT(*)::integer AS weighed_count FROM shipments;', explanation: 'It looks like COUNT(*) was used for weighed shipments. COUNT(*) counts every row, including shipments with no weight. COUNT(weight_kg) counts only the recorded weights.' },
+      { id: 'g3-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id = NULL)::integer AS unassigned_count, COUNT(weight_kg)::integer AS weighed_count FROM shipments;', explanation: 'It looks like the unassigned count tests driver_id = NULL. That is never true, so the count is zero. Use FILTER (WHERE driver_id IS NULL).' },
+    ],
+    ordered: true,
+    columns: [{ name: 'unassigned_count', type: 23 }, { name: 'weighed_count', type: 23 }],
+    hints: [
+      'Two different counts. One counts rows with a test; the other counts only non-missing values.',
+      'COUNT(column) skips NULL values. COUNT(*) does not. FILTER restricts the rows one count sees.',
+      'COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count,\nCOUNT(weight_kg)::integer AS weighed_count',
+    ],
+    docs: [{ label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+  {
+    id: 'c2-i1', chapterId: 2, role: 'independent', kind: 'write', title: 'Customers missing a region',
+    colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
+    summary: 'Find the customers we still need to ask about their region.',
+    instructions: 'Return id and name for customers whose region is missing (NULL). Order by id ascending. Column names and order: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM customers;\n',
+    referenceSql: 'SELECT id, name FROM customers WHERE region IS NULL ORDER BY id;',
+    wrongVariants: [
+      { id: 'i1-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region = NULL ORDER BY id;', explanation: 'It looks like region = NULL was used. That is never true, so the list comes back empty. Use IS NULL.' },
+      { id: 'i1-inverted', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the customers whose region is known, the opposite of the ticket.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'Which test asks whether a value is missing?',
+      'IS NULL is true only for missing values. = NULL is never true.',
+      'WHERE region IS NULL\nORDER BY id;',
+    ],
+    docs: [{ label: 'PostgreSQL comparison operators', url: COMPARISON }],
+    datasets: datasetsFor(['nulltext', 'boundary']),
+  },
+  {
+    id: 'c2-i2', chapterId: 2, role: 'independent', kind: 'write', title: 'Average of the known weights',
+    colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
+    summary: 'Report the average shipment weight for the planning deck.',
+    instructions: 'Return one row: the average weight_kg over shipments that have a recorded weight, rounded to one decimal place. Shipments with no recorded weight are not counted. Column name and type: avg_weight_kg (numeric).',
+    starterSql: 'SELECT weight_kg\nFROM shipments;\n',
+    referenceSql: 'SELECT ROUND(AVG(weight_kg), 1) AS avg_weight_kg FROM shipments;',
+    wrongVariants: [
+      { id: 'i2-count-star', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT ROUND(SUM(weight_kg)::numeric / COUNT(*), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like the total was divided by COUNT(*), which counts shipments with no weight too. Divide by the number of recorded weights, which AVG does for you.' },
+      { id: 'i2-null-zero', mistake: 'NULL_AS_DEFAULT', sql: 'SELECT ROUND(AVG(COALESCE(weight_kg, 0)), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like missing weights were counted as zero. The ticket says they are not counted at all, so the average drops.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'avg_weight_kg', type: 1700 }],
+    hints: [
+      'AVG already skips missing values. What does it divide by?',
+      'Use AVG on weight_kg by itself, then round the result to one decimal place.',
+      'SELECT ROUND(AVG(weight_kg), 1) AS avg_weight_kg\nFROM shipments;',
+    ],
+    docs: [{ label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
+    id: 'c2-i3', chapterId: 2, role: 'independent', kind: 'write', title: 'Customers with no shipments and no region',
+    colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
+    summary: 'Find customers who have never shipped and whose region is also unknown.',
+    instructions: 'Return id and name for customers who have no shipments and whose region is missing (NULL). Order by id ascending. Column names and order: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM customers;\n',
+    referenceSql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL AND c.region IS NULL ORDER BY c.id;',
+    wrongVariants: [
+      { id: 'i3-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like the LEFT JOIN became an inner join. Customers with no shipments are then removed before the IS NULL test, so no rows remain.' },
+      { id: 'i3-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id = NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like s.id = NULL was used to find customers with no shipments. That is never true. Use IS NULL.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'Keep every customer with a LEFT JOIN, then look for the missing shipment on the right.',
+      'After a LEFT JOIN, a customer with no shipment has NULL in the shipment columns. Test that with IS NULL.',
+      'LEFT JOIN shipments s ON s.customer_id = c.id\nWHERE s.id IS NULL AND c.region IS NULL',
+    ],
+    docs: [{ label: 'PostgreSQL table expressions and joins', url: TABLE_EXPR }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+  {
+    id: 'c2-i4', chapterId: 2, role: 'independent', kind: 'write', title: 'Invoices still open',
+    colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
+    summary: 'List the invoices that have not been paid yet.',
+    instructions: 'Return id, shipment_id and amount for invoices with no paid_at date. Order by id ascending. Column names and order: id (integer), shipment_id (integer), amount (numeric).',
+    starterSql: 'SELECT id, shipment_id, amount\nFROM invoices;\n',
+    referenceSql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at IS NULL ORDER BY id;',
+    wrongVariants: [
+      { id: 'i4-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at = NULL ORDER BY id;', explanation: 'It looks like paid_at = NULL was used. That is never true, so no open invoices appear. Use IS NULL.' },
+      { id: 'i4-paid', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the paid invoices, the opposite of the ticket.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'shipment_id', type: 23 }, { name: 'amount', type: 1700 }],
+    hints: [
+      'Open invoices have no payment date. How do you test for a missing value?',
+      'Use IS NULL on paid_at, not an equals sign.',
+      'WHERE paid_at IS NULL\nORDER BY id;',
+    ],
+    docs: [{ label: 'PostgreSQL comparison operators', url: COMPARISON }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+  {
+    id: 'c2-b1-p1', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', kind: 'write', title: 'Boss ticket, part 1: drivers without a supervisor',
+    colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
+    summary: 'Find the drivers who report to nobody. Part 1 of 2.',
+    instructions: 'Part 1 of 2. Return id and name for drivers with no supervisor (supervisor_id is missing). Order by id ascending. Column names and order: id (integer), name (text).',
+    starterSql: 'SELECT id, name\nFROM drivers;\n',
+    referenceSql: 'SELECT id, name FROM drivers WHERE supervisor_id IS NULL ORDER BY id;',
+    wrongVariants: [
+      { id: 'b2p1-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id = NULL ORDER BY id;', explanation: 'It looks like supervisor_id = NULL was used. Nothing equals NULL, so the list is empty. Use IS NULL.' },
+      { id: 'b2p1-inverted', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the drivers who do have a supervisor.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    hints: [
+      'A missing supervisor is stored as NULL. Which test finds missing values?',
+      'Use IS NULL on supervisor_id.',
+      'WHERE supervisor_id IS NULL\nORDER BY id;',
+    ],
+    docs: [{ label: 'PostgreSQL comparison operators', url: COMPARISON }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+  {
+    id: 'c2-b1-p2', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', kind: 'write', title: 'Boss ticket, part 2: settled dates',
+    colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
+    summary: 'Give every invoice one settled date for the aging report. Part 2 of 2.',
+    instructions: 'Part 2 of 2. For every invoice return id and settled_at: the paid_at date when the invoice is paid, otherwise the issued_at date. Order by id ascending. Column names and order: id (integer), settled_at (timestamptz).',
+    starterSql: 'SELECT id, paid_at\nFROM invoices;\n',
+    referenceSql: 'SELECT id, COALESCE(paid_at, issued_at) AS settled_at FROM invoices ORDER BY id;',
+    wrongVariants: [
+      { id: 'b2p2-reversed', mistake: 'COALESCE_ORDER', sql: 'SELECT id, COALESCE(issued_at, paid_at) AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the COALESCE arguments are reversed. issued_at is always present, so it always wins, and paid invoices show the wrong date.' },
+      { id: 'b2p2-no-fallback', mistake: 'NULL_NO_FALLBACK', sql: 'SELECT id, paid_at AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the fallback was left out. Open invoices show NULL instead of their issued date.' },
+    ],
+    ordered: true,
+    columns: [{ name: 'id', type: 23 }, { name: 'settled_at', type: 1184 }],
+    hints: [
+      'Two dates exist for each invoice. Which one should win when it is present?',
+      'COALESCE returns its first argument when that argument is not NULL, otherwise the next one.',
+      'SELECT id, COALESCE(paid_at, issued_at) AS settled_at\nFROM invoices\nORDER BY id;',
+    ],
+    docs: [{ label: 'PostgreSQL COALESCE', url: CONDITIONAL }],
+    datasets: datasetsFor(['nulls', 'nulltext']),
+  },
+];

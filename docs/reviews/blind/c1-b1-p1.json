@@ -1,0 +1,23 @@
+{
+  "id": "c1-b1-p1",
+  "solutionSql": "SELECT id, weight_kg\nFROM shipments\nWHERE status = 'queued'\n  AND weight_kg BETWEEN 500 AND 900\nORDER BY id ASC;",
+  "sampleRowCount": 19,
+  "sampleFirstRows": [
+    [
+      2,
+      500
+    ],
+    [
+      3,
+      501
+    ],
+    [
+      46,
+      791
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "BETWEEN with explicit inclusive bounds. The 500 kg boundary row (id 2) is in the sample, so an exclusive bound would be caught."
+}

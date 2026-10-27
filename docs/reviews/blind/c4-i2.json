@@ -1,0 +1,32 @@
+{
+  "id": "c4-i2",
+  "solutionSql": "SELECT d.id,\n       d.name,\n       sup.name AS supervisor_name\nFROM drivers d\nLEFT JOIN drivers sup ON sup.id = d.supervisor_id\nORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      "Nera Vale",
+      null
+    ],
+    [
+      2,
+      "Olin Moss",
+      "Nera Vale"
+    ],
+    [
+      3,
+      "Pella Reed",
+      "Nera Vale"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "supervisor_name for the driver’s supervisor (blank for a driver with no supervisor).",
+      "readingChosen": "Blank means NULL, the SQL missing value.",
+      "alternativeReading": "Blank means an empty string, so the output would show ''."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A self-join on drivers. Nera Vale is the only driver with no supervisor, and the LEFT JOIN keeps that row with a NULL supervisor_name."
+}
