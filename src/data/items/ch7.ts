@@ -104,6 +104,7 @@ export const chapter7Items: readonly Challenge[] = [
     wrongVariants: [
       { id: 'i3-union', mistake: 'UNION_DEDUPES', sql: 'SELECT id FROM (SELECT id FROM shipments ORDER BY id LIMIT 3) AS first_shipments UNION SELECT id FROM (SELECT id FROM invoices ORDER BY id LIMIT 3) AS first_invoices ORDER BY id;', explanation: 'It looks like UNION was used. UNION removes the repeated ids, so an id that is both a shipment and an invoice appears once. The ticket keeps a row for each.' },
       { id: 'i3-desc', mistake: 'ORDER_DIRECTION', sql: 'SELECT id FROM (SELECT id FROM shipments ORDER BY id DESC LIMIT 3) AS first_shipments UNION ALL SELECT id FROM (SELECT id FROM invoices ORDER BY id DESC LIMIT 3) AS first_invoices ORDER BY id;', explanation: 'It looks like DESC was used. DESC takes the highest ids, not the lowest. The ticket asks for the first three, which are the lowest.' },
+      { id: 'i3-limit-outside', mistake: 'SET_LIMIT_SCOPE', sql: 'SELECT id FROM shipments UNION ALL SELECT id FROM invoices ORDER BY id LIMIT 3;', explanation: 'It looks like the LIMIT was written after the whole combined query. It then keeps three rows in total, not three from each table. Each input needs its own LIMIT inside its own parentheses.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }],
