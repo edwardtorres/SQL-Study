@@ -14,7 +14,7 @@ const CUSTOMERS = { colleague: 'Tamsin Rowe', colleagueRole: 'Customer success l
 // Chapter 6: Shape the report. CASE labels, text, dates and casts decide what a report shows; NULL and zones change the answer.
 export const chapter6Items: readonly Challenge[] = [
   {
-    id: 'c6-g1', chapterId: 6, role: 'guided', kind: 'guided', title: 'Weight bands with an unweighed label',
+    id: 'c6-g1', chapterId: 6, role: 'guided', starterStyle: 'blanks', title: 'Weight bands with an unweighed label',
     ...DISPATCH,
     summary: 'Band early shipments by weight, and label the ones with no weight as unweighed.',
     instructions: 'Return id and weight_band for shipments with ids 1 through 40. weight_band is unweighed when weight_kg is missing, light when it is under 1000 kg, and heavy otherwise. Order by id. Column names and types: id (integer), weight_band (text).',
@@ -35,7 +35,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c6-g2', chapterId: 6, role: 'guided', kind: 'guided', title: 'Three-letter customer codes',
+    id: 'c6-g2', chapterId: 6, role: 'guided', starterStyle: 'blanks', title: 'Three-letter customer codes',
     ...CUSTOMERS,
     summary: 'Build a short capital-letter code from each customer name for the account list.',
     instructions: 'Return id and code for every customer. code is the first three characters of the name in capital letters. Order by id. Column names and types: id (integer), code (text).',
@@ -56,7 +56,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'empty']),
   },
   {
-    id: 'c6-g3', chapterId: 6, role: 'guided', kind: 'guided', title: 'Bookings on 31 January 2026, in UTC',
+    id: 'c6-g3', chapterId: 6, role: 'guided', starterStyle: 'blanks', title: 'Bookings on 31 January 2026, in UTC',
     ...BILLING,
     summary: 'Find the shipments booked on 31 January 2026, counting the last moments of the day.',
     instructions: 'Return id and booked_at for shipments booked on 31 January 2026 in UTC. A booking at 23:59:59.999 on that day counts. Order by id. Column names and types: id (integer), booked_at (timestamptz).',
@@ -77,7 +77,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c6-i1', chapterId: 6, role: 'independent', kind: 'write', title: 'Weight labels for the dispatch board',
+    id: 'c6-i1', chapterId: 6, role: 'independent', starterStyle: 'skeleton', title: 'Weight labels for the dispatch board',
     ...DISPATCH,
     summary: 'Label each early shipment heavy, light or unweighed for the dispatch board.',
     instructions: 'For shipments with ids 1 through 40, return id and weight_label: unweighed when weight_kg is missing, heavy when it is 1000 kg or more, and light otherwise. Order by id. Column names and types: id (integer), weight_label (text).',
@@ -98,7 +98,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c6-i2', chapterId: 6, role: 'independent', kind: 'write', title: 'Tracking prefix and serial',
+    id: 'c6-i2', chapterId: 6, role: 'independent', starterStyle: 'skeleton', title: 'Tracking prefix and serial',
     ...PIPELINE,
     summary: 'Split each tracking code into its two-letter prefix and its four-digit serial for the scan feed.',
     instructions: 'For shipments with ids 1 through 5, return id, prefix (the first two characters of tracking_code) and serial (the last four characters). Order by id. Column names and types: id (integer), prefix (text), serial (text).',
@@ -119,7 +119,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'empty']),
   },
   {
-    id: 'c6-i3', chapterId: 6, role: 'independent', kind: 'write', title: 'January 2026 bookings, in UTC',
+    id: 'c6-i3', chapterId: 6, role: 'independent', starterStyle: 'skeleton', title: 'January 2026 bookings, in UTC',
     ...CUSTOMERS,
     summary: 'List the early shipments booked in January 2026, using UTC for the month boundaries.',
     instructions: 'For shipments with ids 1 through 60, return id and booked_at when the booking falls in January 2026 in UTC. A booking at 23:59:59.999 on 31 January counts. Order by id. Column names and types: id (integer), booked_at (timestamptz).',
@@ -140,7 +140,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c6-i4', chapterId: 6, role: 'independent', kind: 'write', title: 'Average shipment weight in whole kilograms',
+    id: 'c6-i4', chapterId: 6, role: 'independent', starterStyle: 'skeleton', title: 'Average shipment weight in whole kilograms',
     ...CUSTOMERS,
     summary: 'Give each early customer an average shipment weight in whole kilograms for the account review.',
     instructions: 'For customers with ids 1 through 6, return customer_id and avg_kg, the average weight of their shipments rounded to the nearest whole kilogram, with a half kilogram (2.5) rounding up to 3. Missing weights are ignored. Order by customer_id. Column names and types: customer_id (integer), avg_kg (integer).',
@@ -161,7 +161,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c6-i5', chapterId: 6, role: 'independent', kind: 'write', title: 'Customer labels for the account card',
+    id: 'c6-i5', chapterId: 6, role: 'independent', starterStyle: 'skeleton', title: 'Customer labels for the account card',
     ...CUSTOMERS,
     summary: 'Build the label printed on each account card: the name, then the region in brackets.',
     instructions: "Return id and label for each customer: the name, a space, then the region in brackets. Use unassigned inside the brackets when the region is missing, for example Brindle Pantry (South). Order by id. Column names and types: id (integer), label (text).",
@@ -182,7 +182,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c6-b1-p1', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 1: weight bands by status',
+    id: 'c6-b1-p1', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: weight bands by status',
     ...DISPATCH,
     summary: 'Count shipments in each weight band for every status, with missing weights shown as unweighed. Part 1 of 3.',
     instructions: "Part 1 of 3. For each status and weight band that has at least one shipment, count the shipments. The bands are: unweighed when weight_kg is missing, light when it is under 1000 kg, and heavy otherwise. Return status (text), weight_band (text) and shipments (integer). Order by status, then weight_band.",
@@ -203,7 +203,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c6-b1-p2', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 2: booking days and prefixes',
+    id: 'c6-b1-p2', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: booking days and prefixes',
     ...BILLING,
     summary: 'Give each early shipment its tracking prefix and its UTC booking date. Part 2 of 3.',
     instructions: "Part 2 of 3. For shipments with ids 1 through 10 (no date filter), return id, prefix (the first two characters of tracking_code) and booked_day, the calendar date of booked_at in UTC. Shipments 1 and 2 are booked on 2026-01-31 and shipments 3 through 10 on 2025-12-28, so booked_day runs from 2025-12-28 to 2026-01-31. Order by id. Column names and types: id (integer), prefix (text), booked_day (date).",
@@ -224,7 +224,7 @@ export const chapter6Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c6-b1-p3', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 3: rounded weights by customer',
+    id: 'c6-b1-p3', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: rounded weights by customer',
     ...PIPELINE,
     summary: 'Count each early customer’s shipments and show the rounded average weight. Part 3 of 3.',
     instructions: 'Part 3 of 3. For customers with ids 1 through 6, return customer_id, shipments (the number of shipments, including ones with a missing weight) and avg_kg (the average weight_kg rounded to the nearest whole kilogram, with 2.5 rounding up to 3; missing weights are ignored). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), avg_kg (integer).',

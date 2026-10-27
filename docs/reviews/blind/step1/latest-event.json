@@ -1,0 +1,5 @@
+{
+  "id": "latest-event",
+  "origin": "Step 1 blind solution, held inline in tests/blind-review.test.ts before this record existed; moved here unchanged so the blind-solve rule covers every graded item.",
+  "solutionSql": "SELECT shipment_id, event_id, status, occurred_at\n    FROM (\n      SELECT shipment_id, id AS event_id, status, occurred_at,\n        ROW_NUMBER() OVER (PARTITION BY shipment_id ORDER BY occurred_at DESC, id DESC) AS scan_number\n      FROM shipment_events\n    ) scans WHERE scan_number = 1 ORDER BY shipment_id;"
+}

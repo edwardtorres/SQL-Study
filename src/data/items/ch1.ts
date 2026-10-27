@@ -12,7 +12,7 @@ const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator'
 // Chapter 1: Read the dispatch board. Guided items first, then independent tickets, then the boss ticket.
 export const chapter1Items: readonly Challenge[] = [
   {
-    id: 'c1-g1', chapterId: 1, role: 'guided', kind: 'guided', title: 'Read the delivered list',
+    id: 'c1-g1', chapterId: 1, role: 'guided', starterStyle: 'blanks', title: 'Read the delivered list',
     ...DISPATCH,
     summary: 'Read the status and tracking code for every delivered shipment.',
     instructions: 'Return tracking_code and status for shipments whose status is delivered. Order by id ascending. Column names and order: tracking_code (text), status (text).',
@@ -33,7 +33,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'nulltext']),
   },
   {
-    id: 'c1-g2', chapterId: 1, role: 'guided', kind: 'guided', title: 'Queued and heavy',
+    id: 'c1-g2', chapterId: 1, role: 'guided', starterStyle: 'blanks', title: 'Queued and heavy',
     ...DISPATCH,
     summary: 'Find queued shipments that weigh at least 500 kg.',
     instructions: 'Return id and weight_kg for queued shipments whose weight is at least 500 kg. Order by id ascending. Column names and order: id (integer), weight_kg (integer). A shipment at exactly 500 kg qualifies.',
@@ -54,7 +54,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c1-g3', chapterId: 1, role: 'guided', kind: 'guided', title: 'January bookings on two routes',
+    id: 'c1-g3', chapterId: 1, role: 'guided', starterStyle: 'blanks', title: 'January bookings on two routes',
     ...DISPATCH,
     summary: 'Find January 2026 bookings on routes 2 and 4, including the last instant of 31 January.',
     instructions: 'Return id, route_id and booked_at for shipments on route 2 or route 4 that were booked during January 2026, UTC. Include bookings on 31 January at any time of day. Order by id ascending. Column names and order: id (integer), route_id (integer), booked_at (timestamptz).',
@@ -75,7 +75,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['boundary', 'nulltext']),
   },
   {
-    id: 'c1-g4', chapterId: 1, role: 'guided', kind: 'guided', title: 'Shipments numbered 10 to 19',
+    id: 'c1-g4', chapterId: 1, role: 'guided', starterStyle: 'blanks', title: 'Shipments numbered 10 to 19',
     ...DISPATCH,
     summary: 'Find the shipments whose tracking codes end in 0010 through 0019.',
     instructions: 'Return id and tracking_code for shipments whose tracking code ends in a four-digit number from 0010 to 0019. Order by id ascending. Column names and order: id (integer), tracking_code (text).',
@@ -96,7 +96,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'empty']),
   },
   {
-    id: 'c1-g5', chapterId: 1, role: 'guided', kind: 'guided', title: 'Customers by region',
+    id: 'c1-g5', chapterId: 1, role: 'guided', starterStyle: 'blanks', title: 'Customers by region',
     ...DISPATCH,
     summary: 'List the customers in the North and West regions.',
     instructions: 'Return id and name for customers whose region is North or West. Order by name ascending. Column names and order: id (integer), name (text).',
@@ -117,7 +117,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c1-i1', chapterId: 1, role: 'independent', kind: 'write', title: 'Newsletter names B to D',
+    id: 'c1-i1', chapterId: 1, role: 'independent', starterStyle: 'skeleton', title: 'Newsletter names B to D',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Pull the customers whose names start with B, C or D for the newsletter list.',
     instructions: 'Return id and name for customers whose name’s first character is a capital B, C, or D. Order by name from A to Z. Column names and order: id (integer), name (text). Names starting with D, such as Dovetail Lanterns, must be included.',
@@ -138,7 +138,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c1-i2', chapterId: 1, role: 'independent', kind: 'write', title: 'Latest delivery deadlines',
+    id: 'c1-i2', chapterId: 1, role: 'independent', starterStyle: 'skeleton', title: 'Latest delivery deadlines',
     colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
     summary: 'Find the ten shipments with the latest delivery deadlines.',
     instructions: 'Return id and delivery_due for the ten shipments with the latest delivery_due. When deadlines tie, return the greater id first. Order by delivery_due descending, then id descending. Column names and order: id (integer), delivery_due (date).',
@@ -159,7 +159,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c1-i3', chapterId: 1, role: 'independent', kind: 'write', title: 'Long routes out of hubs 1 and 2',
+    id: 'c1-i3', chapterId: 1, role: 'independent', starterStyle: 'skeleton', title: 'Long routes out of hubs 1 and 2',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'Route planning wants routes that leave warehouse 1 or 2 and cover more than 300 km.',
     instructions: 'Return id, origin_id and distance_km for routes whose origin_id is 1 or 2 and whose distance_km is greater than 300. Order by distance_km descending, then id ascending. Column names and order: id (integer), origin_id (integer), distance_km (integer).',
@@ -180,7 +180,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c1-i4', chapterId: 1, role: 'independent', kind: 'write', title: 'Which statuses are in use',
+    id: 'c1-i4', chapterId: 1, role: 'independent', starterStyle: 'skeleton', title: 'Which statuses are in use',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Give the operations dashboard the statuses that appear in shipments.',
     instructions: 'Return each shipments.status value once, sorted by status from A to Z. Column name and type: status (text).',
@@ -201,7 +201,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'empty']),
   },
   {
-    id: 'c1-b1-p1', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', kind: 'write', title: 'Boss ticket, part 1: mid-weight queue',
+    id: 'c1-b1-p1', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: mid-weight queue',
     ...DISPATCH,
     summary: 'Build the mid-weight queue for the morning board. Part 1 of 3.',
     instructions: 'Part 1 of 3. Return id and weight_kg for queued shipments weighing between 500 and 900 kg inclusive. Order by id ascending. Column names and order: id (integer), weight_kg (integer).',
@@ -222,7 +222,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c1-b1-p2', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', kind: 'write', title: 'Boss ticket, part 2: tracking lookup',
+    id: 'c1-b1-p2', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: tracking lookup',
     ...DISPATCH,
     summary: 'Look up the shipments with ids 10 through 19 by their tracking codes. Part 2 of 3.',
     instructions: 'Part 2 of 3. Return id and tracking_code for shipments whose tracking_code ends with a four-digit serial from 0010 to 0019 inclusive (the last four characters are 0010, 0011, … or 0019). Order by id ascending. Column names and order: id (integer), tracking_code (text).',
@@ -243,7 +243,7 @@ export const chapter1Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulltext', 'empty']),
   },
   {
-    id: 'c1-b1-p3', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', kind: 'write', title: 'Boss ticket, part 3: heaviest in transit',
+    id: 'c1-b1-p3', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: heaviest in transit',
     ...DISPATCH,
     summary: 'Find the three heaviest shipments in transit. Part 3 of 3.',
     instructions: 'Part 3 of 3. Return the three heaviest in_transit shipments: id and weight_kg, heaviest first, with id ascending to break weight ties. Shipments with no recorded weight are left out. Column names and order: id (integer), weight_kg (integer).',

@@ -7,7 +7,7 @@ export const datasets = datasetsFor(['nulls', 'ties', 'boundary']);
 
 export const challenges: readonly Challenge[] = [
   {
-    id: 'dispatch', chapterId: 1, role: 'sample', title: 'The heavy-load shortlist', kind: 'write',
+    id: 'dispatch', chapterId: 1, role: 'sample', title: 'The heavy-load shortlist', starterStyle: 'skeleton',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the five heaviest queued shipments for the next dispatch board.',
     instructions: 'Use shipments. Return id, tracking_code, weight_kg, in that column order. Include only status = \'queued\' and weight_kg >= 500. Return at most 5 rows, ordered by weight_kg descending, then id ascending to break ties. Keep the original column names. Types: integer, text, integer. An empty result is valid when no shipments qualify.',
@@ -43,7 +43,7 @@ export const challenges: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties', 'boundary']),
   },
   {
-    id: 'unbilled', chapterId: 3, role: 'sample', title: 'The phantom unbilled shipment', kind: 'fix',
+    id: 'unbilled', chapterId: 3, role: 'sample', title: 'The phantom unbilled shipment', starterStyle: 'broken',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'A billing dashboard reports unbilled shipments for customers who have never shipped anything.',
     instructions: 'Repair the supplied query. Return one row for every customer, including customers with no shipments. A shipment is unbilled when no invoices row references it. Return customer_id (integer), customer_name (text), unbilled_shipments (integer), in that column order. A customer with no shipments must have 0. Sort by customer_id ascending. Count real shipments, not the placeholder row made by a LEFT JOIN.',
@@ -78,7 +78,7 @@ export const challenges: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties', 'boundary']),
   },
   {
-    id: 'latest-event', chapterId: 8, role: 'sample', title: 'One reliable latest scan', kind: 'window',
+    id: 'latest-event', chapterId: 8, role: 'sample', title: 'One reliable latest scan', starterStyle: 'skeleton',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'Build a latest-event feed that stays deterministic when two scans share a timestamp.',
     instructions: 'Use a window function. Return one row for each shipment that has at least one shipment_events row; exclude shipments with no events. Latest means greatest occurred_at. If timestamps tie, choose the greatest event id. Return shipment_id (integer), event_id (integer), status (text), occurred_at (timestamptz), in that column order. Sort the final result by shipment_id ascending. Column aliases and types must match. Event insertion order is not chronological.',

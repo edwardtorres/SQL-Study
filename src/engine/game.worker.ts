@@ -1,6 +1,6 @@
 import { datasetCatalog, hiddenDatasets, sampleDataset, schema, seedSql } from '../data';
 import type { DatasetSpec } from '../core/types';
-import { items } from '../data/catalog';
+import { loadItem } from '../data/items/loader';
 import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
 import { readPolicy } from '../grader/policy';
@@ -51,10 +51,15 @@ function loadHidden(runtime: WarmEngine): Promise<void> {
   });
   return hiddenLoaded;
 }
+// Ticket definitions load per chapter: a request names its ticket, and the worker loads only that chapter.
+async function challengeOf(id: string): Promise<Challenge> {
+  try { return await loadItem(id); }
+  catch { throw new Error('Unknown ticket.'); }
+}
+
 async function grade(challengeId: string, sql: string): Promise<GradedSubmission> {
   const runtime = await engine();
-  const challenge = items.find((item) => item.id === challengeId);
-  if (!challenge) throw new Error('Unknown ticket.');
+  const challenge = await challengeOf(challengeId);
   const start = performance.now();
   if (challenge.checks) return gradeState(runtime, challenge, sql, start);
   const outcomes: DatasetOutcome[] = [];
@@ -91,7 +96,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
 // Write tickets: learner statements, then trusted checks and constraint tests, inside one rolled-back transaction per dataset.
 // A write ticket's sample view: the learner's statements, then the same checks and constraint tests a submission uses.
 async function statePreview(runtime: WarmEngine, challengeId: string, sql: string): Promise<StatePreview> {
-  const challenge = items.find((item) => item.id === challengeId);
+  const challenge = await loadItem(challengeId).catch(() => undefined);
   if (!challenge?.checks) throw new Error('This ticket is graded by its query result, not by database state.');
   const policy = challenge.policy ?? readPolicy;
   return runtime.runState(sampleDataset.id, sql, {
@@ -188,8 +193,7 @@ async function handle(request: EngineRequest): Promise<EngineValue> {
     return runtime.run('sample', `SELECT * FROM "${request.table}" ORDER BY 1 LIMIT 5;`);
   }
   if (request.type === 'grade') return grade(request.challengeId, request.sql);
-  const challenge = items.find((item) => item.id === request.challengeId);
-  if (!challenge) throw new Error('Unknown ticket.');
+  const challenge = await challengeOf(request.challengeId);
   await grade(challenge.id, challenge.referenceSql);
   const samplesMs: number[] = [];
   for (let i = 0; i < 10; i += 1) {

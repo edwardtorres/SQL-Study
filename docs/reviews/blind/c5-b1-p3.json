@@ -19,5 +19,6 @@
   "columnsMatchTicket": true,
   "ambiguities": [],
   "confidence": "high",
-  "notes": "The heavy threshold of 1500 kg is stated as at least. Shipments with a NULL driver_id are not counted for any driver, and drivers 1 to 4 get 2, 4, 3 and 1, with zero reserved for any driver with none."
+  "notes": "The heavy threshold of 1500 kg is stated as at least. Shipments with a NULL driver_id are not counted for any driver, and drivers 1 to 4 get 2, 4, 3 and 1, with zero reserved for any driver with none.",
+  "superseded": "docs/reviews/blind/rerun-a/c5-b1-p3.json"
 }

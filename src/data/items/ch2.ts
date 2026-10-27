@@ -10,7 +10,7 @@ const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator'
 // Chapter 2: Missing is meaningful. NULL means unknown, so = and <> never match it.
 export const chapter2Items: readonly Challenge[] = [
   {
-    id: 'c2-g1', chapterId: 2, role: 'guided', kind: 'guided', title: 'Shipments without a driver',
+    id: 'c2-g1', chapterId: 2, role: 'guided', starterStyle: 'blanks', title: 'Shipments without a driver',
     ...DISPATCH,
     summary: 'Find the shipments that have no driver assigned yet.',
     instructions: 'Return id and tracking_code for shipments whose driver_id is missing (NULL). Order by id ascending. Column names and order: id (integer), tracking_code (text).',
@@ -31,7 +31,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c2-g2', chapterId: 2, role: 'guided', kind: 'guided', title: 'Region with a fallback',
+    id: 'c2-g2', chapterId: 2, role: 'guided', starterStyle: 'blanks', title: 'Region with a fallback',
     ...DISPATCH,
     summary: 'Show every customer’s region, with a clear label where it is missing.',
     instructions: "Return id and region for every customer, ordered by id ascending. Where region is missing, return the text 'unassigned'. Column names and order: id (integer), region (text).",
@@ -52,7 +52,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulltext', 'boundary']),
   },
   {
-    id: 'c2-g3', chapterId: 2, role: 'guided', kind: 'guided', title: 'Unassigned and weighed shipments',
+    id: 'c2-g3', chapterId: 2, role: 'guided', starterStyle: 'blanks', title: 'Unassigned and weighed shipments',
     ...DISPATCH,
     summary: 'Count the unassigned shipments and the shipments that have a recorded weight.',
     instructions: 'Return one row with two counts: unassigned_count is the number of shipments with no driver_id, and weighed_count is the number with a recorded weight_kg. Column names and types: unassigned_count (integer), weighed_count (integer).',
@@ -73,7 +73,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c2-i1', chapterId: 2, role: 'independent', kind: 'write', title: 'Customers missing a region',
+    id: 'c2-i1', chapterId: 2, role: 'independent', starterStyle: 'skeleton', title: 'Customers missing a region',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Find the customers we still need to ask about their region.',
     instructions: 'Return id and name for customers whose region is missing (NULL). Order by id ascending. Column names and order: id (integer), name (text).',
@@ -94,7 +94,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulltext', 'boundary']),
   },
   {
-    id: 'c2-i2', chapterId: 2, role: 'independent', kind: 'write', title: 'Average of the known weights',
+    id: 'c2-i2', chapterId: 2, role: 'independent', starterStyle: 'skeleton', title: 'Average of the known weights',
     colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
     summary: 'Report the average shipment weight for the planning deck.',
     instructions: 'Return one row: the average weight_kg over shipments that have a recorded weight, rounded to one decimal place. Shipments with no recorded weight are not counted. Column name and type: avg_weight_kg (numeric).',
@@ -115,7 +115,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c2-i3', chapterId: 2, role: 'independent', kind: 'write', title: 'Customers with no shipments and no region',
+    id: 'c2-i3', chapterId: 2, role: 'independent', starterStyle: 'skeleton', title: 'Customers with no shipments and no region',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Find customers who have never shipped and whose region is also unknown.',
     instructions: 'Return id and name for customers who have no shipments and whose region is missing (NULL). Order by id ascending. Column names and order: id (integer), name (text).',
@@ -136,7 +136,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c2-i4', chapterId: 2, role: 'independent', kind: 'write', title: 'Invoices still open',
+    id: 'c2-i4', chapterId: 2, role: 'independent', starterStyle: 'skeleton', title: 'Invoices still open',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'List the invoices that have not been paid yet.',
     instructions: 'Return id, shipment_id and amount for invoices with no paid_at date. Order by id ascending. Column names and order: id (integer), shipment_id (integer), amount (numeric).',
@@ -157,7 +157,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c2-b1-p1', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', kind: 'write', title: 'Boss ticket, part 1: drivers without a supervisor',
+    id: 'c2-b1-p1', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: drivers without a supervisor',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the drivers who report to nobody. Part 1 of 2.',
     instructions: 'Part 1 of 2. Return id and name for drivers with no supervisor (supervisor_id is missing). Order by id ascending. Column names and order: id (integer), name (text).',
@@ -178,7 +178,7 @@ export const chapter2Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c2-b1-p2', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', kind: 'write', title: 'Boss ticket, part 2: settled dates',
+    id: 'c2-b1-p2', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: settled dates',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Give every invoice one settled timestamp for the aging report. Part 2 of 2.',
     instructions: 'Part 2 of 2. For every invoice return id and settled_at: the paid_at value (a full timestamp, not a date) when paid_at is not missing, otherwise the issued_at value (also a full timestamp). Order by id ascending. Column names and order: id (integer), settled_at (timestamptz).',

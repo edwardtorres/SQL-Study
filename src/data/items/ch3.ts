@@ -8,7 +8,7 @@ const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator'
 // Chapter 3: Daily totals. Aggregates collapse rows; GROUP BY sets the grain; HAVING filters groups.
 export const chapter3Items: readonly Challenge[] = [
   {
-    id: 'c3-g1', chapterId: 3, role: 'guided', kind: 'guided', title: 'Shipments per customer',
+    id: 'c3-g1', chapterId: 3, role: 'guided', starterStyle: 'blanks', title: 'Shipments per customer',
     ...DISPATCH,
     summary: 'Count how many shipments each customer has booked.',
     instructions: 'Return customer_id and the number of shipments for each customer, ordered by customer_id. Customers with no shipments do not appear. Column names and types: customer_id (integer), shipments (integer).',
@@ -29,7 +29,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c3-g2', chapterId: 3, role: 'guided', kind: 'guided', title: 'Weights per driver',
+    id: 'c3-g2', chapterId: 3, role: 'guided', starterStyle: 'blanks', title: 'Weights per driver',
     ...DISPATCH,
     summary: 'Show the heaviest and the average shipment for each driver.',
     instructions: 'For each driver_id with at least one shipment, return the largest weight_kg as max_weight_kg, and the average weight_kg rounded to one decimal place as avg_weight_kg. Ignore shipments with no driver. Order by driver_id. Column names and types: driver_id (integer), max_weight_kg (integer), avg_weight_kg (numeric).',
@@ -50,7 +50,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['boundary', 'ties']),
   },
   {
-    id: 'c3-g3', chapterId: 3, role: 'guided', kind: 'guided', title: 'Customers with several deliveries',
+    id: 'c3-g3', chapterId: 3, role: 'guided', starterStyle: 'blanks', title: 'Customers with several deliveries',
     ...DISPATCH,
     summary: 'Find the customers with more than eight delivered shipments.',
     instructions: 'Return customer_id and the number of delivered shipments, for customers with more than eight delivered shipments. Order by customer_id. Column names and types: customer_id (integer), delivered (integer).',
@@ -71,7 +71,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['boundary', 'nulltext']),
   },
   {
-    id: 'c3-i1', chapterId: 3, role: 'independent', kind: 'write', title: 'Billed amount per customer',
+    id: 'c3-i1', chapterId: 3, role: 'independent', starterStyle: 'skeleton', title: 'Billed amount per customer',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Total what each customer has been billed, for the monthly review.',
     instructions: 'Return customer_id and billed_amount, the total of the amount column over every invoice whose shipment belongs to that customer, ordered by customer_id. Each invoice counts once. Customers with no invoices are not listed. Column names and types: customer_id (integer), billed_amount (numeric).',
@@ -92,7 +92,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary', 'precision']),
   },
   {
-    id: 'c3-i2', chapterId: 3, role: 'independent', kind: 'write', title: 'Weighed shipments by route',
+    id: 'c3-i2', chapterId: 3, role: 'independent', starterStyle: 'skeleton', title: 'Weighed shipments by route',
     colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
     summary: 'Report how much of each route’s shipment data has a recorded weight.',
     instructions: 'For each route_id, return shipments (all shipments on the route), weighed (how many have a recorded weight_kg), and pct_weighed (weighed as a percentage of shipments, rounded to one decimal place). Order by route_id. Column names and types: route_id (integer), shipments (integer), weighed (integer), pct_weighed (numeric).',
@@ -113,7 +113,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c3-i3', chapterId: 3, role: 'independent', kind: 'write', title: 'First and last booking per customer',
+    id: 'c3-i3', chapterId: 3, role: 'independent', starterStyle: 'skeleton', title: 'First and last booking per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Give each customer their first and last booking date for the account review.',
     instructions: 'For each customer_id that has at least one shipment in the range (customers with none in the range are not listed), return the earliest booked_at as first_booked and the latest booked_at as last_booked. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Order by customer_id. Column names and types: customer_id (integer), first_booked (timestamptz), last_booked (timestamptz).',
@@ -134,7 +134,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['boundary', 'nulltext']),
   },
   {
-    id: 'c3-i4', chapterId: 3, role: 'independent', kind: 'write', title: 'Share of shipments per status',
+    id: 'c3-i4', chapterId: 3, role: 'independent', starterStyle: 'skeleton', title: 'Share of shipments per status',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'Show what percentage of all shipments sits in each status, for the dashboard.',
     instructions: 'For each status, return the percentage of all shipments that have that status, rounded to one decimal place. The percentages are of the whole shipments table, not just the delivered ones. Order by status. Column names and types: status (text), pct_of_shipments (numeric).',
@@ -155,7 +155,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c3-b1-p1', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', kind: 'write', title: 'Boss ticket, part 1: busy booking days',
+    id: 'c3-b1-p1', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: busy booking days',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the days with at least two bookings, with the count for each. Part 1 of 2.',
     instructions: 'Part 1 of 2. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Group them by the calendar date of booked_at in UTC. Return booking_day (date) and bookings (integer) for days with at least two bookings. Count every shipment, whatever its status, cancelled ones included. Order by booking_day. Column names and types: booking_day (date), bookings (integer).',
@@ -176,7 +176,7 @@ export const chapter3Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c3-b1-p2', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', kind: 'write', title: 'Boss ticket, part 2: billed customers',
+    id: 'c3-b1-p2', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: billed customers',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Give each customer their shipment count and total billed amount. Part 2 of 2.',
     instructions: 'Part 2 of 2. For every customer with at least one shipment, return customer_id, shipments (the number of shipments, including unbilled ones), and billed (the total invoice amount, NULL when nothing is billed). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), billed (numeric).',

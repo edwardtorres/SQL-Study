@@ -1,5 +1,5 @@
 import { ArrowRight, Check, Database, Lock, Sparkles, Table2, Trophy } from 'lucide-react';
-import type { Challenge } from '../core/types';
+import type { ItemMeta } from '../data/itemIndex';
 import type { Chapter } from '../data/curriculum';
 import type { SaveV2 } from '../save/progress';
 import { bossPartsOf, bossPassed, isPassed, itemsForChapter, partLabel, summarizeChapter } from './model';
@@ -7,7 +7,7 @@ import { bossPartsOf, bossPassed, isPassed, itemsForChapter, partLabel, summariz
 export const lessonSectionIds = (chapterId: number): readonly string[] => [1, 2, 3].map((index) => `c${chapterId}-s${index}`);
 
 export function HomeView({ chapters, items, save, onChapter, onScratch, onItem }: {
-  chapters: readonly Chapter[]; items: readonly Challenge[]; save: SaveV2; onChapter: (id: number) => void; onScratch: () => void; onItem: (item: Challenge) => void;
+  chapters: readonly Chapter[]; items: readonly ItemMeta[]; save: SaveV2; onChapter: (id: number) => void; onScratch: () => void; onItem: (item: ItemMeta) => void;
 }) {
   const showcase = items.find((item) => item.id === 'latest-event');
   const totalPassed = chapters.reduce((sum, chapter) => sum + summarizeChapter(items, save, chapter.id, lessonSectionIds(chapter.id)).passed, 0);
@@ -36,14 +36,14 @@ export function HomeView({ chapters, items, save, onChapter, onScratch, onItem }
 }
 
 export function ChapterView({ chapter, items, save, onLesson, onItem, onScratch, onBack }: {
-  chapter: Chapter; items: readonly Challenge[]; save: SaveV2; onLesson: () => void; onItem: (item: Challenge) => void; onScratch: () => void; onBack: () => void;
+  chapter: Chapter; items: readonly ItemMeta[]; save: SaveV2; onLesson: () => void; onItem: (item: ItemMeta) => void; onScratch: () => void; onBack: () => void;
 }) {
   const summary = summarizeChapter(items, save, chapter.id, lessonSectionIds(chapter.id));
   const chapterItems = itemsForChapter(items, chapter.id);
   const guided = chapterItems.filter((item) => item.role === 'guided');
   const independent = chapterItems.filter((item) => item.role === 'independent' || item.role === 'sample');
   const bossGroups = [...new Set(chapterItems.map((item) => item.bossGroup).filter((group): group is string => Boolean(group)))];
-  const row = (item: Challenge) => <button key={item.id} className="practice-row" onClick={() => { onItem(item); }}>
+  const row = (item: ItemMeta) => <button key={item.id} className="practice-row" onClick={() => { onItem(item); }}>
     <span className="practice-title">{item.title}</span>
     <span className={`ticket-badge ${isPassed(save, item.id) ? 'passed-badge' : ''}`}>{isPassed(save, item.id) ? <><Check size={12} /> Passed</> : save.tickets[item.id]?.draft ? 'In progress' : 'Open'}</span>
     <ArrowRight size={16} />

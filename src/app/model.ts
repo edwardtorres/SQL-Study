@@ -1,19 +1,19 @@
-import type { Challenge } from '../core/types';
+import type { ItemMeta } from '../data/itemIndex';
 import type { SaveV2 } from '../save/progress';
 
 // Pure helpers for the chapter UI. Nothing here touches the engine or the DOM.
-export interface ChapterSummary { chapterId: number; items: readonly Challenge[]; graded: number; passed: number; bossPassed: boolean; lessonsDone: number; lessonCount: number }
+export interface ChapterSummary { chapterId: number; items: readonly ItemMeta[]; graded: number; passed: number; bossPassed: boolean; lessonsDone: number; lessonCount: number }
 
-export function itemsForChapter(items: readonly Challenge[], chapterId: number): readonly Challenge[] {
+export function itemsForChapter(items: readonly ItemMeta[], chapterId: number): readonly ItemMeta[] {
   return items.filter((item) => item.chapterId === chapterId);
 }
 
 // Boss parts share a bossGroup. Each part is graded on its own; the boss passes when every part passes.
-export function bossPartsOf(items: readonly Challenge[], group: string): readonly Challenge[] {
+export function bossPartsOf(items: readonly ItemMeta[], group: string): readonly ItemMeta[] {
   return items.filter((item) => item.bossGroup === group);
 }
 
-export function partLabel(item: Challenge, items: readonly Challenge[]): string | undefined {
+export function partLabel(item: ItemMeta, items: readonly ItemMeta[]): string | undefined {
   if (!item.bossGroup) return undefined;
   const parts = bossPartsOf(items, item.bossGroup);
   return `Part ${parts.indexOf(item) + 1} of ${parts.length}`;
@@ -23,12 +23,12 @@ export function isPassed(save: Pick<SaveV2, 'tickets'>, id: string): boolean {
   return save.tickets[id]?.passed === true;
 }
 
-export function bossPassed(items: readonly Challenge[], save: Pick<SaveV2, 'tickets'>, group: string): boolean {
+export function bossPassed(items: readonly ItemMeta[], save: Pick<SaveV2, 'tickets'>, group: string): boolean {
   const parts = bossPartsOf(items, group);
   return parts.length > 0 && parts.every((part) => isPassed(save, part.id));
 }
 
-export function summarizeChapter(items: readonly Challenge[], save: SaveV2, chapterId: number, sectionIds: readonly string[]): ChapterSummary {
+export function summarizeChapter(items: readonly ItemMeta[], save: SaveV2, chapterId: number, sectionIds: readonly string[]): ChapterSummary {
   const chapterItems = itemsForChapter(items, chapterId);
   const groups = [...new Set(chapterItems.map((item) => item.bossGroup).filter((group): group is string => Boolean(group)))];
   const singles = chapterItems.filter((item) => !item.bossGroup);

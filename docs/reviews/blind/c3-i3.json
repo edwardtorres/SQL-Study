@@ -22,5 +22,6 @@
   "columnsMatchTicket": true,
   "ambiguities": [],
   "confidence": "high",
-  "notes": "Shipments 1 and 2 are booked on 2026-01-31, out of sequence with their neighbours, so they set last_booked for customers 1 and 2. Customers 7 and 8 have no shipments and so do not appear, which the grouping implies."
+  "notes": "Shipments 1 and 2 are booked on 2026-01-31, out of sequence with their neighbours, so they set last_booked for customers 1 and 2. Customers 7 and 8 have no shipments and so do not appear, which the grouping implies.",
+  "superseded": "docs/reviews/blind/rerun-a/c3-i3.json"
 }

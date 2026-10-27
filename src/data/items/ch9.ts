@@ -30,7 +30,7 @@ const constraintsOf = (table: string): CheckQuery => ({
 // Chapter 9: Own the data. Tables, constraints, data changes and transactions are graded by what the database holds afterwards.
 export const chapter9Items: readonly Challenge[] = [
   {
-    id: 'c9-g1', chapterId: 9, role: 'guided', kind: 'guided', title: 'Create carriers with a primary key',
+    id: 'c9-g1', chapterId: 9, role: 'guided', starterStyle: 'blanks', title: 'Create carriers with a primary key',
     ...DISPATCH,
     summary: 'Create a carriers table whose id identifies each carrier and never repeats.',
     instructions: 'Create a table named carriers with two columns. id is an integer that identifies each carrier and can never repeat or be missing. name is text that can never be missing. Column names and types: id (integer), name (text). The blank completes the id column.',
@@ -53,7 +53,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-g2', chapterId: 9, role: 'guided', kind: 'guided', title: 'Cancel one shipment, and only that one',
+    id: 'c9-g2', chapterId: 9, role: 'guided', starterStyle: 'blanks', title: 'Cancel one shipment, and only that one',
     ...DISPATCH,
     summary: 'Change the status of one shipment with an UPDATE that names it exactly.',
     instructions: 'Mark shipment 7 as cancelled and change no other shipment. The blank is the shipment’s id.',
@@ -79,7 +79,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c9-g3', chapterId: 9, role: 'guided', kind: 'guided', title: 'Dry run that leaves no trace',
+    id: 'c9-g3', chapterId: 9, role: 'guided', starterStyle: 'blanks', title: 'Dry run that leaves no trace',
     ...BILLING,
     summary: 'Test a bulk change inside a transaction, then undo it so the table is as it was.',
     instructions: 'Dry run: clear every paid date to see the effect, then undo the whole change so the invoices end exactly as they started. The blank is the statement that ends the transaction and undoes the change.',
@@ -105,7 +105,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-g4', chapterId: 9, role: 'guided', kind: 'guided', title: 'Holds that must be positive and must point at a shipment',
+    id: 'c9-g4', chapterId: 9, role: 'guided', starterStyle: 'blanks', title: 'Holds that must be positive and must point at a shipment',
     ...PIPELINE,
     summary: 'Create a hold table whose hours must be above zero and whose shipment must exist.',
     instructions: 'Create shipment_holds for the time a shipment waits at a hub. Each hold names a shipment that exists, and hold_hours must be above zero. The blank is the rule for hold_hours. Column names and types: id (integer), shipment_id (integer), hold_hours (integer).',
@@ -133,7 +133,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i1', chapterId: 9, role: 'independent', kind: 'write', title: 'Carrier codes that never repeat',
+    id: 'c9-i1', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Carrier codes that never repeat',
     ...CUSTOMERS,
     summary: 'Create carriers so that each carrier has one code that no other carrier shares.',
     instructions: 'Create a table named carriers. Each carrier has an integer id that identifies it and can never repeat or be missing. Each carrier also has a short code, which must be present and unique across carriers, and a name, which must be present. Column names and types: id (integer), code (text), name (text). Write the table definition only.',
@@ -161,7 +161,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i2', chapterId: 9, role: 'independent', kind: 'write', title: 'Assignments that point at real rows',
+    id: 'c9-i2', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Assignments that point at real rows',
     ...DISPATCH,
     summary: 'Create a carriers table and an assignments table that can only refer to real carriers and real shipments.',
     instructions: 'Create two tables. carriers has an integer id primary key and a required name (text). shipment_carriers records which carrier takes which shipment, with shipment_id and carrier_id as required integers. Each shipment_id must match a shipment, each carrier_id must match a carrier, and the same pair of shipment_id and carrier_id can appear only once. Write both table definitions. The starter line is a placeholder for carriers: replace it with the full definition, then add shipment_carriers.',
@@ -190,7 +190,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i3', chapterId: 9, role: 'independent', kind: 'write', title: 'Unpay invoices of cancelled shipments',
+    id: 'c9-i3', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Unpay invoices of cancelled shipments',
     ...BILLING,
     summary: 'Clear the paid date on the invoices of cancelled shipments, and nothing else.',
     instructions: 'Invoices of shipments whose status is cancelled should have no paid date. Clear paid_at on every invoice whose shipment has status cancelled. Leave every other invoice unchanged. Write one UPDATE statement; use a subquery on shipments to find the cancelled shipments.',
@@ -216,7 +216,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i4', chapterId: 9, role: 'independent', kind: 'write', title: 'Two new customers, kept together',
+    id: 'c9-i4', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Two new customers, kept together',
     ...CUSTOMERS,
     summary: 'Add two customers in one transaction, and keep both.',
     instructions: 'Add two customers: id 9, named Juniper Crate with region North, and id 10, named Kestrel Mills with no region. Write both rows in one transaction and keep them. Column names: id, name, region.',
@@ -241,7 +241,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i5', chapterId: 9, role: 'independent', kind: 'write', title: 'Remove invoices of cancelled shipments',
+    id: 'c9-i5', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Remove invoices of cancelled shipments',
     ...PIPELINE,
     summary: 'Delete the invoices of cancelled shipments, and only those.',
     instructions: 'Delete every invoice whose shipment has status cancelled. Keep every other invoice. Write one DELETE statement; use a subquery on shipments to find the cancelled shipments.',
@@ -266,7 +266,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-i6', chapterId: 9, role: 'independent', kind: 'write', title: 'Trial table, then undo',
+    id: 'c9-i6', chapterId: 9, role: 'independent', starterStyle: 'skeleton', title: 'Trial table, then undo',
     ...DISPATCH,
     summary: 'Build a trial table inside a transaction and undo it, so the database keeps no trace of it.',
     instructions: 'Try a new table named trial_notes with an integer id primary key and a note text column. Create it inside a transaction, then roll back so the table does not exist afterwards. The starter line is the CREATE TABLE statement; add the BEGIN and the ending.',
@@ -291,7 +291,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-b1-p1', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', kind: 'write', title: 'Boss ticket, part 1: the rate card table',
+    id: 'c9-b1-p1', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: the rate card table',
     ...CUSTOMERS,
     summary: 'Create the rate card: a carrier and lane pair is unique, and every rate is above zero.',
     instructions: 'Create a table named rate_card. Each row has an integer id primary key, a carrier_code and a lane (both required text), and a rate_per_kg, a numeric(8,2) value that is required and must be above zero. A carrier can list each lane only once. Write the table definition only.',
@@ -319,7 +319,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c9-b1-p2', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', kind: 'write', title: 'Boss ticket, part 2: raise invoices on route 1',
+    id: 'c9-b1-p2', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: raise invoices on route 1',
     ...BILLING,
     summary: 'Raise the invoice amounts for route 1 by ten percent, rounded to cents, and leave the rest alone.',
     instructions: 'Raise the amount of every invoice whose shipment is on route 1 by ten percent, rounded to two decimal places. Leave the other invoices unchanged. Write one UPDATE statement.',
@@ -345,7 +345,7 @@ export const chapter9Items: readonly Challenge[] = [
     datasets: datasetsFor(['precision', 'boundary']),
   },
   {
-    id: 'c9-b1-p3', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', kind: 'write', title: 'Boss ticket, part 3: deliver and record, as one unit',
+    id: 'c9-b1-p3', chapterId: 9, role: 'boss', bossGroup: 'c9-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: deliver and record, as one unit',
     ...PIPELINE,
     summary: 'Mark shipment 3 delivered and add its delivered scan, keeping both or neither.',
     instructions: 'Mark shipment 3 as delivered and add a delivered scan for it with id 1000, occurred at 2026-02-01 10:00 UTC, and no note. Both changes belong in one transaction, and both must be kept. Column names for the scan: id, shipment_id, status, occurred_at, note.',

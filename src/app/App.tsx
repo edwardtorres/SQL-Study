@@ -1,7 +1,8 @@
-import { lazy, Suspense, useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { ChevronRight, Leaf, LoaderCircle, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
 import { curriculum, openChapterCount } from '../data';
-import { items } from '../data/catalog';
+import { itemIndex, itemMetaById, type ItemMeta } from '../data/itemIndex';
+import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
 import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV2, type TicketProgress } from '../save/progress';
 import { ChapterView, HomeView, lessonSectionIds } from './Chapters';
@@ -23,7 +24,7 @@ function initialState() {
   catch { return { ...restoreSave(null), writable: false }; }
 }
 const chapterOf = (id: number) => curriculum.find((chapter) => chapter.id === id);
-const shelf = (chapterId: number) => items.filter((item) => item.chapterId === chapterId);
+const shelf = (chapterId: number) => itemIndex.filter((item) => item.chapterId === chapterId);
 
 export default function App() {
   const [restored] = useState(initialState);
@@ -37,7 +38,7 @@ export default function App() {
   }, [restored.writable]);
   const updateTicket = useCallback((id: string, update: (previous: TicketProgress) => TicketProgress) => {
     setSave((previous) => {
-      const item = items.find((candidate) => candidate.id === id);
+      const item = itemMetaById(id);
       const next = { ...previous, tickets: { ...previous.tickets, [id]: update(previous.tickets[id] ?? emptyProgress(item?.starterSql)) } };
       persist(next);
       return next;
@@ -50,7 +51,7 @@ export default function App() {
       return next;
     });
   }, [persist]);
-  const openItem = (item: Challenge) => {
+  const openItem = (item: ItemMeta) => {
     const next = { ...save, activeTicket: item.id };
     setSave(next);
     persist(next);
@@ -63,10 +64,20 @@ export default function App() {
   };
   const xp = Object.values(save.tickets).reduce((sum, ticket) => sum + ticket.xp, 0);
   const current = view.name === 'chapter' || view.name === 'lesson' ? chapterOf(view.chapterId) : undefined;
-  const item = view.name === 'item' ? items.find((candidate) => candidate.id === view.itemId) : undefined;
+  const meta = view.name === 'item' ? itemMetaById(view.itemId) : undefined;
+  // The ticket's full definition loads with its chapter; the view shows a loading card until it arrives.
+  const [loaded, setLoaded] = useState<Challenge | null>(null);
+  const itemId = view.name === 'item' ? view.itemId : undefined;
+  useEffect(() => {
+    if (itemId === undefined) return;
+    let cancelled = false;
+    loadItem(itemId).then((found) => { if (!cancelled) setLoaded(found); }).catch(() => { if (!cancelled) setLoaded(null); });
+    return () => { cancelled = true; };
+  }, [itemId]);
+  const item = itemId !== undefined && loaded?.id === itemId ? loaded : undefined;
   const crumb = view.name === 'home' ? 'Chapters'
     : view.name === 'scratch' ? 'Scratchpad'
-      : view.name === 'item' && item ? `Chapter ${item.chapterId} · ${item.title}`
+      : view.name === 'item' && meta ? `Chapter ${meta.chapterId} · ${meta.title}`
         : current ? `Chapter ${current.id}${view.name === 'lesson' ? ' · Lesson' : ''}` : 'Chapters';
   return (
     <div className="app-shell">
@@ -80,7 +91,7 @@ export default function App() {
         <span className="rail-eyebrow">THE DATA DESK</span>
         <nav aria-label="Chapters" className="chapter-nav">
           {curriculum.slice(0, openChapterCount).map((chapter) => {
-            const summary = summarizeChapter(items, save, chapter.id, lessonSectionIds(chapter.id));
+            const summary = summarizeChapter(itemIndex, save, chapter.id, lessonSectionIds(chapter.id));
             return <button key={chapter.id} className={`nav-button ${current?.id === chapter.id ? 'is-current' : ''}`} aria-current={current?.id === chapter.id ? 'page' : undefined} onClick={() => { go({ name: 'chapter', chapterId: chapter.id }); }}>
               <span>{chapter.id}. {chapter.title}</span><span className="nav-count">{summary.passed}/{summary.graded}</span>
             </button>;
@@ -102,19 +113,20 @@ export default function App() {
         <main id="main" className={view.name === 'item' || view.name === 'scratch' ? 'workspace-main' : 'board-main'}>
           {saveFailed && <p role="alert" className="save-warning">{restored.status === 'future' ? 'Your save belongs to a newer app version. This session will not overwrite it.' : restored.status === 'corrupt' ? 'Your saved progress could not be read. The original is preserved; this session continues without saving.' : 'Progress could not be saved on this browser. Keep this tab open to retain this session.'}</p>}
           <Suspense fallback={<div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the desk…</div>}>
-            {view.name === 'home' && <HomeView chapters={curriculum.slice(0, openChapterCount)} items={items} save={save} onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onScratch={() => { go({ name: 'scratch' }); }} onItem={openItem} />}
-            {view.name === 'chapter' && current && <ChapterView chapter={current} items={items} save={save} onLesson={() => { go({ name: 'lesson', chapterId: current.id }); }} onItem={openItem} onScratch={() => { go({ name: 'scratch' }); }} onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'home' && <HomeView chapters={curriculum.slice(0, openChapterCount)} items={itemIndex} save={save} onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onScratch={() => { go({ name: 'scratch' }); }} onItem={openItem} />}
+            {view.name === 'chapter' && current && <ChapterView chapter={current} items={itemIndex} save={save} onLesson={() => { go({ name: 'lesson', chapterId: current.id }); }} onItem={openItem} onScratch={() => { go({ name: 'scratch' }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'lesson' && current && <LessonView chapter={current} lessonProgress={save.lessons} onAnswer={answerLesson} onBack={() => { go({ name: 'chapter', chapterId: current.id }); }} onPractice={() => { go({ name: 'chapter', chapterId: current.id }); }} />}
             {view.name === 'scratch' && <Scratchpad onBack={() => { go({ name: 'home' }); }} />}
-            {view.name === 'item' && item && <Workspace
+            {view.name === 'item' && meta && !item && <div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the ticket…</div>}
+            {view.name === 'item' && meta && item && <Workspace
               key={item.id}
               challenge={item}
-              code={`CH${item.chapterId} · ${shelf(item.chapterId).indexOf(item) + 1}`}
-              partLabel={partLabel(item, items)}
-              backLabel={chapterOf(item.chapterId) ? `Chapter ${item.chapterId}` : 'Chapters'}
+              code={`CH${meta.chapterId} · ${shelf(meta.chapterId).findIndex((candidate) => candidate.id === meta.id) + 1}`}
+              partLabel={partLabel(meta, itemIndex)}
+              backLabel={chapterOf(meta.chapterId) ? `Chapter ${meta.chapterId}` : 'Chapters'}
               progress={save.tickets[item.id] ?? emptyProgress(item.starterSql)}
               update={(fn) => { updateTicket(item.id, fn); }}
-              onBack={() => { go(chapterOf(item.chapterId) ? { name: 'chapter', chapterId: item.chapterId } : { name: 'home' }); }}
+              onBack={() => { go(chapterOf(meta.chapterId) ? { name: 'chapter', chapterId: meta.chapterId } : { name: 'home' }); }}
             />}
           </Suspense>
         </main>

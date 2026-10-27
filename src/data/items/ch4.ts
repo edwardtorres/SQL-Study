@@ -9,7 +9,7 @@ const DISPATCH = { colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator'
 // Chapter 4: Connect the network. Each join changes the number of rows; check the grain before you count.
 export const chapter4Items: readonly Challenge[] = [
   {
-    id: 'c4-g1', chapterId: 4, role: 'guided', kind: 'guided', title: 'Shipments with their customer',
+    id: 'c4-g1', chapterId: 4, role: 'guided', starterStyle: 'blanks', title: 'Shipments with their customer',
     ...DISPATCH,
     summary: 'Attach the customer name to the first five shipments.',
     instructions: 'Return id and customer_name for shipments with ids 1 through 5, ordered by id. Use the customer that booked each shipment. Column names and types: id (integer), customer_name (text).',
@@ -30,7 +30,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c4-g2', chapterId: 4, role: 'guided', kind: 'guided', title: 'Routes with their origin city',
+    id: 'c4-g2', chapterId: 4, role: 'guided', starterStyle: 'blanks', title: 'Routes with their origin city',
     ...DISPATCH,
     summary: 'Name the origin city for every route.',
     instructions: 'Return route_id and origin_city for every route, ordered by route_id. The origin city is the city of the warehouse named by origin_id. Column names and types: route_id (integer), origin_city (text).',
@@ -51,7 +51,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['boundary', 'nulltext']),
   },
   {
-    id: 'c4-g3', chapterId: 4, role: 'guided', kind: 'guided', title: 'Customers with no shipments',
+    id: 'c4-g3', chapterId: 4, role: 'guided', starterStyle: 'blanks', title: 'Customers with no shipments',
     ...DISPATCH,
     summary: 'Find the customers who have never booked a shipment.',
     instructions: 'Return id and name for customers who have no shipments, ordered by id. Column names and types: id (integer), name (text).',
@@ -72,7 +72,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'empty']),
   },
   {
-    id: 'c4-g4', chapterId: 4, role: 'guided', kind: 'guided', title: 'Invoices for the first shipments',
+    id: 'c4-g4', chapterId: 4, role: 'guided', starterStyle: 'blanks', title: 'Invoices for the first shipments',
     ...DISPATCH,
     summary: 'Show every early shipment with its invoice amount, including unbilled shipments.',
     instructions: 'For shipments with ids 1 through 4, return id and amount from the matching invoice. Keep a shipment even when it has no invoice; its amount is then missing. Order by id. Column names and types: id (integer), amount (numeric).',
@@ -93,7 +93,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c4-i1', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipments with their driver, if any',
+    id: 'c4-i1', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Shipments with their driver, if any',
     colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
     summary: 'List the first ten shipments with the driver name, leaving the driver blank when none is assigned.',
     instructions: 'For shipments with ids 1 through 10, return id and driver_name. Keep a shipment even when it has no driver. Order by id. Column names and types: id (integer), driver_name (text).',
@@ -114,7 +114,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c4-i2', chapterId: 4, role: 'independent', kind: 'write', title: 'Each driver and their supervisor',
+    id: 'c4-i2', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Each driver and their supervisor',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'List every driver with the name of their supervisor, for the staffing review.',
     instructions: 'Return id and name for every driver, and supervisor_name for the driver’s supervisor (NULL, meaning missing rather than an empty string, for a driver with no supervisor). Order by id. Column names and types: id (integer), name (text), supervisor_name (text).',
@@ -135,7 +135,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c4-i3', chapterId: 4, role: 'independent', kind: 'write', title: 'Route destinations',
+    id: 'c4-i3', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Route destinations',
     colleague: 'Ravi Okafor', colleagueRole: 'Route planner',
     summary: 'Name the destination city of every route, keeping every route in the list.',
     instructions: 'Return route_id and destination_city for every route. Keep every route. Order by route_id. Column names and types: route_id (integer), destination_city (text).',
@@ -156,7 +156,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c4-i4', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipment, customer and origin city',
+    id: 'c4-i4', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Shipment, customer and origin city',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Build the first-shipments card for customer success: who booked it, and where it leaves from.',
     instructions: 'For shipments with ids 1 through 6, return id, customer_name and origin_city. Order by id. Column names and types: id (integer), customer_name (text), origin_city (text).',
@@ -177,7 +177,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c4-i5', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipments that have no events',
+    id: 'c4-i5', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Shipments that have no events',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'Find shipments that the scanners have never seen, so the pipeline can chase them.',
     instructions: 'Return id and tracking_code for shipments that have no rows in shipment_events. Order by id. Column names and types: id (integer), tracking_code (text).',
@@ -198,7 +198,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c4-i6', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipments and events per customer',
+    id: 'c4-i6', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Shipments and events per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Count each customer’s shipments and their scan events without double counting.',
     instructions: 'For each customer_id that has at least one shipment (customers with no shipments are not listed), return shipments: the number of distinct shipments that customer booked, including shipments with no events and events (the number of shipment_events rows for that customer). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), events (integer).',
@@ -219,7 +219,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c4-i7', chapterId: 4, role: 'independent', kind: 'write', title: 'Drivers who delivered something',
+    id: 'c4-i7', chapterId: 4, role: 'independent', starterStyle: 'skeleton', title: 'Drivers who delivered something',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'List each driver who delivered a shipment on routes 1 or 2, once each.',
     instructions: 'Return id and name for each driver who carries at least one shipment with status delivered whose route_id is 1 or 2. Each driver appears once. Order by id. Column names and types: id (integer), name (text).',
@@ -240,7 +240,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c4-b1-p1', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', kind: 'write', title: 'Boss ticket, part 1: the first twelve shipments',
+    id: 'c4-b1-p1', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: the first twelve shipments',
     ...DISPATCH,
     summary: 'Build the morning manifest for the first twelve shipments. Part 1 of 3.',
     instructions: 'Part 1 of 3. For shipments with ids 1 through 12, return id, customer_name, origin_city and driver_name. Keep a shipment when it has no driver; its driver_name is then missing. Order by id. Column names and types: id (integer), customer_name (text), origin_city (text), driver_name (text).',
@@ -261,7 +261,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c4-b1-p2', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', kind: 'write', title: 'Boss ticket, part 2: customers without a delivery',
+    id: 'c4-b1-p2', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: customers without a delivery',
     ...DISPATCH,
     summary: 'Find the customers who have not had any delivered shipment. Part 2 of 3.',
     instructions: "Part 2 of 3. Return id and name for customers with no shipment whose shipments.status column is ‘delivered’ (shipment events do not count). Customers with only queued, in_transit or cancelled shipments, and customers with no shipments at all, qualify. Order by id. Column names and types: id (integer), name (text).",
@@ -282,7 +282,7 @@ export const chapter4Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'empty']),
   },
   {
-    id: 'c4-b1-p3', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', kind: 'write', title: 'Boss ticket, part 3: events by origin city',
+    id: 'c4-b1-p3', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: events by origin city',
     ...DISPATCH,
     summary: 'Count the scan events that leave from each origin city. Part 3 of 3.',
     instructions: 'Part 3 of 3. For each origin city, return city and events, the number of shipment_events rows for shipments on routes from warehouses in that city. Order by city. Column names and types: city (text), events (integer).',

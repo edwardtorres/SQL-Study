@@ -2,7 +2,7 @@ name: Cross-browser SQL checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/gracious-albattani-peptiz]
   pull_request:
   workflow_dispatch:
 

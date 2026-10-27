@@ -26,10 +26,19 @@ TLS and artifact-integrity checks. Never invent test results or engine outputs.
 Never commit tokens, private or session links, credential values, or machine-
 specific absolute paths. Verify staged files before committing.
 
-Author commits as Edward Torres with email
-`12915571+edwardtorres@users.noreply.github.com`. Push at the end of each step
-and confirm HEAD equals origin/main and the actual remote main. Never reset
-or force-push user work to make that check pass.
+Commit identity: the author of every commit is Edward Torres
+`<12915571+edwardtorres@users.noreply.github.com>`. The committer field does not
+matter. Make commits with `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` set, leaving the
+default committer. Never rewrite pushed history to change an author or committer.
+Push at the end of each step and confirm HEAD equals origin/main and the actual
+remote main. Never reset or force-push user work to make that check pass.
+
+Scope: concurrent sessions and isolation levels are out of scope for the whole
+curriculum. The transaction translation models one session.
+
+Blind-solve rule: no graded item ships until a blind solver agrees with its reference
+on every dataset that item uses. `tests/blind-compare.test.ts` runs that comparison over
+every `docs/reviews/blind/<set>/` folder as part of `npm test`.
 
 ## Audit after every prompt
 

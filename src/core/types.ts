@@ -35,6 +35,8 @@ export interface WrongVariant { id: string; sql: string; mistake: MistakeTag; ex
 // sample: the Step 1 showcase tickets. guided: fill-in-the-blank. independent: a colleague's ticket.
 // boss: one part of a multi-part ticket (bossGroup names the group).
 export type Role = 'sample' | 'guided' | 'independent' | 'boss';
+// How the starter is written: skeleton (a bare skeleton, write and window tickets), blanks (fill-in blanks, guided), broken (a real broken starter, fix tickets).
+export type StarterStyle = 'skeleton' | 'broken' | 'blanks';
 
 export interface Challenge {
   id: string;
@@ -43,7 +45,7 @@ export interface Challenge {
   bossGroup?: string;
   title: string;
   // write: a bare skeleton at most. fix: a real broken starter. guided: fill-in blanks.
-  kind: 'write' | 'fix' | 'window' | 'guided';
+  starterStyle: StarterStyle;
   colleague: string;
   colleagueRole: string;
   summary: string;

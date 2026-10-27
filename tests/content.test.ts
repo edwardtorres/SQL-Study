@@ -60,10 +60,10 @@ describe('content check: graded items', () => {
 
   test('write-query starters are bare skeletons; guided starters keep their blanks', async () => {
     for (const item of items) {
-      if (item.kind === 'write' || item.kind === 'window') {
+      if (item.starterStyle === 'skeleton') {
         expect(await isBareSkeleton(item.starterSql), `${item.id} starter must be a bare skeleton`).toBe(true);
       }
-      if (item.kind === 'guided') expect(item.starterSql, `${item.id} guided blanks`).toContain('____');
+      if (item.starterStyle === 'blanks') expect(item.starterSql, `${item.id} guided blanks`).toContain('____');
     }
   });
 });

@@ -13,7 +13,7 @@ const BILLING = { colleague: 'Pella Reed', colleagueRole: 'Billing analyst' };
 // Chapter 8: Rank and compare. A window function sees related rows without collapsing them; PARTITION, ORDER and the frame decide what it sees.
 export const chapter8Items: readonly Challenge[] = [
   {
-    id: 'c8-g1', chapterId: 8, role: 'guided', kind: 'guided', title: 'Shipment order within each customer',
+    id: 'c8-g1', chapterId: 8, role: 'guided', starterStyle: 'blanks', title: 'Shipment order within each customer',
     ...CUSTOMERS,
     summary: 'Number each customer’s shipments in booking order, so every customer starts again at 1.',
     instructions: 'Return customer_id, id and position for every shipment. position is the row number within the customer, oldest booking first, starting at 1; break booking-time ties by id. Order by customer_id, then position. Column names and types: customer_id (integer), id (integer), position (bigint).',
@@ -34,7 +34,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c8-g2', chapterId: 8, role: 'guided', kind: 'guided', title: 'Due-date rank within each route',
+    id: 'c8-g2', chapterId: 8, role: 'guided', starterStyle: 'blanks', title: 'Due-date rank within each route',
     ...ROUTES,
     summary: 'Rank each route’s shipments by due date, soonest first, and let shipments due the same day share a rank.',
     instructions: 'For each route, rank its shipments by delivery_due, soonest first. Shipments with the same due date share a rank, and the next rank skips the number of tied rows. Return route_id, id and due_rank (bigint), ordered by route_id, due_rank, then id.',
@@ -55,7 +55,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'nulls']),
   },
   {
-    id: 'c8-g3', chapterId: 8, role: 'guided', kind: 'guided', title: 'Status changes between scans',
+    id: 'c8-g3', chapterId: 8, role: 'guided', starterStyle: 'blanks', title: 'Status changes between scans',
     ...PIPELINE,
     summary: 'Find the scans where a shipment’s status changed from the scan before it.',
     instructions: 'Order each shipment’s scans by occurred_at, then by id. Return the scans whose status differs from the scan just before them in that order. A shipment’s first scan has no earlier scan, so it is not returned. Return shipment_id, event_id (the scan’s id), prev_status and status, ordered by shipment_id, then event_id. Column names and types: shipment_id (integer), event_id (integer), prev_status (text), status (text).',
@@ -76,7 +76,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c8-g4', chapterId: 8, role: 'guided', kind: 'guided', title: 'Shipments due on or before each date',
+    id: 'c8-g4', chapterId: 8, role: 'guided', starterStyle: 'blanks', title: 'Shipments due on or before each date',
     ...DISPATCH,
     summary: 'For each shipment, count the route’s shipments due on or before its own due date, including ties.',
     instructions: 'For each shipment, count the shipments on the same route whose delivery_due is on or before its own delivery_due. Shipments with the same due date count each other. Return route_id, id and due_count (bigint), ordered by route_id, then id.',
@@ -97,7 +97,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'nulls']),
   },
   {
-    id: 'c8-i1', chapterId: 8, role: 'independent', kind: 'write', title: 'Invoice amount ranks per customer',
+    id: 'c8-i1', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'Invoice amount ranks per customer',
     ...BILLING,
     summary: 'Rank each customer’s invoices by amount, with equal amounts sharing a rank and no gaps after a tie.',
     instructions: 'For each customer, rank its invoices by amount, highest first. Equal amounts share a rank, and the next rank is one more than the last. Return customer_id, the invoice id and amount_rank (bigint). Break equal amounts by invoice id for the row order. Order by customer_id, amount_rank, then invoice id. An invoice reaches a customer through its shipment.',
@@ -118,7 +118,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'precision']),
   },
   {
-    id: 'c8-i2', chapterId: 8, role: 'independent', kind: 'write', title: 'Two soonest-due shipments per route',
+    id: 'c8-i2', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'Two soonest-due shipments per route',
     ...DISPATCH,
     summary: 'Keep exactly two shipments per route, the two due soonest, even when due dates tie.',
     instructions: 'For each route, among all of its shipments, return the two due soonest. If two shipments share a due date, the lower id comes first, and a route returns exactly two rows when it has at least two shipments. Return route_id, id and delivery_due, ordered by route_id, then delivery_due, then id. Column names and types: route_id (integer), id (integer), delivery_due (date).',
@@ -139,7 +139,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c8-i3', chapterId: 8, role: 'independent', kind: 'write', title: 'Running invoice total per customer',
+    id: 'c8-i3', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'Running invoice total per customer',
     ...BILLING,
     summary: 'Keep a running total of each customer’s invoices, in the order they were issued.',
     instructions: 'For each customer, keep a running total of invoice amounts in issue order, with issued_at then invoice id breaking ties. The total includes the current invoice. Return customer_id, the invoice id and running_total (numeric). Order by customer_id, then issue order. An invoice reaches a customer through its shipment.',
@@ -160,7 +160,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['precision', 'boundary']),
   },
   {
-    id: 'c8-i4', chapterId: 8, role: 'independent', kind: 'write', title: 'Three-invoice moving average',
+    id: 'c8-i4', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'Three-invoice moving average',
     ...BILLING,
     summary: 'Average each invoice with the two before it for the same customer, rounded to cents.',
     instructions: 'For each invoice, average its amount with the amounts of the two invoices before it for the same customer, in issue order (issued_at, then invoice id). The first invoice averages only itself, and the second averages two invoices. Round the average to two decimal places. Return customer_id, the invoice id and moving_avg (numeric). Order by customer_id, then issue order.',
@@ -181,7 +181,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['precision', 'ties']),
   },
   {
-    id: 'c8-i5', chapterId: 8, role: 'independent', kind: 'write', title: 'Seconds until each next scan',
+    id: 'c8-i5', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'Seconds until each next scan',
     ...PIPELINE,
     summary: 'Measure how long each shipment waited from one scan until its next scan.',
     instructions: 'For each scan, return the seconds from its occurred_at to the next scan of the same shipment, rounded to the nearest whole second. Order scans by occurred_at, then by id; a scan at the same moment with a greater id is the next scan. The last scan of a shipment has no next scan, so its value is NULL. Return shipment_id, event_id (the scan’s id) and seconds_to_next (integer), ordered by shipment_id, then occurred_at, then event_id.',
@@ -202,7 +202,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c8-i6', chapterId: 8, role: 'independent', kind: 'write', title: 'One scan per shipment and timestamp',
+    id: 'c8-i6', chapterId: 8, role: 'independent', starterStyle: 'skeleton', title: 'One scan per shipment and timestamp',
     ...PIPELINE,
     summary: 'Where a shipment has two scans at the same moment, keep only the one with the greater id.',
     instructions: 'Some scans share a timestamp with another scan of the same shipment. Keep one scan per shipment and timestamp: the one with the greatest id. Return shipment_id, event_id (the scan’s id), status and occurred_at. Order by shipment_id, then occurred_at, then event_id. Column names and types: shipment_id (integer), event_id (integer), status (text), occurred_at (timestamptz).',
@@ -223,7 +223,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c8-b1-p1', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', kind: 'write', title: 'Boss ticket, part 1: latest shipment per customer',
+    id: 'c8-b1-p1', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: latest shipment per customer',
     ...CUSTOMERS,
     summary: 'Find the most recent shipment for each customer that has one.',
     instructions: 'For each customer, return the id of its most recent shipment by booked_at, breaking ties with the greater id. Customers with no shipments are not returned. Return customer_id and id (integer), ordered by customer_id.',
@@ -244,7 +244,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'boundary']),
   },
   {
-    id: 'c8-b1-p2', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', kind: 'write', title: 'Boss ticket, part 2: share of each customer’s billed total',
+    id: 'c8-b1-p2', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: share of each customer’s billed total',
     ...BILLING,
     summary: 'Show each invoice as a share of its customer’s whole billed total.',
     instructions: 'For each invoice, return its share of its customer’s total billed amount, rounded to four decimal places. Use the whole customer total, not a running total. Return customer_id, the invoice id and share (numeric), ordered by customer_id, then invoice id. An invoice reaches a customer through its shipment.',
@@ -265,7 +265,7 @@ export const chapter8Items: readonly Challenge[] = [
     datasets: datasetsFor(['precision', 'ties']),
   },
   {
-    id: 'c8-b1-p3', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', kind: 'write', title: 'Boss ticket, part 3: latest invoice above its customer’s average',
+    id: 'c8-b1-p3', chapterId: 8, role: 'boss', bossGroup: 'c8-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: latest invoice above its customer’s average',
     ...CUSTOMERS,
     summary: 'Return the latest invoice of each customer when it is larger than that customer’s average invoice.',
     instructions: 'For each customer, take its most recently issued invoice (issued_at, then the greater invoice id). Return that invoice only when its amount is greater than the average of all the customer’s invoices. Return customer_id, the invoice id and amount (numeric), ordered by customer_id. An invoice reaches a customer through its shipment.',

@@ -66,6 +66,7 @@ export const lesson9: Lesson = {
       paragraphs: [
         'A transaction bundles several statements. COMMIT keeps every change in the group, and ROLLBACK discards them all. Use ROLLBACK to test a change: run it inside BEGIN, check the result, and end with ROLLBACK so the table is unchanged.',
         'A transaction that has no COMMIT or ROLLBACK is still open. Other transactions should not be able to see its incomplete changes, so the ending statement is part of the work.',
+        'In this sandbox, COMMIT is simulated. The grader keeps your changes inside its own transaction and rolls them back afterwards, so nothing persists between runs. On a real PostgreSQL server, COMMIT makes the changes permanent and visible to other sessions.',
       ],
       example: 'SELECT id, paid_at\nFROM invoices\nWHERE id <= 6\nORDER BY id;',
       predict: {

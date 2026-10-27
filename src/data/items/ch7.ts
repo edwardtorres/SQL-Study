@@ -11,7 +11,7 @@ const CUSTOMERS = { colleague: 'Tamsin Rowe', colleagueRole: 'Customer success l
 // Chapter 7: Combine the feeds. Set operations compare whole rows; UNION, INTERSECT and EXCEPT remove repeats unless ALL is used.
 export const chapter7Items: readonly Challenge[] = [
   {
-    id: 'c7-g1', chapterId: 7, role: 'guided', kind: 'guided', title: 'Every status in both feeds',
+    id: 'c7-g1', chapterId: 7, role: 'guided', starterStyle: 'blanks', title: 'Every status in both feeds',
     ...DISPATCH,
     summary: 'Combine the shipment statuses with the scan statuses into one list with no repeats.',
     instructions: 'Return status for every distinct value that appears in shipments.status or in shipment_events.status, sorted from A to Z. Column name and type: status (text).',
@@ -32,7 +32,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c7-g2', chapterId: 7, role: 'guided', kind: 'guided', title: 'Shipments that were never billed',
+    id: 'c7-g2', chapterId: 7, role: 'guided', starterStyle: 'blanks', title: 'Shipments that were never billed',
     ...BILLING,
     summary: 'List the shipments with no invoice by taking the billed ids away from all the shipment ids.',
     instructions: 'Return id for every shipment whose id does not appear as shipment_id in invoices. Order by id. Column name and type: id (integer).',
@@ -53,7 +53,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c7-i1', chapterId: 7, role: 'independent', kind: 'write', title: 'Queued or billed shipments',
+    id: 'c7-i1', chapterId: 7, role: 'independent', starterStyle: 'skeleton', title: 'Queued or billed shipments',
     ...PIPELINE,
     summary: 'Build the work list for billing: shipments still queued, or shipments that already have an invoice, each listed once.',
     instructions: 'Return id for every shipment that is queued (status queued), together with every shipment id that appears in invoices.shipment_id. Each id appears once. Order by id. Column name and type: id (integer).',
@@ -74,7 +74,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c7-i2', chapterId: 7, role: 'independent', kind: 'write', title: 'Delivered and billed',
+    id: 'c7-i2', chapterId: 7, role: 'independent', starterStyle: 'skeleton', title: 'Delivered and billed',
     ...ROUTES,
     summary: 'Find the shipments that were both scanned as delivered and billed, for the month-end check.',
     instructions: 'Return shipment_id for every shipment that has at least one shipment_events row with status delivered and at least one invoices row. Each shipment_id appears once. Order by shipment_id. Column name and type: shipment_id (integer).',
@@ -95,7 +95,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c7-i3', chapterId: 7, role: 'independent', kind: 'write', title: 'First ids from both tables, repeats kept',
+    id: 'c7-i3', chapterId: 7, role: 'independent', starterStyle: 'skeleton', title: 'First ids from both tables, repeats kept',
     ...CUSTOMERS,
     summary: 'Build a reconciliation sample: the first three shipment ids and the first three invoice ids, one row each, even when they match.',
     instructions: 'Return id for the three lowest shipment ids and, separately, the three lowest invoice ids. Keep a row for each, even when an id appears in both lists. Order by id. Column name and type: id (integer).',
@@ -117,7 +117,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c7-i4', chapterId: 7, role: 'independent', kind: 'write', title: 'Statuses only the scans use',
+    id: 'c7-i4', chapterId: 7, role: 'independent', starterStyle: 'skeleton', title: 'Statuses only the scans use',
     ...PIPELINE,
     summary: 'Find the scan statuses that never appear as a shipment status, so the dispatch vocabulary can be updated.',
     instructions: 'Return status for every value that appears in shipment_events.status but never in shipments.status. Each value appears once. Order by status. Column name and type: status (text).',
@@ -138,7 +138,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c7-b1-p1', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', kind: 'write', title: 'Boss ticket, part 1: mismatched scans and invoices',
+    id: 'c7-b1-p1', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: mismatched scans and invoices',
     ...DISPATCH,
     summary: 'Find the shipments that were scanned but not billed, or billed but never scanned. Part 1 of 2.',
     instructions: 'Part 1 of 2. Return shipment_id for each shipment that has a shipment_events row but no invoices row, or has an invoices row but no shipment_events row. Each shipment_id appears once. Order by shipment_id. Column name and type: shipment_id (integer).',
@@ -159,7 +159,7 @@ export const chapter7Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c7-b1-p2', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', kind: 'write', title: 'Boss ticket, part 2: statuses in one feed only',
+    id: 'c7-b1-p2', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: statuses in one feed only',
     ...ROUTES,
     summary: 'Find the status values that appear in exactly one of the two feeds. Part 2 of 2.',
     instructions: 'Part 2 of 2. Return status for each value that appears in shipments.status or in shipment_events.status, but not in both. Each value appears once. Sort from A to Z. Column name and type: status (text).',

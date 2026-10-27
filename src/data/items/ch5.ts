@@ -14,7 +14,7 @@ const CUSTOMERS = { colleague: 'Tamsin Rowe', colleagueRole: 'Customer success l
 // Chapter 5: Queries within queries. A nested query answers one question inside another; check which row it belongs to.
 export const chapter5Items: readonly Challenge[] = [
   {
-    id: 'c5-g1', chapterId: 5, role: 'guided', kind: 'guided', title: 'Shipments heavier than average',
+    id: 'c5-g1', chapterId: 5, role: 'guided', starterStyle: 'blanks', title: 'Shipments heavier than average',
     ...DISPATCH,
     summary: 'Compare early shipments with the average weight of the whole table.',
     instructions: 'Return id and weight_kg for shipments with ids 1 through 12 that weigh more than the average weight of all shipments. A missing weight is never greater than anything, so that shipment is left out. Order by id. Column names and types: id (integer), weight_kg (integer).',
@@ -35,7 +35,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c5-g2', chapterId: 5, role: 'guided', kind: 'guided', title: 'Customers who have shipments',
+    id: 'c5-g2', chapterId: 5, role: 'guided', starterStyle: 'blanks', title: 'Customers who have shipments',
     ...CUSTOMERS,
     summary: 'Keep the customers who have booked at least one shipment, each listed once.',
     instructions: 'Return id and name for each customer who has at least one shipment. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
@@ -56,7 +56,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c5-g3', chapterId: 5, role: 'guided', kind: 'guided', title: 'Name the early shipments in a WITH clause',
+    id: 'c5-g3', chapterId: 5, role: 'guided', starterStyle: 'blanks', title: 'Name the early shipments in a WITH clause',
     ...PIPELINE,
     summary: 'Name the first thirty shipments as an intermediate result, then keep the heavy ones.',
     instructions: 'Use a WITH clause named early that holds id and weight_kg for shipments with ids up to 30. Then, from early, return id and weight_kg for shipments weighing at least 500 kg, ordered by id. Column names and types: id (integer), weight_kg (integer).',
@@ -78,7 +78,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c5-i1', chapterId: 5, role: 'independent', kind: 'write', title: 'Drivers who supervise nobody',
+    id: 'c5-i1', chapterId: 5, role: 'independent', starterStyle: 'skeleton', title: 'Drivers who supervise nobody',
     ...PIPELINE,
     summary: 'List the drivers that no other driver names as a supervisor, for the staffing review.',
     instructions: 'Return id and name for each driver whose id does not appear as supervisor_id on any driver. Some drivers have no supervisor_id, which is a missing value. Order by id. Column names and types: id (integer), name (text).',
@@ -99,7 +99,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'nulltext']),
   },
   {
-    id: 'c5-i2', chapterId: 5, role: 'independent', kind: 'write', title: 'Heavier than the customer’s own average',
+    id: 'c5-i2', chapterId: 5, role: 'independent', starterStyle: 'skeleton', title: 'Heavier than the customer’s own average',
     ...CUSTOMERS,
     summary: 'Flag early shipments that are heavier than the average for the same customer.',
     instructions: 'For shipments with ids 1 through 40, return id, customer_id and weight_kg for each shipment whose weight is greater than the average weight_kg of all shipments with the same customer_id, including the shipment itself. Missing weights are not counted in the average. Order by id. Column names and types: id (integer), customer_id (integer), weight_kg (integer).',
@@ -120,7 +120,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c5-i3', chapterId: 5, role: 'independent', kind: 'write', title: 'Name the customer volume step',
+    id: 'c5-i3', chapterId: 5, role: 'independent', starterStyle: 'skeleton', title: 'Name the customer volume step',
     ...CUSTOMERS,
     summary: 'Rewrite the customer volume count as a named step, so the review can reuse it.',
     instructions: 'Use a WITH clause named per_customer that counts shipments for each customer_id. Then return customer_id and shipments for customers with 30 or more shipments, ordered by customer_id. Column names and types: customer_id (integer), shipments (integer).',
@@ -142,7 +142,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['ties', 'nulltext']),
   },
   {
-    id: 'c5-i4', chapterId: 5, role: 'independent', kind: 'write', title: 'Customers with an invoiced shipment',
+    id: 'c5-i4', chapterId: 5, role: 'independent', starterStyle: 'skeleton', title: 'Customers with an invoiced shipment',
     ...BILLING,
     summary: 'Build the billing contact list: customers with at least one invoiced shipment, once each.',
     instructions: 'Return id and name for each customer that has at least one shipment with an invoice. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
@@ -163,7 +163,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'ties']),
   },
   {
-    id: 'c5-i5', chapterId: 5, role: 'independent', kind: 'write', title: 'Customers heavier than the table average',
+    id: 'c5-i5', chapterId: 5, role: 'independent', starterStyle: 'skeleton', title: 'Customers heavier than the table average',
     ...DISPATCH,
     summary: 'Find the customers whose shipments are heavier on average than the average shipment in the table.',
     instructions: 'Return id and name for each customer whose average shipment weight (the average weight_kg of that customer’s shipments) is greater than the average weight_kg across every shipment in the table. Missing weights are not counted in either average. Order by id. Column names and types: id (integer), name (text).',
@@ -184,7 +184,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary', 'ties', 'nulltext']),
   },
   {
-    id: 'c5-b1-p1', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 1: queued shipments above the queued average',
+    id: 'c5-b1-p1', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: queued shipments above the queued average',
     ...DISPATCH,
     summary: 'Find the early queued shipments that outweigh the typical queued load. Part 1 of 3.',
     instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight_kg of every queued shipment in the table. The ids 1 through 60 limit only which shipments are listed. Order by id. Column names and types: id (integer), weight_kg (integer).",
@@ -205,7 +205,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c5-b1-p2', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 2: customers with a heavy shipment',
+    id: 'c5-b1-p2', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: customers with a heavy shipment',
     ...CUSTOMERS,
     summary: 'Find the customers with at least one shipment whose weight_kg is 900 or more. Part 2 of 3.',
     instructions: 'Part 2 of 3. Return id and name for each customer with at least one shipment whose weight_kg is 900 or more. A missing weight does not count. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
@@ -226,7 +226,7 @@ export const chapter5Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
-    id: 'c5-b1-p3', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 3: heavy queued load per driver',
+    id: 'c5-b1-p3', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 3: heavy queued load per driver',
     ...ROUTES,
     summary: 'Count each driver’s heavy queued shipments, showing zero for drivers with none. Part 3 of 3.',
     instructions: 'Part 3 of 3. Use a WITH clause named heavy that counts queued shipments of at least 1800 kg for each driver_id. Return driver_id for every driver and heavy_queued, the count, with 0 when the driver has none. Order by driver_id. Column names and types: driver_id (integer), heavy_queued (integer).',
