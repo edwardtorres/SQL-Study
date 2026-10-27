@@ -61,6 +61,8 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   const runtime = await engine();
   const challenge = await challengeOf(challengeId);
   const start = performance.now();
+  // A Submit waits for the hidden datasets (background-loaded after the editor is ready) on every grading path.
+  await loadHidden(runtime);
   if (challenge.checks) return gradeState(runtime, challenge, sql, start);
   const outcomes: DatasetOutcome[] = [];
   const actualResults = new Map<string, QueryResult>();
@@ -70,7 +72,6 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   } catch (error) {
     return { preview, report: { passed: false, outcomes, elapsedMs: performance.now() - start, error: safeError(error) } };
   }
-  await loadHidden(runtime);
   for (const dataset of challenge.datasets) {
     try {
       const actual = await runtime.run(dataset.id, sql);
