@@ -1,6 +1,9 @@
 import { PGlite } from '@electric-sql/pglite';
 import type { DatasetSpec, QueryResult } from '../core/types';
 import { parsedStatements } from '../grader';
+import type { ParsedStatement } from '../grader/structure';
+import type { CheckQuery, ConstraintTest, StatementKind } from '../core/types';
+import { LearnerTransaction, LearnerTransactionError } from './learner-transaction';
 
 export interface RunOptions {
   mode?: 'read' | 'schema';
@@ -30,6 +33,40 @@ interface PreparedDataset {
 }
 
 const quoteIdentifier = (value: string) => `"${value.replaceAll('"', '""')}"`;
+
+// Statement timeouts and worker crashes must reach the worker so it can restart. Ordinary SQL errors become learner feedback.
+const isFatal = (error: unknown): boolean => {
+  const code = error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' ? error.code : undefined;
+  return code === '57014' || code === '53200' || error instanceof WebAssembly.RuntimeError;
+};
+const learnerMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error)).slice(0, 500);
+const sqlstateOf = (error: unknown): string | null => (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' ? error.code : null);
+
+// Learner transaction control becomes savepoint calls inside the grader's transaction; see learner-transaction.ts.
+function translateTransaction(tx: LearnerTransaction, transaction: { kind: string; savepoint?: string }): string[] {
+  const name = transaction.savepoint ?? '';
+  switch (transaction.kind) {
+    case 'TRANS_STMT_BEGIN': case 'TRANS_STMT_START': return tx.begin();
+    case 'TRANS_STMT_COMMIT': return tx.commit();
+    case 'TRANS_STMT_ROLLBACK': return tx.rollback();
+    case 'TRANS_STMT_SAVEPOINT': return tx.savepoint(name);
+    case 'TRANS_STMT_RELEASE': return tx.release(name);
+    case 'TRANS_STMT_ROLLBACK_TO': return tx.rollbackTo(name);
+    default: throw new LearnerTransactionError('0A000', 'That transaction command is not available in tickets.');
+  }
+}
+
+export interface StateOptions {
+  allow: readonly StatementKind[];
+  transactions?: boolean;
+  checks: readonly CheckQuery[];
+  tests: readonly ConstraintTest[];
+  timeoutMs?: number;
+  rowLimit?: number;
+}
+export interface CheckOutcome { id: string; label: string; result: QueryResult | null; error: string | null }
+export interface TestOutcome { name: string; passed: boolean; message: string }
+export interface StateResult { learnerError: string | null; checks: CheckOutcome[]; tests: TestOutcome[] }
 
 /**
  * One instance belongs to one worker. Datasets are retained; learner effects
@@ -185,6 +222,103 @@ export class WarmEngine {
         return outcomes;
       });
     });
+  }
+
+  /**
+   * Runs the learner's statements, then trusted check queries and constraint tests, inside one rolled-back
+   * transaction. Callers compare the result with the reference's result on the same dataset.
+   */
+  async runState(datasetId: string, sql: string, options: StateOptions): Promise<StateResult> {
+    return this.serial(async () => {
+      if (this.closed) throw new Error('The practice engine is closed.');
+      const dataset = this.prepared.get(datasetId);
+      if (!dataset) throw new Error('The requested dataset is not loaded.');
+      const timeoutMs = options.timeoutMs ?? 1500;
+      const rowLimit = options.rowLimit ?? 1000;
+      if (!Number.isInteger(rowLimit) || rowLimit < 1 || rowLimit > 10_000) throw new Error('Row limit must be an integer from 1 to 10000.');
+      if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000) throw new Error('Statement timeout must be an integer from 1 to 10000 milliseconds.');
+      const statements = await parsedStatements(sql, { mode: 'write', allow: options.allow, transactions: options.transactions ?? false });
+      return this.withDatasetTransaction(dataset, timeoutMs, async (): Promise<StateResult> => {
+        const tx = new LearnerTransaction();
+        try {
+          await this.executeLearner(statements, rowLimit, tx);
+          tx.requireNotAborted();
+        } catch (error) {
+          if (isFatal(error)) throw error;
+          return { learnerError: learnerMessage(error), checks: [], tests: [] };
+        }
+        const checks: CheckOutcome[] = [];
+        for (const check of options.checks) checks.push(await this.checkOutcome(check, rowLimit));
+        const tests: TestOutcome[] = [];
+        for (const test of options.tests) tests.push(await this.constraintOutcome(test));
+        return { learnerError: null, checks, tests };
+      });
+    });
+  }
+
+  private async executeLearner(statements: readonly ParsedStatement[], rowLimit: number, tx: LearnerTransaction): Promise<void> {
+    for (const statement of statements) {
+      if (statement.transaction) {
+        for (const sql of translateTransaction(tx, statement.transaction)) await this.db.exec(sql);
+        continue;
+      }
+      tx.requireNotAborted();
+      try {
+        await this.executeStatements([statement], rowLimit);
+      } catch (error) {
+        if (isFatal(error)) throw error;
+        // Recover the grader's transaction; an open learner block stays aborted until the learner ends it.
+        for (const sql of tx.fail()) await this.db.exec(sql);
+        throw error;
+      }
+    }
+  }
+
+  private async checkOutcome(check: CheckQuery, rowLimit: number): Promise<CheckOutcome> {
+    await this.db.exec('SAVEPOINT desk_check');
+    try {
+      const result = await this.boundedRows(check.sql.replace(/;\s*$/, ''), rowLimit);
+      return { id: check.id, label: check.label, result, error: null };
+    } catch (error) {
+      if (isFatal(error)) throw error;
+      return { id: check.id, label: check.label, result: null, error: learnerMessage(error) };
+    } finally {
+      await this.db.exec('ROLLBACK TO SAVEPOINT desk_check');
+      await this.db.exec('RELEASE SAVEPOINT desk_check');
+    }
+  }
+
+  private async boundedRows(sql: string, rowLimit: number): Promise<QueryResult> {
+    await this.db.exec(`DECLARE desk_check NO SCROLL CURSOR FOR ${sql}`);
+    const result = await this.db.query<unknown[]>(`FETCH FORWARD ${rowLimit + 1} FROM desk_check`, [], { rowMode: 'array' });
+    if (result.rows.length > rowLimit) throw new Error(`Result exceeds the ${rowLimit}-row limit. Add a filter or LIMIT.`);
+    await this.db.exec('CLOSE desk_check');
+    return { rows: result.rows, fields: result.fields };
+  }
+
+  // A constraint test runs its statement in a savepoint and always rolls it back, so tests never change later tests.
+  private async constraintOutcome(test: ConstraintTest): Promise<TestOutcome> {
+    await this.db.exec('SAVEPOINT desk_constraint');
+    let failed = false;
+    let code: string | null = null;
+    let message = '';
+    try {
+      await this.db.exec(test.sql);
+    } catch (error) {
+      if (isFatal(error)) throw error;
+      failed = true;
+      code = sqlstateOf(error);
+      message = learnerMessage(error);
+    } finally {
+      await this.db.exec('ROLLBACK TO SAVEPOINT desk_constraint');
+      await this.db.exec('RELEASE SAVEPOINT desk_constraint');
+    }
+    if (test.expect === 'ok') {
+      return { name: test.name, passed: !failed, message: failed ? `was rejected: ${message}` : 'was accepted.' };
+    }
+    const matches = failed && (test.sqlstate === undefined || (code !== null && (test.sqlstate.length === 2 ? code.startsWith(test.sqlstate) : code === test.sqlstate)));
+    if (matches) return { name: test.name, passed: true, message: `was rejected with SQLSTATE ${code}.` };
+    return { name: test.name, passed: false, message: failed ? `was rejected with SQLSTATE ${code ?? 'none'}, not ${test.sqlstate ?? 'an error'}: ${message}` : `should have been rejected${test.sqlstate ? ` with SQLSTATE ${test.sqlstate}` : ''}, but the statement succeeded.` };
   }
 
   private async withDatasetTransaction<T>(dataset: PreparedDataset, timeoutMs: number, work: () => Promise<T>): Promise<T> {

@@ -3,8 +3,10 @@ import type { DatasetSpec } from '../core/types';
 import { items } from '../data/catalog';
 import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
+import { readPolicy } from '../grader/policy';
+import { sameState, stateDiff } from '../grader/state';
 import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, WorkerRequest, WorkerResponse } from './protocol';
-import { WarmEngine } from './runtime';
+import { WarmEngine, type StateOptions, type StateResult } from './runtime';
 
 let initialization: Promise<WarmEngine> | undefined;
 let info: EngineInfo;
@@ -54,6 +56,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   const challenge = items.find((item) => item.id === challengeId);
   if (!challenge) throw new Error('Unknown ticket.');
   const start = performance.now();
+  if (challenge.checks) return gradeState(runtime, challenge, sql, start);
   const outcomes: DatasetOutcome[] = [];
   const actualResults = new Map<string, QueryResult>();
   let preview: QueryResult | null = null;
@@ -83,6 +86,60 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
     if (mistake) report.mistake = mistake;
   }
   return { report, preview };
+}
+
+// Write tickets: learner statements, then trusted checks and constraint tests, inside one rolled-back transaction per dataset.
+async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string, start: number): Promise<GradedSubmission> {
+  const policy = challenge.policy ?? readPolicy;
+  const options: StateOptions = { allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks ?? [], tests: challenge.constraintTests ?? [] };
+  const outcomes: DatasetOutcome[] = [];
+  const actualStates = new Map<string, StateResult>();
+  let preview: QueryResult | null = null;
+  try {
+    await validateSql(sql, { mode: 'write', allow: policy.allow, transactions: options.transactions ?? false });
+  } catch (error) {
+    return { preview, report: { passed: false, outcomes, elapsedMs: performance.now() - start, error: safeError(error) } };
+  }
+  for (const dataset of challenge.datasets) {
+    try {
+      const actual = await runtime.runState(dataset.id, sql, options);
+      actualStates.set(dataset.id, actual);
+      if (!dataset.hidden) preview = actual.checks[0]?.result ?? null;
+      const expected = await runtime.runState(dataset.id, challenge.referenceSql, options);
+      const diff = stateDiff(actual, expected);
+      outcomes.push({ id: dataset.id, label: dataset.label, hidden: dataset.hidden, passed: diff.passed, diff });
+    } catch (error) {
+      if (fatalError(error)) throw error;
+      outcomes.push({ id: dataset.id, label: dataset.label, hidden: dataset.hidden, passed: false, diff: { passed: false, message: safeError(error), missing: [], extra: [] } });
+    }
+  }
+  const passed = outcomes.every((outcome) => outcome.passed);
+  const report: GradeReport = { passed, outcomes, elapsedMs: performance.now() - start };
+  if (!passed) {
+    const mistake = await matchStateMistake(runtime, challenge, options, actualStates);
+    if (mistake) report.mistake = mistake;
+  }
+  return { report, preview };
+}
+
+// A wrong variant that leaves exactly the learner's state, on every dataset, gets that mistake's explanation.
+async function matchStateMistake(runtime: WarmEngine, challenge: Challenge, options: StateOptions, actual: ReadonlyMap<string, StateResult>): Promise<MistakeFeedback | undefined> {
+  if (actual.size !== challenge.datasets.length) return undefined;
+  for (const variant of challenge.wrongVariants) {
+    let matches = true;
+    for (const dataset of challenge.datasets) {
+      try {
+        const wrong = await runtime.runState(dataset.id, variant.sql, options);
+        if (!sameState(actual.get(dataset.id)!, wrong)) { matches = false; break; }
+      } catch (error) {
+        if (fatalError(error)) throw error;
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return { id: variant.id, mistake: variant.mistake, explanation: variant.explanation };
+  }
+  return undefined;
 }
 
 // A failing submission that returns exactly a known wrong variant's rows on every dataset gets that

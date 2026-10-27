@@ -1,10 +1,13 @@
 import { parse } from 'libpg-query';
-import type { Structure } from '../core/types';
+import { statementKinds, type Structure, type StatementKind } from '../core/types';
+import { notAllowedMessage } from './policy';
 
 export const MAX_SQL_LENGTH = 20_000;
-export interface SqlOptions { mode?: 'read' | 'schema'; structure?: Structure }
+export interface SqlOptions { mode?: 'read' | 'schema' | 'write'; structure?: Structure; allow?: readonly StatementKind[]; transactions?: boolean }
 interface Ast { [key: string]: unknown }
-const SAFE_STATEMENTS = new Set(['SelectStmt', 'CreateStmt', 'InsertStmt', 'UpdateStmt', 'DeleteStmt', 'DropStmt']);
+// The ceiling: no ticket may use a statement kind outside this list. Each ticket then allows a subset (its policy).
+const CEILING = new Set<string>(statementKinds);
+const SCHEMA_DEFAULT: readonly StatementKind[] = ['SelectStmt', 'CreateStmt', 'InsertStmt', 'UpdateStmt', 'DeleteStmt', 'DropStmt'];
 const SAFE_FUNCTIONS = new Set([
   'count', 'sum', 'avg', 'min', 'max', 'coalesce', 'nullif', 'greatest', 'least',
   'lower', 'upper', 'length', 'char_length', 'character_length', 'octet_length', 'substring', 'substr',
@@ -38,10 +41,17 @@ async function validatedTree(sql: string, options: SqlOptions): Promise<Ast> {
   if (sql.includes('\0')) reject('SQL cannot contain a NUL character.');
   const tree = await parse(sql) as unknown as Ast;
   if (!Array.isArray(tree.stmts) || tree.stmts.length === 0) reject('Write a SQL statement before running.');
-  if ((options.mode ?? 'read') === 'read' && tree.stmts.length !== 1) reject('Query tickets accept one SELECT statement.');
+  const mode = options.mode ?? 'read';
+  const allowed = new Set<string>(options.allow ?? (mode === 'schema' ? SCHEMA_DEFAULT : ['SelectStmt']));
+  if (mode === 'read' && tree.stmts.length !== 1) reject('Query tickets accept one SELECT statement.');
   let windowFound = false;
   let cteFound = false;
   let visited = 0;
+  // The policy applies to each top-level statement; nested statement kinds are checked against the ceiling only.
+  for (const raw of tree.stmts as unknown[]) {
+    const kind = record(raw) && record(raw.stmt) ? Object.keys(raw.stmt)[0] : undefined;
+    if (!kind || !allowed.has(kind)) reject(notAllowedMessage(kind ?? 'Unknown'));
+  }
   const visit = (value: unknown): void => {
     if (++visited > 50_000) reject('SQL structure is too complex for this ticket.');
     if (Array.isArray(value)) { value.forEach(visit); return; }
@@ -49,8 +59,14 @@ async function validatedTree(sql: string, options: SqlOptions): Promise<Ast> {
     if (typeof value.relname === 'string') checkRelation(value);
     for (const [key, child] of Object.entries(value)) {
       if (/^[A-Z].*Stmt$/.test(key)) {
-        if (!SAFE_STATEMENTS.has(key)) reject(`${key.replace(/Stmt$/, '')} statements are not allowed in tickets.`);
-        if ((options.mode ?? 'read') === 'read' && key !== 'SelectStmt') reject('Read-only tickets cannot change data, including inside CTEs.');
+        // Nested SELECTs (VALUES lists, subqueries, sources of INSERT ... SELECT) are part of other statements.
+        if (!CEILING.has(key)) reject(notAllowedMessage(key));
+        if (mode === 'read' && key !== 'SelectStmt') reject('Read-only tickets cannot change data, including inside CTEs.');
+        if (key === 'TransactionStmt' && record(child)) {
+          if (Array.isArray(child.options) && child.options.length > 0) reject('Isolation levels and access modes are not available in tickets.');
+          if (child.chain) reject('AND CHAIN is not available in tickets.');
+          if (typeof child.kind === 'string' && child.kind.includes('PREPARE')) reject('Two-phase commit is not available in tickets.');
+        }
       }
       if (key === 'SelectStmt' && record(child) && child.intoClause) reject('SELECT INTO is not allowed; use a schema ticket for DDL.');
       if (key === 'CreateStmt' && record(child) && (child.tablespacename || child.tableSpaceName || child.accessMethod || child.options || child.inhRelations || child.partbound || child.partspec)) reject('Storage, inheritance, and partition options are not available in schema tickets.');
@@ -92,7 +108,8 @@ async function validatedTree(sql: string, options: SqlOptions): Promise<Ast> {
 export async function validateSql(sql: string, options: SqlOptions = {}): Promise<void> { await validatedTree(sql, options); }
 
 /** Validated SQL slices use the parser's UTF-8 byte offsets, never semicolon splitting. */
-export async function parsedStatements(sql: string, options: SqlOptions = {}): Promise<{ sql: string; kind: string; returning: boolean }[]> {
+export interface ParsedStatement { sql: string; kind: string; returning: boolean; transaction: { kind: string; savepoint?: string } | null }
+export async function parsedStatements(sql: string, options: SqlOptions = {}): Promise<ParsedStatement[]> {
   const tree = await validatedTree(sql, options);
   const bytes = new TextEncoder().encode(sql);
   return (tree.stmts as unknown[]).map((raw) => {
@@ -102,6 +119,9 @@ export async function parsedStatements(sql: string, options: SqlOptions = {}): P
     const kind = Object.keys(raw.stmt)[0] ?? '';
     const statement = raw.stmt[kind];
     const returning = record(statement) && Boolean(statement.returningClause || statement.returningList);
-    return { sql: new TextDecoder().decode(bytes.slice(start, start + length)), kind, returning };
+    const transaction = kind === 'TransactionStmt' && record(statement)
+      ? { kind: String(statement.kind), ...(typeof statement.savepoint_name === 'string' ? { savepoint: statement.savepoint_name } : {}) }
+      : null;
+    return { sql: new TextDecoder().decode(bytes.slice(start, start + length)), kind, returning, transaction };
   });
 }

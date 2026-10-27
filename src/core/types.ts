@@ -5,6 +5,19 @@ export type Variant = 'sample' | 'nulls' | 'ties' | 'boundary' | 'empty' | 'null
 export interface DatasetSpec { id: string; label: string; hidden: boolean; seed: number; variant: Variant }
 export type Structure = 'window' | 'cte';
 
+// Statement kinds a ticket can allow. Names are libpg-query node names, so the grader reads the parser's own tree.
+export const statementKinds = [
+  'SelectStmt', 'InsertStmt', 'UpdateStmt', 'DeleteStmt', 'MergeStmt',
+  'CreateStmt', 'AlterTableStmt', 'DropStmt', 'TransactionStmt',
+] as const;
+export type StatementKind = typeof statementKinds[number];
+// What one ticket allows. Read tickets allow SELECT only. Transaction control is accepted only when a ticket sets it.
+export interface Policy { allow: readonly StatementKind[]; transactions?: boolean }
+// A trusted query the grader runs after the learner's statements; its rows describe the resulting state.
+export interface CheckQuery { id: string; label: string; sql: string }
+// A statement that must succeed (expect 'ok') or fail (expect 'error', with a SQLSTATE class or code).
+export interface ConstraintTest { name: string; sql: string; expect: 'ok' | 'error'; sqlstate?: string }
+
 // Mistake tags name the beginner error a wrong variant models. Every wrong variant carries one.
 export const mistakeTags = [
   'GE_VS_GT', 'COUNT_STAR_VS_COL', 'MISSING_GROUP_COL', 'LEFT_TO_INNER', 'NULL_EQUALS',
@@ -41,6 +54,10 @@ export interface Challenge {
   ordered: boolean;
   columns: readonly ColumnRule[];
   structure?: Structure;
+  // Write tickets declare a policy and check queries; the grader runs learner statements, then the checks.
+  policy?: Policy;
+  checks?: readonly CheckQuery[];
+  constraintTests?: readonly ConstraintTest[];
   hints: readonly [string, string, string];
   docs: readonly { label: string; url: string }[];
   datasets: readonly DatasetSpec[];
