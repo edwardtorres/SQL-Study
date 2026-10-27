@@ -1,0 +1,26 @@
+{
+  "id": "c1-i4",
+  "solutionSql": "SELECT DISTINCT status\nFROM shipments\nORDER BY status;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "cancelled"
+    ],
+    [
+      "delivered"
+    ],
+    [
+      "in_transit"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "sorted by status from A to Z",
+      "readingChosen": "Ascending under the default collation.",
+      "alternativeReading": "Byte order. The four status values start with different letters, so both orders match."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Only four statuses exist, and status is NOT NULL, so no NULL row can appear."
+}

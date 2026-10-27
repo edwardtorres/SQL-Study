@@ -1,0 +1,23 @@
+{
+  "id": "c2-b1-p2",
+  "solutionSql": "SELECT id, COALESCE(paid_at, issued_at) AS settled_at\nFROM invoices\nORDER BY id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      1,
+      "2025-12-28T22:00:00.000Z"
+    ],
+    [
+      2,
+      "2025-12-29T00:00:00.000Z"
+    ],
+    [
+      3,
+      "2025-12-28T09:00:00.000Z"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "All 205 invoices are returned. Invoice 3 (paid_at NULL) falls back to issued_at, which is 2025-12-28 09:00 UTC."
+}

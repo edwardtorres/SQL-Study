@@ -1,0 +1,34 @@
+{
+  "id": "c1-i1",
+  "solutionSql": "SELECT id, name\nFROM customers\nWHERE LEFT(name, 1) IN ('B', 'C', 'D')\nORDER BY name;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      3,
+      "Cobalt Paperworks"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "whose name’s first character is a capital B, C, or D",
+      "readingChosen": "Case-sensitive test on the first character: LEFT(name, 1) IN ('B', 'C', 'D').",
+      "alternativeReading": "Case-insensitive first-letter match, or a match that skips leading spaces."
+    },
+    {
+      "phrase": "Order by name from A to Z.",
+      "readingChosen": "Ascending by name under the database default collation.",
+      "alternativeReading": "A locale-aware or case-insensitive collation."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Every sample name starts with a capital letter, so the case-sensitivity wording does not change the three rows returned."
+}

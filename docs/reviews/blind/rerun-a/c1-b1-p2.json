@@ -1,0 +1,29 @@
+{
+  "id": "c1-b1-p2",
+  "solutionSql": "SELECT id, tracking_code\nFROM shipments\nWHERE RIGHT(tracking_code, 4) BETWEEN '0010' AND '0019'\nORDER BY id;",
+  "sampleRowCount": 10,
+  "sampleFirstRows": [
+    [
+      10,
+      "JF-104729-0010"
+    ],
+    [
+      11,
+      "JF-104729-0011"
+    ],
+    [
+      12,
+      "JF-104729-0012"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "ends with a four-digit serial from 0010 to 0019 inclusive",
+      "readingChosen": "Last four characters of tracking_code between '0010' and '0019' as text.",
+      "alternativeReading": "A numeric serial from 10 to 19, or the summary's 'ids 10 through 19'. Each gives the same ten rows here."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Tracking codes end in the zero-padded id, so the rule and the summary select the same shipments on this data."
+}

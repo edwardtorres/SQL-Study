@@ -1,0 +1,32 @@
+{
+  "id": "c3-i3",
+  "solutionSql": "SELECT customer_id,\n       MIN(booked_at) AS first_booked,\n       MAX(booked_at) AS last_booked\nFROM shipments\nWHERE booked_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND booked_at <  TIMESTAMPTZ '2026-02-01 00:00:00+00'\nGROUP BY customer_id\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "2026-01-01T00:00:00.000Z",
+      "2026-01-31T00:00:00.000Z"
+    ],
+    [
+      2,
+      "2026-01-01T02:00:00.000Z",
+      "2026-01-31T23:59:59.999Z"
+    ],
+    [
+      3,
+      "2026-01-01T04:00:00.000Z",
+      "2026-01-16T16:00:00.000Z"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "For each customer_id",
+      "readingChosen": "Only customer_ids with a shipment booked in the window appear (6 rows here).",
+      "alternativeReading": "Every customer in the customers table, with NULL first and last bookings for customers with no January bookings (8 rows here)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Shipment 49 (customer 1, booked exactly 2026-01-01 00:00:00 UTC) sets customer 1's first_booked, so the inclusive lower bound matters."
+}

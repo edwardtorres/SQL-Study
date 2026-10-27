@@ -39,3 +39,16 @@ Open, not changed: the T-SQL dialect notes in chapters 1 and 6 still need the Mi
 - **A5 demonstrations.** Labeled "Demonstrated by the engine": `||` with NULL and CONCAT (chapter 6), SUBSTRING from position 0 (chapter 6), GROUP BY grouping NULL driver ids (chapter 2), a plain date meaning midnight (chapter 1), and the half-open range note (chapter 6). The content check runs every demonstration on the visible sample.
 - **A6 dialect notes.** Microsoft Learn, TOP page: "When you use TOP with the ORDER BY clause, the result set is limited to the first n number of ordered rows." and "Otherwise, TOP returns the first n number of rows in an undefined order." The chapter 1 note now says only that. Microsoft Learn, DATEADD page: "This function adds a number (a signed bigint) to a datepart of an input date, and returns a modified date/time value." The chapter 6 note now says only that.
 - **A7 startup.** Only the sample is seeded at init; hidden datasets load in the background, one at a time, and a Submit awaits them. Median time to a runnable editor (five fresh Chromium loads, 1280 px): 3.89 s, from 4.5 s before.
+
+## Part A follow-up: fresh blind re-solve of the 21 changed tickets
+
+A fresh solver saw only the reworded ticket text, the schema, and the regenerated visible sample. It did not see the references or the earlier solutions. Its SQL agrees with every reference on every dataset that ticket uses (`docs/reviews/blind/rerun-a/compare.json`, 21 of 21). It reported no low-confidence solves; five were medium: c3-i1, c3-b1-p1, c4-i6, c5-b1-p1, c6-b1-p1.
+
+Its alternative readings changed the sample result for four tickets, so those wordings were tightened without changing any reference:
+- `c4-b1-p2`: "status is delivered" now says the shipments.status column, not shipment events (an events reading returned 6 customers, not 2).
+- `c5-b1-p1`: the average is over every queued shipment in the table; ids 1 through 60 limit only which shipments are listed (the ids-only average returned 7 rows, not 8).
+- `c4-i6` and `c3-i3`: "for each customer_id" now lists only customers with at least one shipment (in the range, for c3-i3); customers 7 and 8 have none.
+- `c3-b1-p1`: every shipment counts, whatever its status, cancelled ones included.
+- `c3-i1`: customers with no invoices are not listed.
+
+The re-solve's other ambiguities (for example "ordered by name from A to Z") were checked against the reference and need no change. The content check passes after these edits.

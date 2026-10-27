@@ -74,7 +74,7 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-i1', chapterId: 3, role: 'independent', kind: 'write', title: 'Billed amount per customer',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Total what each customer has been billed, for the monthly review.',
-    instructions: 'Return customer_id and billed_amount, the total of the amount column over every invoice whose shipment belongs to that customer, ordered by customer_id. Each invoice counts once. Column names and types: customer_id (integer), billed_amount (numeric).',
+    instructions: 'Return customer_id and billed_amount, the total of the amount column over every invoice whose shipment belongs to that customer, ordered by customer_id. Each invoice counts once. Customers with no invoices are not listed. Column names and types: customer_id (integer), billed_amount (numeric).',
     starterSql: 'SELECT customer_id\nFROM shipments;\n',
     referenceSql: 'SELECT s.customer_id, SUM(i.amount) AS billed_amount FROM invoices i JOIN shipments s ON s.id = i.shipment_id GROUP BY s.customer_id ORDER BY s.customer_id;',
     wrongVariants: [
@@ -116,7 +116,7 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-i3', chapterId: 3, role: 'independent', kind: 'write', title: 'First and last booking per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Give each customer their first and last booking date for the account review.',
-    instructions: 'For each customer_id, return the earliest booked_at as first_booked and the latest booked_at as last_booked. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Order by customer_id. Column names and types: customer_id (integer), first_booked (timestamptz), last_booked (timestamptz).',
+    instructions: 'For each customer_id that has at least one shipment in the range (customers with none in the range are not listed), return the earliest booked_at as first_booked and the latest booked_at as last_booked. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Order by customer_id. Column names and types: customer_id (integer), first_booked (timestamptz), last_booked (timestamptz).',
     starterSql: 'SELECT customer_id, booked_at\nFROM shipments;\n',
     referenceSql: 'SELECT customer_id, MIN(booked_at) AS first_booked, MAX(booked_at) AS last_booked FROM shipments WHERE booked_at >= \'2026-01-01T00:00:00Z\' AND booked_at < \'2026-02-01T00:00:00Z\' GROUP BY customer_id ORDER BY customer_id;',
     wrongVariants: [
@@ -158,7 +158,7 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-b1-p1', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', kind: 'write', title: 'Boss ticket, part 1: busy booking days',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the days with at least two bookings, with the count for each. Part 1 of 2.',
-    instructions: 'Part 1 of 2. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Group them by the calendar date of booked_at in UTC. Return booking_day (date) and bookings (integer) for days with at least two bookings. Order by booking_day. Column names and types: booking_day (date), bookings (integer).',
+    instructions: 'Part 1 of 2. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Group them by the calendar date of booked_at in UTC. Return booking_day (date) and bookings (integer) for days with at least two bookings. Count every shipment, whatever its status, cancelled ones included. Order by booking_day. Column names and types: booking_day (date), bookings (integer).',
     starterSql: 'SELECT booked_at\nFROM shipments;\n',
     referenceSql: 'SELECT (booked_at AT TIME ZONE \'UTC\')::date AS booking_day, COUNT(*)::integer AS bookings FROM shipments WHERE booked_at >= \'2026-01-01T00:00:00Z\' AND booked_at < \'2026-02-01T00:00:00Z\' GROUP BY booking_day HAVING COUNT(*) >= 2 ORDER BY booking_day;',
     wrongVariants: [

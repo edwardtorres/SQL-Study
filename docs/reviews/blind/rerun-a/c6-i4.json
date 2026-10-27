@@ -1,0 +1,23 @@
+{
+  "id": "c6-i4",
+  "solutionSql": "SELECT customer_id,\n       ROUND(AVG(weight_kg))::integer AS avg_kg\nFROM shipments\nWHERE customer_id BETWEEN 1 AND 6\nGROUP BY customer_id\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      1021
+    ],
+    [
+      2,
+      1047
+    ],
+    [
+      3,
+      993
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Customer 5 averages exactly 1126.5 and customer 6 exactly 899.5. Half-up rounding gives 1127 and 900, so the tie rule shows up in the sample."
+}

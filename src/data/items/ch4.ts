@@ -201,7 +201,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-i6', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipments and events per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Count each customer’s shipments and their scan events without double counting.',
-    instructions: 'For each customer_id, return shipments: the number of distinct shipments that customer booked, including shipments with no events and events (the number of shipment_events rows for that customer). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), events (integer).',
+    instructions: 'For each customer_id that has at least one shipment (customers with no shipments are not listed), return shipments: the number of distinct shipments that customer booked, including shipments with no events and events (the number of shipment_events rows for that customer). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), events (integer).',
     starterSql: 'SELECT customer_id, id\nFROM shipments;\n',
     referenceSql: 'SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;',
     wrongVariants: [
@@ -264,7 +264,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-b1-p2', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', kind: 'write', title: 'Boss ticket, part 2: customers without a delivery',
     ...DISPATCH,
     summary: 'Find the customers who have not had any delivered shipment. Part 2 of 3.',
-    instructions: "Part 2 of 3. Return id and name for customers with no shipment whose status is ‘delivered’. Customers with only queued, in_transit or cancelled shipments, and customers with no shipments at all, qualify. Order by id. Column names and types: id (integer), name (text).",
+    instructions: "Part 2 of 3. Return id and name for customers with no shipment whose shipments.status column is ‘delivered’ (shipment events do not count). Customers with only queued, in_transit or cancelled shipments, and customers with no shipments at all, qualify. Order by id. Column names and types: id (integer), name (text).",
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s WHERE s.customer_id = c.id AND s.status = 'delivered') ORDER BY c.id;",
     wrongVariants: [

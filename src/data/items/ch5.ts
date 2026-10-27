@@ -187,7 +187,7 @@ export const chapter5Items: readonly Challenge[] = [
     id: 'c5-b1-p1', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 1: queued shipments above the queued average',
     ...DISPATCH,
     summary: 'Find the early queued shipments that outweigh the typical queued load. Part 1 of 3.',
-    instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight_kg of the queued shipments only (status queued). Order by id. Column names and types: id (integer), weight_kg (integer).",
+    instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight_kg of every queued shipment in the table. The ids 1 through 60 limit only which shipments are listed. Order by id. Column names and types: id (integer), weight_kg (integer).",
     starterSql: 'SELECT id, weight_kg\nFROM shipments;\n',
     referenceSql: "SELECT s.id, s.weight_kg FROM shipments s WHERE s.status = 'queued' AND s.id <= 60 AND s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q WHERE q.status = 'queued') ORDER BY s.id;",
     wrongVariants: [

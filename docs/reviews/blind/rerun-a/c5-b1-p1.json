@@ -1,0 +1,29 @@
+{
+  "id": "c5-b1-p1",
+  "solutionSql": "SELECT s.id, s.weight_kg\nFROM shipments AS s\nWHERE s.id BETWEEN 1 AND 60\n  AND s.status = 'queued'\n  AND s.weight_kg > (\n    SELECT AVG(q.weight_kg)\n    FROM shipments AS q\n    WHERE q.status = 'queued'\n  )\nORDER BY s.id;",
+  "sampleRowCount": 8,
+  "sampleFirstRows": [
+    [
+      7,
+      1412
+    ],
+    [
+      13,
+      1986
+    ],
+    [
+      36,
+      1680
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "greater than the average weight_kg of the queued shipments only (status queued)",
+      "readingChosen": "Average over all queued shipments in the table (1001.0). The ids 1 to 60 limit applies to the rows returned.",
+      "alternativeReading": "Average over queued shipments with ids 1 to 60 only (about 1124.3). Measured: 7 rows, dropping id 38 (1010 kg)."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Shipment 38 (1010 kg) clears the table-wide queued average of 1001.0 by 9 kg, so the average scope decides whether that row appears."
+}

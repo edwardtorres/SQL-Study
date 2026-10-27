@@ -1,0 +1,32 @@
+{
+  "id": "c4-i6",
+  "solutionSql": "SELECT s.customer_id,\n       COUNT(DISTINCT s.id)::integer AS shipments,\n       COUNT(e.id)::integer AS events\nFROM shipments AS s\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id\nGROUP BY s.customer_id\nORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      40,
+      120
+    ],
+    [
+      2,
+      40,
+      111
+    ],
+    [
+      3,
+      40,
+      111
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "For each customer_id",
+      "readingChosen": "Only customers that have shipments (customers 1 to 6 here).",
+      "alternativeReading": "Every customer in the customers table, adding customers 7 and 8 with 0 shipments and 0 events."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Events summed across customers total 678, equal to the shipment_events row count, so the join neither drops nor duplicates events."
+}
