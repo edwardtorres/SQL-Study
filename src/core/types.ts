@@ -1,7 +1,7 @@
 export interface Field { name: string; dataTypeID: number }
 export interface QueryResult { fields: Field[]; rows: unknown[][] }
 export interface ColumnRule { name: string; type: number }
-export type Variant = 'sample' | 'nulls' | 'ties' | 'boundary' | 'empty' | 'nulltext';
+export type Variant = 'sample' | 'nulls' | 'ties' | 'boundary' | 'empty' | 'nulltext' | 'precision';
 export interface DatasetSpec { id: string; label: string; hidden: boolean; seed: number; variant: Variant }
 export type Structure = 'window' | 'cte';
 

@@ -9,6 +9,7 @@ export const hiddenDatasets: readonly DatasetSpec[] = [
   { id: 'boundary', label: 'Edge case C', hidden: true, seed: 181081, variant: 'boundary' },
   { id: 'empty', label: 'Edge case D', hidden: true, seed: 196613, variant: 'empty' },
   { id: 'nulltext', label: 'Edge case E', hidden: true, seed: 214747, variant: 'nulltext' },
+  { id: 'precision', label: 'Edge case F', hidden: true, seed: 231917, variant: 'precision' },
 ];
 
 export const datasetCatalog: readonly DatasetSpec[] = [sampleDataset, ...hiddenDatasets];

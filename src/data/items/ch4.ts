@@ -117,7 +117,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-i2', chapterId: 4, role: 'independent', kind: 'write', title: 'Each driver and their supervisor',
     colleague: 'Olin Moss', colleagueRole: 'Pipeline engineer',
     summary: 'List every driver with the name of their supervisor, for the staffing review.',
-    instructions: 'Return id and name for every driver, and supervisor_name for the driver’s supervisor (blank for a driver with no supervisor). Order by id. Column names and types: id (integer), name (text), supervisor_name (text).',
+    instructions: 'Return id and name for every driver, and supervisor_name for the driver’s supervisor (NULL, meaning missing rather than an empty string, for a driver with no supervisor). Order by id. Column names and types: id (integer), name (text), supervisor_name (text).',
     starterSql: 'SELECT id, name, supervisor_id\nFROM drivers;\n',
     referenceSql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d LEFT JOIN drivers s ON s.id = d.supervisor_id ORDER BY d.id;',
     wrongVariants: [
@@ -201,7 +201,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-i6', chapterId: 4, role: 'independent', kind: 'write', title: 'Shipments and events per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Count each customer’s shipments and their scan events without double counting.',
-    instructions: 'For each customer_id, return shipments (the number of distinct shipments, including ones with no events) and events (the number of shipment_events rows for that customer). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), events (integer).',
+    instructions: 'For each customer_id, return shipments: the number of distinct shipments that customer booked, including shipments with no events and events (the number of shipment_events rows for that customer). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), events (integer).',
     starterSql: 'SELECT customer_id, id\nFROM shipments;\n',
     referenceSql: 'SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;',
     wrongVariants: [
@@ -222,7 +222,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-i7', chapterId: 4, role: 'independent', kind: 'write', title: 'Drivers who delivered something',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'List each driver who delivered a shipment on routes 1 or 2, once each.',
-    instructions: 'Return id and name for each driver who carries at least one shipment with status delivered on route 1 or route 2. Each driver appears once. Order by id. Column names and types: id (integer), name (text).',
+    instructions: 'Return id and name for each driver who carries at least one shipment with status delivered whose route_id is 1 or 2. Each driver appears once. Order by id. Column names and types: id (integer), name (text).',
     starterSql: 'SELECT id, name\nFROM drivers;\n',
     referenceSql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;",
     wrongVariants: [
@@ -264,7 +264,7 @@ export const chapter4Items: readonly Challenge[] = [
     id: 'c4-b1-p2', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', kind: 'write', title: 'Boss ticket, part 2: customers without a delivery',
     ...DISPATCH,
     summary: 'Find the customers who have not had any delivered shipment. Part 2 of 3.',
-    instructions: "Part 2 of 3. Return id and name for customers with no shipment whose status is delivered. Order by id. Column names and types: id (integer), name (text).",
+    instructions: "Part 2 of 3. Return id and name for customers with no shipment whose status is ‘delivered’. Customers with only queued, in_transit or cancelled shipments, and customers with no shipments at all, qualify. Order by id. Column names and types: id (integer), name (text).",
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s WHERE s.customer_id = c.id AND s.status = 'delivered') ORDER BY c.id;",
     wrongVariants: [

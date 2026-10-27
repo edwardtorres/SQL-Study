@@ -90,6 +90,11 @@ Step 2 rules (enforced by the content check and its Vitest suite):
 - Every item has three hint tiers (nudge, approach, partial query).
 - Lesson claims are checked against the cited pages. Quotes in `src/data/citations.json`
   must appear verbatim on the live page; `scripts/verify-quotes.mjs` checks this.
+- At least one wrong variant per graded item must fail on the visible sample, not only
+  on hidden datasets. A learner can then see a wrong answer without any hidden data.
+- A lesson claim with no verbatim documentation quote is shown as a demonstration:
+  a runnable example labeled "Demonstrated by the engine", run by the content check.
+- Hidden datasets are seeded after the editor is ready. A Submit waits for them if needed.
 
 Step 3 plan note (recorded, not built): chapters 9 and 11 need a per-ticket
 statement policy that allows DDL and DML. Grading will run the learner's statements,

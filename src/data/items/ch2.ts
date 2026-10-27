@@ -180,8 +180,8 @@ export const chapter2Items: readonly Challenge[] = [
   {
     id: 'c2-b1-p2', chapterId: 2, role: 'boss', bossGroup: 'c2-boss', kind: 'write', title: 'Boss ticket, part 2: settled dates',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
-    summary: 'Give every invoice one settled date for the aging report. Part 2 of 2.',
-    instructions: 'Part 2 of 2. For every invoice return id and settled_at: the paid_at date when the invoice is paid, otherwise the issued_at date. Order by id ascending. Column names and order: id (integer), settled_at (timestamptz).',
+    summary: 'Give every invoice one settled timestamp for the aging report. Part 2 of 2.',
+    instructions: 'Part 2 of 2. For every invoice return id and settled_at: the paid_at value (a full timestamp, not a date) when paid_at is not missing, otherwise the issued_at value (also a full timestamp). Order by id ascending. Column names and order: id (integer), settled_at (timestamptz).',
     starterSql: 'SELECT id, paid_at\nFROM invoices;\n',
     referenceSql: 'SELECT id, COALESCE(paid_at, issued_at) AS settled_at FROM invoices ORDER BY id;',
     wrongVariants: [

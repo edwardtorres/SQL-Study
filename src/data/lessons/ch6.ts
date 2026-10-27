@@ -54,6 +54,10 @@ export const lesson6: Lesson = {
         { mistake: 'CAST_ROUNDING', text: 'Truncating and rounding give different whole numbers. Read the ticket: nearest whole number means ROUND, not TRUNC.' },
       ],
       citations: ['pg-left-function', 'pg-upper', 'pg-substring-start', 'pg-concat-operator', 'pg-concat-ignores', 'pg-round-ties', 'pg-int-division'],
+      demonstrations: [
+        { claim: "The || operator returns NULL when either side is NULL; CONCAT skips a NULL argument.", sql: "SELECT 'Region: ' || NULL::text AS with_operator, CONCAT('Region: ', NULL::text) AS with_concat;" },
+        { claim: "SUBSTRING counts positions from 1, so a start of 0 shortens the result by one character.", sql: "SELECT SUBSTRING('Aster' FROM 0 FOR 3) AS from_zero, SUBSTRING('Aster' FROM 1 FOR 3) AS from_one;" },
+      ],
     },
     {
       id: 'c6-s3',
@@ -75,10 +79,14 @@ export const lesson6: Lesson = {
         explanation: 'The start is the first moment of the day and the end is the first moment of the next day. Every moment in between is kept, including 23:59:59.999.',
       },
       commonMistakes: [
+        { mistake: 'BETWEEN_END_BOUND', text: 'Half-open ranges: start with >= the first instant of the period and stop with < the first instant of the next period. Shown below, a BETWEEN range that stops at 23:59:59 drops the last fraction of a second.' },
         { mistake: 'BETWEEN_END_BOUND', text: 'BETWEEN includes its end value. A range ending at 23:59:59 misses the last fraction of a second, so use < the next day.' },
         { mistake: 'TIMEZONE_ASSUMED', text: 'Without AT TIME ZONE, a timestamp literal with no zone is read in the session’s TimeZone setting, so the day boundary depends on that setting. Name the zone in the query.' },
       ],
       citations: ['pg-at-time-zone', 'pg-at-time-zone-out', 'pg-between', 'pg-timezone-assumed'],
+      demonstrations: [
+        { claim: "A range that ends at 23:59:59 with BETWEEN misses the last fraction of that second; a half-open range keeps the whole day.", sql: "SELECT COUNT(*) FILTER (WHERE booked_at BETWEEN '2026-01-31T00:00:00Z' AND '2026-01-31T23:59:59Z')::integer AS between_end, COUNT(*) FILTER (WHERE booked_at >= '2026-01-31T00:00:00Z' AND booked_at < '2026-02-01T00:00:00Z')::integer AS half_open FROM shipments;" },
+      ],
     },
   ],
 };

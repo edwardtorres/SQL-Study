@@ -1,4 +1,5 @@
-import { datasetCatalog, schema, seedSql } from '../data';
+import { datasetCatalog, hiddenDatasets, sampleDataset, schema, seedSql } from '../data';
+import type { DatasetSpec } from '../core/types';
 import { items } from '../data/catalog';
 import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
@@ -9,6 +10,7 @@ let initialization: Promise<WarmEngine> | undefined;
 let info: EngineInfo;
 let queue: Promise<void> = Promise.resolve();
 let developmentSeed: number | undefined;
+let hiddenLoaded: Promise<void> | undefined;
 const safeError = (error: unknown): string => (error instanceof Error ? error.message : String(error)).slice(0, 500);
 const fatalError = (error: unknown): boolean => {
   if (error instanceof WebAssembly.RuntimeError) return true;
@@ -18,20 +20,34 @@ const fatalError = (error: unknown): boolean => {
   }
   return /out of memory|memory access out of bounds|memory allocation failed|cannot enlarge memory/i.test(safeError(error));
 };
+const seedFor = (dataset: DatasetSpec): number => (developmentSeed === undefined ? dataset.seed : developmentSeed + datasetCatalog.indexOf(dataset));
+// Startup seeds only the visible sample; that is all the editor needs to run a query.
 function engine(): Promise<WarmEngine> {
   if (!initialization) {
     initialization = (async () => {
       const start = performance.now();
       const runtime = await WarmEngine.create();
-      for (const dataset of datasetCatalog) {
-        const seed = developmentSeed === undefined ? dataset.seed : developmentSeed + datasetCatalog.indexOf(dataset);
-        await runtime.prepare({ ...dataset, seed }, seedSql(seed, dataset.variant));
-      }
+      const seed = seedFor(sampleDataset);
+      await runtime.prepare({ ...sampleDataset, seed }, seedSql(seed, sampleDataset.variant));
       info = { initializationMs: performance.now() - start, memoryBytes: runtime.memoryBytes() };
       return runtime;
     })();
   }
   return initialization;
+}
+// Hidden datasets are seeded one at a time on the engine's queue, so a learner's preview waits for at most one of them.
+// A Submit awaits this promise. A failed load clears it so the next Submit retries.
+function loadHidden(runtime: WarmEngine): Promise<void> {
+  hiddenLoaded ??= (async () => {
+    for (const dataset of hiddenDatasets) {
+      const seed = seedFor(dataset);
+      await runtime.prepare({ ...dataset, seed }, seedSql(seed, dataset.variant));
+    }
+  })().catch((error: unknown) => {
+    hiddenLoaded = undefined;
+    throw error;
+  });
+  return hiddenLoaded;
 }
 async function grade(challengeId: string, sql: string): Promise<GradedSubmission> {
   const runtime = await engine();
@@ -46,6 +62,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   } catch (error) {
     return { preview, report: { passed: false, outcomes, elapsedMs: performance.now() - start, error: safeError(error) } };
   }
+  await loadHidden(runtime);
   for (const dataset of challenge.datasets) {
     try {
       const actual = await runtime.run(dataset.id, sql);
@@ -91,7 +108,9 @@ async function matchMistake(runtime: WarmEngine, challenge: Challenge, actual: R
 async function handle(request: EngineRequest): Promise<EngineValue> {
   if (request.type === 'init') {
     if (import.meta.env.DEV && 'devSeed' in request) developmentSeed = request.devSeed;
-    await engine();
+    const runtime = await engine();
+    // Start the hidden datasets after the editor can run; a failure here is retried on the next Submit.
+    void loadHidden(runtime).catch(() => undefined);
     return info;
   }
   const runtime = await engine();

@@ -76,7 +76,7 @@ const chapterDefinitions = [
 
 const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
   1: [
-    { dialect: 'T-SQL', note: 'T-SQL uses TOP for a simple row cap; PostgreSQL uses LIMIT. Use ORDER BY when selecting a predictable subset.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/queries/top-transact-sql' },
+    { dialect: 'T-SQL', note: 'T-SQL TOP (expression) limits the rows returned. With ORDER BY it returns the first n ordered rows; without ORDER BY it returns the first n rows in an undefined order. PostgreSQL LIMIT is a separate clause, and this game pairs it with ORDER BY.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/queries/top-transact-sql' },
     { dialect: 'Spark SQL', note: 'Spark SQL also supports LIMIT. Its reference pairs LIMIT with ORDER BY to make the returned rows deterministic.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-limit.html' },
   ],
   2: [
@@ -96,7 +96,7 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
     { dialect: 'Spark SQL', note: 'Spark supports common table expressions with WITH as temporary named results within a statement.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-cte.html' },
   ],
   6: [
-    { dialect: 'T-SQL', note: 'T-SQL provides DATEADD(datepart, number, date). PostgreSQL date arithmetic uses interval expressions, documented on its date and time functions page.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/functions/dateadd-transact-sql' },
+    { dialect: 'T-SQL', note: 'T-SQL DATEADD(datepart, number, date) adds a signed bigint number of datepart units to a date and returns the modified value.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/functions/dateadd-transact-sql' },
     { dialect: 'Spark SQL', note: 'Spark has its own catalog of date, timestamp and string functions. Check the documented function signatures before translating.', source: 'https://spark.apache.org/docs/latest/sql-ref-functions-builtin.html' },
   ],
   7: [

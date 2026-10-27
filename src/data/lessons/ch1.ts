@@ -79,6 +79,9 @@ export const lesson1: Lesson = {
         { mistake: 'BETWEEN_END_BOUND', text: 'BETWEEN includes its end value. A plain date as the end of a timestamp range means midnight, so the rest of that day falls outside the range.' },
       ],
       citations: ['pg-like-wildcards', 'pg-between', 'pg-distinct'],
+      demonstrations: [
+        { claim: "A plain date used as a timestamp means midnight at the start of that day.", sql: "SELECT '2026-01-31'::timestamp AS plain_date, '2026-01-31 23:59:59.999'::timestamp AS last_millisecond;" },
+      ],
     },
   ],
 };

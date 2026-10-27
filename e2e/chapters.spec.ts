@@ -119,3 +119,52 @@ test('keyboard-only path from the chapter list to the lesson and the scratchpad'
   await page.keyboard.press('Control+Enter');
   await expect(page.locator('.results-card table')).toBeVisible({ timeout: 40_000 });
 });
+
+// Keyboard-only submission of a chapter ticket: focus order, typing, Control+Enter, and Submit with Enter.
+for (const width of [390, 1280]) {
+  test(`keyboard-only chapter ticket submission at ${width}px`, async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
+    await tabUntil(page, 'Open chapter 5');
+    await page.keyboard.press('Enter');
+    await tabUntil(page, 'Shipments heavier than average');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Run sample', exact: true })).toBeEnabled({ timeout: 35_000 });
+    await tabUntil(page, 'SQL query');
+    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Delete');
+    await page.keyboard.type(REFERENCE.replace(/;$/, ''));
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Control+Enter');
+    await expect(page.locator('.results-card table')).toBeVisible({ timeout: 40_000 });
+    await tabUntil(page, 'Submit query');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name: 'Ticket passed. Nice work.' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.dataset-feedback')).toHaveCount(3);
+  });
+}
+
+// Upgrade: a real version 1 save in localStorage must load, keep its drafts and passes, and be rewritten as version 2.
+test('a real version 1 save loads with its drafts and passes, then upgrades to version 2', async ({ page }) => {
+  test.setTimeout(90_000);
+  const v1 = {
+    version: 1,
+    activeTicket: 'dispatch',
+    tickets: {
+      dispatch: { draft: 'SELECT id FROM shipments LIMIT 1;', attempts: 1, failures: 0, passed: true, hintTier: 0, solutionRevealed: false, xp: 100 },
+    },
+  };
+  await page.addInitScript((save) => { localStorage.setItem('larkspur-sql-desk.progress', JSON.stringify(save)); }, v1);
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Open chapter 1$/ })).toBeVisible();
+  await openChapter(page, 1);
+  await expect(page.locator('.practice-row .passed-badge')).toHaveCount(1);
+  await page.getByRole('button', { name: /The heavy-load shortlist/ }).first().tap();
+  await expect(page.getByRole('textbox', { name: 'SQL query', exact: true })).toContainText('LIMIT 1');
+  await page.getByRole('textbox', { name: 'SQL query', exact: true }).fill('SELECT id FROM shipments LIMIT 2;');
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null')?.version)).toBe(2);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null'));
+  expect(saved.lessons).toEqual({});
+  expect(saved.tickets.dispatch.passed).toBe(true);
+});

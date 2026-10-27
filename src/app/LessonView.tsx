@@ -9,6 +9,7 @@ import type { QueryResult } from '../core/types';
 import type { LessonProgress } from '../save/progress';
 import ResultsTable from '../components/ResultsTable';
 import { shuffleOptions } from './model';
+import type { Demonstration } from '../core/lesson';
 
 const SqlEditor = lazy(() => import('../components/SqlEditor'));
 
@@ -26,6 +27,26 @@ async function loadLesson(chapterId: number): Promise<Lesson> {
 }
 
 const mistakeLabel = (mistake: MistakeTag) => mistake.replaceAll('_', ' ').toLowerCase();
+
+function DemonstrationCard({ demonstration }: { demonstration: Demonstration }) {
+  const [result, setResult] = useState<QueryResult | null>(null);
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true); setMessage('');
+    try { await sqlEngine.initialize(); setResult(await sqlEngine.preview(demonstration.sql)); }
+    catch (error) { setResult(null); setMessage(error instanceof Error ? error.message : String(error)); }
+    finally { setBusy(false); }
+  };
+  return <div className="demonstration">
+    <p className="eyebrow">DEMONSTRATED BY THE ENGINE</p>
+    <p>{demonstration.claim}</p>
+    <pre>{demonstration.sql}</pre>
+    <div className="button-row"><button className="secondary-button" disabled={busy} onClick={() => { void run(); }}>{busy ? <LoaderCircle className="spin" size={14} /> : <Play size={14} />}Run demonstration</button></div>
+    {message && <div className="query-error" role="alert"><XCircle size={18} /><span>{message}</span></div>}
+    {result && <div className="results-card"><ResultsTable result={result} /></div>}
+  </div>;
+}
 
 function Section({ section, saved, onAnswer }: { section: LessonSection; saved: LessonProgress | undefined; onAnswer: (progress: LessonProgress) => void }) {
   const [text, setText] = useState(section.example);
@@ -69,6 +90,7 @@ function Section({ section, saved, onAnswer }: { section: LessonSection; saved: 
       {checked && <div className={`predict-result ${answeredCorrectly ? 'predict-right' : 'predict-wrong'}`} role="status">{answeredCorrectly ? <Check size={16} /> : <XCircle size={16} />}<p>{answeredCorrectly ? 'Right. ' : 'Not quite. '}{section.predict.explanation}</p></div>}
     </fieldset>
     <div className="common-mistakes"><h3>Common mistakes</h3><ul>{section.commonMistakes.map((mistake) => <li key={mistake.text}><span className="mistake-tag">{mistakeLabel(mistake.mistake)}</span>{mistake.text}</li>)}</ul></div>
+    {section.demonstrations?.map((demonstration) => <DemonstrationCard key={demonstration.sql} demonstration={demonstration} />)}
     <div className="source-links">{section.citations.map((id) => {
       const citation = citations.find((entry) => entry.id === id);
       if (!citation) return null;

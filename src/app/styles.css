@@ -49,3 +49,6 @@
 @media(max-width:680px){.chapter-grid{grid-template-columns:minmax(0,1fr)}.chapter-card{padding:18px}.predict-card{padding:12px}.chapter-main{gap:16px}}
 /* Links inside running text must be distinguishable without color (WCAG 1.4.1). */
 .lesson-section a,.chapter-main a,.mistake-feedback a{text-decoration:underline;text-underline-offset:3px}
+/* Engine-demonstrated claims: labeled so a learner can tell them from documented rules. */
+.demonstration{border:1px dashed #b8cdc2;border-radius:10px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+.demonstration pre{margin:0}

@@ -143,7 +143,7 @@ export const chapter6Items: readonly Challenge[] = [
     id: 'c6-i4', chapterId: 6, role: 'independent', kind: 'write', title: 'Average shipment weight in whole kilograms',
     ...CUSTOMERS,
     summary: 'Give each early customer an average shipment weight in whole kilograms for the account review.',
-    instructions: 'For customers with ids 1 through 6, return customer_id and avg_kg, the average weight of their shipments rounded to the nearest whole kilogram. Missing weights are ignored. Order by customer_id. Column names and types: customer_id (integer), avg_kg (integer).',
+    instructions: 'For customers with ids 1 through 6, return customer_id and avg_kg, the average weight of their shipments rounded to the nearest whole kilogram, with a half kilogram (2.5) rounding up to 3. Missing weights are ignored. Order by customer_id. Column names and types: customer_id (integer), avg_kg (integer).',
     starterSql: 'SELECT customer_id, weight_kg\nFROM shipments;\n',
     referenceSql: 'SELECT customer_id, ROUND(AVG(weight_kg))::integer AS avg_kg FROM shipments WHERE customer_id <= 6 GROUP BY customer_id ORDER BY customer_id;',
     wrongVariants: [
@@ -185,7 +185,7 @@ export const chapter6Items: readonly Challenge[] = [
     id: 'c6-b1-p1', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 1: weight bands by status',
     ...DISPATCH,
     summary: 'Count shipments in each weight band for every status, with missing weights shown as unweighed. Part 1 of 3.',
-    instructions: "Part 1 of 3. For each status, count the shipments in each weight band: unweighed when weight_kg is missing, light when it is under 1000 kg, and heavy otherwise. Return status (text), weight_band (text) and shipments (integer). Order by status, then weight_band.",
+    instructions: "Part 1 of 3. For each status and weight band that has at least one shipment, count the shipments. The bands are: unweighed when weight_kg is missing, light when it is under 1000 kg, and heavy otherwise. Return status (text), weight_band (text) and shipments (integer). Order by status, then weight_band.",
     starterSql: 'SELECT status, weight_kg\nFROM shipments;\n',
     referenceSql: "SELECT status, CASE WHEN weight_kg IS NULL THEN 'unweighed' WHEN weight_kg < 1000 THEN 'light' ELSE 'heavy' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments GROUP BY status, weight_band ORDER BY status, weight_band;",
     wrongVariants: [
@@ -206,7 +206,7 @@ export const chapter6Items: readonly Challenge[] = [
     id: 'c6-b1-p2', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 2: booking days and prefixes',
     ...BILLING,
     summary: 'Give each early shipment its tracking prefix and its UTC booking date. Part 2 of 3.',
-    instructions: "Part 2 of 3. For shipments with ids 1 through 10, return id, prefix (the first two characters of tracking_code) and booked_day, the calendar date of booked_at in UTC. Order by id. Column names and types: id (integer), prefix (text), booked_day (date).",
+    instructions: "Part 2 of 3. For shipments with ids 1 through 10 (no date filter), return id, prefix (the first two characters of tracking_code) and booked_day, the calendar date of booked_at in UTC. Shipments 1 and 2 are booked on 2026-01-31 and shipments 3 through 10 on 2025-12-28, so booked_day runs from 2025-12-28 to 2026-01-31. Order by id. Column names and types: id (integer), prefix (text), booked_day (date).",
     starterSql: 'SELECT id, tracking_code, booked_at\nFROM shipments;\n',
     referenceSql: "SELECT id, LEFT(tracking_code, 2) AS prefix, (booked_at AT TIME ZONE 'UTC')::date AS booked_day FROM shipments WHERE id <= 10 ORDER BY id;",
     wrongVariants: [
@@ -227,7 +227,7 @@ export const chapter6Items: readonly Challenge[] = [
     id: 'c6-b1-p3', chapterId: 6, role: 'boss', bossGroup: 'c6-boss', kind: 'write', title: 'Boss ticket, part 3: rounded weights by customer',
     ...PIPELINE,
     summary: 'Count each early customer’s shipments and show the rounded average weight. Part 3 of 3.',
-    instructions: 'Part 3 of 3. For customers with ids 1 through 6, return customer_id, shipments (the number of shipments, including ones with a missing weight) and avg_kg (the average weight rounded to the nearest whole kilogram; missing weights are ignored). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), avg_kg (integer).',
+    instructions: 'Part 3 of 3. For customers with ids 1 through 6, return customer_id, shipments (the number of shipments, including ones with a missing weight) and avg_kg (the average weight_kg rounded to the nearest whole kilogram, with 2.5 rounding up to 3; missing weights are ignored). Order by customer_id. Column names and types: customer_id (integer), shipments (integer), avg_kg (integer).',
     starterSql: 'SELECT customer_id, weight_kg\nFROM shipments;\n',
     referenceSql: 'SELECT customer_id, COUNT(*)::integer AS shipments, ROUND(AVG(weight_kg))::integer AS avg_kg FROM shipments WHERE customer_id <= 6 GROUP BY customer_id ORDER BY customer_id;',
     wrongVariants: [

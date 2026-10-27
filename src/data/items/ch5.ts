@@ -102,7 +102,7 @@ export const chapter5Items: readonly Challenge[] = [
     id: 'c5-i2', chapterId: 5, role: 'independent', kind: 'write', title: 'Heavier than the customer’s own average',
     ...CUSTOMERS,
     summary: 'Flag early shipments that are heavier than the average for the same customer.',
-    instructions: 'For shipments with ids 1 through 40, return id, customer_id and weight_kg for each shipment whose weight is greater than the average weight of all shipments with the same customer_id. Missing weights are excluded. Order by id. Column names and types: id (integer), customer_id (integer), weight_kg (integer).',
+    instructions: 'For shipments with ids 1 through 40, return id, customer_id and weight_kg for each shipment whose weight is greater than the average weight_kg of all shipments with the same customer_id, including the shipment itself. Missing weights are not counted in the average. Order by id. Column names and types: id (integer), customer_id (integer), weight_kg (integer).',
     starterSql: 'SELECT id, customer_id, weight_kg\nFROM shipments;\n',
     referenceSql: 'SELECT s.id, s.customer_id, s.weight_kg FROM shipments s WHERE s.id <= 40 AND s.weight_kg > (SELECT AVG(t.weight_kg) FROM shipments t WHERE t.customer_id = s.customer_id) ORDER BY s.id;',
     wrongVariants: [
@@ -166,7 +166,7 @@ export const chapter5Items: readonly Challenge[] = [
     id: 'c5-i5', chapterId: 5, role: 'independent', kind: 'write', title: 'Customers heavier than the table average',
     ...DISPATCH,
     summary: 'Find the customers whose shipments are heavier on average than the average shipment in the table.',
-    instructions: 'Return id and name for each customer whose average shipment weight is greater than the average weight of all shipments. Missing weights are ignored by both averages. Order by id. Column names and types: id (integer), name (text).',
+    instructions: 'Return id and name for each customer whose average shipment weight (the average weight_kg of that customer’s shipments) is greater than the average weight_kg across every shipment in the table. Missing weights are not counted in either average. Order by id. Column names and types: id (integer), name (text).',
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT customer_id FROM shipments GROUP BY customer_id HAVING AVG(weight_kg) > (SELECT AVG(weight_kg) FROM shipments)) ORDER BY c.id;',
     wrongVariants: [
@@ -187,7 +187,7 @@ export const chapter5Items: readonly Challenge[] = [
     id: 'c5-b1-p1', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 1: queued shipments above the queued average',
     ...DISPATCH,
     summary: 'Find the early queued shipments that outweigh the typical queued load. Part 1 of 3.',
-    instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight of all queued shipments. Order by id. Column names and types: id (integer), weight_kg (integer).",
+    instructions: "Part 1 of 3. Return id and weight_kg for queued shipments with ids 1 through 60 whose weight is greater than the average weight_kg of the queued shipments only (status queued). Order by id. Column names and types: id (integer), weight_kg (integer).",
     starterSql: 'SELECT id, weight_kg\nFROM shipments;\n',
     referenceSql: "SELECT s.id, s.weight_kg FROM shipments s WHERE s.status = 'queued' AND s.id <= 60 AND s.weight_kg > (SELECT AVG(q.weight_kg) FROM shipments q WHERE q.status = 'queued') ORDER BY s.id;",
     wrongVariants: [
@@ -207,8 +207,8 @@ export const chapter5Items: readonly Challenge[] = [
   {
     id: 'c5-b1-p2', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 2: customers with a heavy shipment',
     ...CUSTOMERS,
-    summary: 'Find the customers who have booked at least one shipment of 900 kg or more. Part 2 of 3.',
-    instructions: 'Part 2 of 3. Return id and name for each customer with at least one shipment of 900 kg or more. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
+    summary: 'Find the customers with at least one shipment whose weight_kg is 900 or more. Part 2 of 3.',
+    instructions: 'Part 2 of 3. Return id and name for each customer with at least one shipment whose weight_kg is 900 or more. A missing weight does not count. Each customer appears once. Order by id. Column names and types: id (integer), name (text).',
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: 'SELECT c.id, c.name FROM customers c WHERE c.id IN (SELECT s.customer_id FROM shipments s WHERE s.weight_kg >= 900) ORDER BY c.id;',
     wrongVariants: [
@@ -229,12 +229,12 @@ export const chapter5Items: readonly Challenge[] = [
     id: 'c5-b1-p3', chapterId: 5, role: 'boss', bossGroup: 'c5-boss', kind: 'write', title: 'Boss ticket, part 3: heavy queued load per driver',
     ...ROUTES,
     summary: 'Count each driver’s heavy queued shipments, showing zero for drivers with none. Part 3 of 3.',
-    instructions: 'Part 3 of 3. Use a WITH clause named heavy that counts queued shipments of at least 1500 kg for each driver_id. Return driver_id for every driver and heavy_queued, the count, with 0 when the driver has none. Order by driver_id. Column names and types: driver_id (integer), heavy_queued (integer).',
+    instructions: 'Part 3 of 3. Use a WITH clause named heavy that counts queued shipments of at least 1800 kg for each driver_id. Return driver_id for every driver and heavy_queued, the count, with 0 when the driver has none. Order by driver_id. Column names and types: driver_id (integer), heavy_queued (integer).',
     starterSql: 'SELECT id AS driver_id\nFROM drivers;\n',
-    referenceSql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;",
+    referenceSql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1800 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;",
     wrongVariants: [
-      { id: 'b5p3-inner', mistake: 'LEFT_TO_INNER', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like the join became an inner join. A driver with no heavy queued shipments has no row in heavy, so the driver disappears.' },
-      { id: 'b5p3-no-fallback', mistake: 'NULL_NO_FALLBACK', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1500 GROUP BY driver_id) SELECT d.id AS driver_id, h.n::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like COALESCE was left out. The unmatched driver gets NULL, but the ticket asks for 0.' },
+      { id: 'b5p3-inner', mistake: 'LEFT_TO_INNER', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1800 GROUP BY driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers d JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like the join became an inner join. A driver with no heavy queued shipments has no row in heavy, so the driver disappears.' },
+      { id: 'b5p3-no-fallback', mistake: 'NULL_NO_FALLBACK', sql: "WITH heavy AS (SELECT driver_id, COUNT(*) AS n FROM shipments WHERE status = 'queued' AND weight_kg >= 1800 GROUP BY driver_id) SELECT d.id AS driver_id, h.n::integer AS heavy_queued FROM drivers d LEFT JOIN heavy h ON h.driver_id = d.id ORDER BY d.id;", explanation: 'It looks like COALESCE was left out. The unmatched driver gets NULL, but the ticket asks for 0.' },
     ],
     ordered: true,
     structure: 'cte',

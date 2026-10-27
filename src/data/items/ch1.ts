@@ -120,7 +120,7 @@ export const chapter1Items: readonly Challenge[] = [
     id: 'c1-i1', chapterId: 1, role: 'independent', kind: 'write', title: 'Newsletter names B to D',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Pull the customers whose names start with B, C or D for the newsletter list.',
-    instructions: 'Return id and name for customers whose name starts with a letter from B to D, inclusive. Order by name ascending. Column names and order: id (integer), name (text). Names starting with D, such as Dovetail Lanterns, must be included.',
+    instructions: 'Return id and name for customers whose name’s first character is a capital B, C, or D. Order by name from A to Z. Column names and order: id (integer), name (text). Names starting with D, such as Dovetail Lanterns, must be included.',
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: "SELECT id, name FROM customers WHERE LEFT(name, 1) BETWEEN 'B' AND 'D' ORDER BY name;",
     wrongVariants: [
@@ -183,7 +183,7 @@ export const chapter1Items: readonly Challenge[] = [
     id: 'c1-i4', chapterId: 1, role: 'independent', kind: 'write', title: 'Which statuses are in use',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Give the operations dashboard the statuses that appear in shipments.',
-    instructions: 'Return each shipments.status value once, sorted alphabetically ascending. Column name and type: status (text).',
+    instructions: 'Return each shipments.status value once, sorted by status from A to Z. Column name and type: status (text).',
     starterSql: 'SELECT status\nFROM shipments;\n',
     referenceSql: 'SELECT DISTINCT status FROM shipments ORDER BY status;',
     wrongVariants: [
@@ -225,7 +225,7 @@ export const chapter1Items: readonly Challenge[] = [
     id: 'c1-b1-p2', chapterId: 1, role: 'boss', bossGroup: 'c1-boss', kind: 'write', title: 'Boss ticket, part 2: tracking lookup',
     ...DISPATCH,
     summary: 'Look up the shipments with ids 10 through 19 by their tracking codes. Part 2 of 3.',
-    instructions: 'Part 2 of 3. Return id and tracking_code for shipments whose tracking code ends in 0010 through 0019. Order by id ascending. Column names and order: id (integer), tracking_code (text).',
+    instructions: 'Part 2 of 3. Return id and tracking_code for shipments whose tracking_code ends with a four-digit serial from 0010 to 0019 inclusive (the last four characters are 0010, 0011, … or 0019). Order by id ascending. Column names and order: id (integer), tracking_code (text).',
     starterSql: 'SELECT id, tracking_code\nFROM shipments;\n',
     referenceSql: "SELECT id, tracking_code FROM shipments WHERE tracking_code LIKE '%-001_' ORDER BY id;",
     wrongVariants: [

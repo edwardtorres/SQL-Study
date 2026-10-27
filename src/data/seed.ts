@@ -118,7 +118,9 @@ export function generateSeed(seed: number, variant: Variant = 'sample'): Freight
     // At least one unbilled shipment for every active customer; others have invoices.
     const invoiceExists = variant === 'empty' ? false : variant === 'nulls' ? index % 4 === 0 : index % 7 !== 0;
     if (invoiceExists) {
-      data.invoices.push({ id: data.invoices.length + 1, shipment_id: id, amount: index % 5 === 0 ? '90071992.01' : `${100 + integer(8) * 25}.00`, issued_at: timestamp(index * 2 + 3), paid_at: index % 3 === 0 ? null : timestamp(index * 2 + 20) });
+      data.invoices.push({ id: data.invoices.length + 1, shipment_id: id, // Every fifth invoice is realistic, and that branch draws no random number, so other seed data is unchanged.
+      // The precision variant keeps a 90,071,992.01 amount to test exact numeric sums against float rounding.
+      amount: index % 5 === 0 ? (variant === 'precision' ? '90071992.01' : `${100 + ((index * 7) % 8) * 25}.00`) : `${100 + integer(8) * 25}.00`, issued_at: timestamp(index * 2 + 3), paid_at: index % 3 === 0 ? null : timestamp(index * 2 + 20) });
     }
     if (index % 11 === 0) continue; // A real missing-event case, not a NULL placeholder event.
     const first = data.shipment_events.length + 1;

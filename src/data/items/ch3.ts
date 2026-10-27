@@ -74,7 +74,7 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-i1', chapterId: 3, role: 'independent', kind: 'write', title: 'Billed amount per customer',
     colleague: 'Pella Reed', colleagueRole: 'Billing analyst',
     summary: 'Total what each customer has been billed, for the monthly review.',
-    instructions: 'Return customer_id and billed_amount, the sum of invoice amounts for each customer, ordered by customer_id. Each invoice counts once. Column names and types: customer_id (integer), billed_amount (numeric).',
+    instructions: 'Return customer_id and billed_amount, the total of the amount column over every invoice whose shipment belongs to that customer, ordered by customer_id. Each invoice counts once. Column names and types: customer_id (integer), billed_amount (numeric).',
     starterSql: 'SELECT customer_id\nFROM shipments;\n',
     referenceSql: 'SELECT s.customer_id, SUM(i.amount) AS billed_amount FROM invoices i JOIN shipments s ON s.id = i.shipment_id GROUP BY s.customer_id ORDER BY s.customer_id;',
     wrongVariants: [
@@ -89,7 +89,7 @@ export const chapter3Items: readonly Challenge[] = [
       'JOIN shipments s ON s.id = i.shipment_id\nGROUP BY s.customer_id',
     ],
     docs: [{ label: 'PostgreSQL aggregate functions', url: AGGREGATE }],
-    datasets: datasetsFor(['nulls', 'boundary']),
+    datasets: datasetsFor(['nulls', 'boundary', 'precision']),
   },
   {
     id: 'c3-i2', chapterId: 3, role: 'independent', kind: 'write', title: 'Weighed shipments by route',
@@ -116,9 +116,9 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-i3', chapterId: 3, role: 'independent', kind: 'write', title: 'First and last booking per customer',
     colleague: 'Tamsin Rowe', colleagueRole: 'Customer success lead',
     summary: 'Give each customer their first and last booking date for the account review.',
-    instructions: 'For each customer_id, return the earliest booked_at as first_booked and the latest booked_at as last_booked. Order by customer_id. Column names and types: customer_id (integer), first_booked (timestamptz), last_booked (timestamptz).',
+    instructions: 'For each customer_id, return the earliest booked_at as first_booked and the latest booked_at as last_booked. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Order by customer_id. Column names and types: customer_id (integer), first_booked (timestamptz), last_booked (timestamptz).',
     starterSql: 'SELECT customer_id, booked_at\nFROM shipments;\n',
-    referenceSql: 'SELECT customer_id, MIN(booked_at) AS first_booked, MAX(booked_at) AS last_booked FROM shipments GROUP BY customer_id ORDER BY customer_id;',
+    referenceSql: 'SELECT customer_id, MIN(booked_at) AS first_booked, MAX(booked_at) AS last_booked FROM shipments WHERE booked_at >= \'2026-01-01T00:00:00Z\' AND booked_at < \'2026-02-01T00:00:00Z\' GROUP BY customer_id ORDER BY customer_id;',
     wrongVariants: [
       { id: 'i3-swapped', mistake: 'AGGREGATE_CHOICE', sql: 'SELECT customer_id, MAX(booked_at) AS first_booked, MIN(booked_at) AS last_booked FROM shipments GROUP BY customer_id ORDER BY customer_id;', explanation: 'It looks like MIN and MAX were swapped, so first_booked holds the latest booking. MIN returns the earliest timestamp.' },
       { id: 'i3-finer-grain', mistake: 'MISSING_GROUP_COL', sql: 'SELECT customer_id, MIN(booked_at) AS first_booked, MAX(booked_at) AS last_booked FROM shipments GROUP BY customer_id, status ORDER BY customer_id;', explanation: 'It looks like status was added to GROUP BY. Each customer is split by status, so each customer can appear several times.' },
@@ -158,9 +158,9 @@ export const chapter3Items: readonly Challenge[] = [
     id: 'c3-b1-p1', chapterId: 3, role: 'boss', bossGroup: 'c3-boss', kind: 'write', title: 'Boss ticket, part 1: busy booking days',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the days with at least two bookings, with the count for each. Part 1 of 2.',
-    instructions: 'Part 1 of 2. Group shipments by the calendar date of booked_at (UTC). Return booking_day (date) and bookings (integer) for days with at least two bookings. Order by booking_day. Column names and types: booking_day (date), bookings (integer).',
+    instructions: 'Part 1 of 2. Use only shipments booked from 1 January 2026 at 00:00:00 UTC up to but not including 1 February 2026 at 00:00:00 UTC. Group them by the calendar date of booked_at in UTC. Return booking_day (date) and bookings (integer) for days with at least two bookings. Order by booking_day. Column names and types: booking_day (date), bookings (integer).',
     starterSql: 'SELECT booked_at\nFROM shipments;\n',
-    referenceSql: 'SELECT booked_at::date AS booking_day, COUNT(*)::integer AS bookings FROM shipments GROUP BY booking_day HAVING COUNT(*) >= 2 ORDER BY booking_day;',
+    referenceSql: 'SELECT (booked_at AT TIME ZONE \'UTC\')::date AS booking_day, COUNT(*)::integer AS bookings FROM shipments WHERE booked_at >= \'2026-01-01T00:00:00Z\' AND booked_at < \'2026-02-01T00:00:00Z\' GROUP BY booking_day HAVING COUNT(*) >= 2 ORDER BY booking_day;',
     wrongVariants: [
       { id: 'b3p1-timestamp-grain', mistake: 'MISSING_GROUP_COL', sql: 'SELECT booked_at AS booking_day, COUNT(*)::integer AS bookings FROM shipments GROUP BY booked_at HAVING COUNT(*) >= 2 ORDER BY booking_day;', explanation: 'It looks like the grouping uses the full timestamp, not the calendar date. Each timestamp is nearly unique, so no group reaches two bookings.' },
       { id: 'b3p1-strict', mistake: 'GE_VS_GT', sql: 'SELECT booked_at::date AS booking_day, COUNT(*)::integer AS bookings FROM shipments GROUP BY booking_day HAVING COUNT(*) > 2 ORDER BY booking_day;', explanation: 'It looks like the threshold was written as > 2. The ticket says at least two, so a day with exactly two bookings must appear.' },
@@ -194,6 +194,6 @@ export const chapter3Items: readonly Challenge[] = [
       'LEFT JOIN invoices i ON i.shipment_id = s.id\nGROUP BY s.customer_id',
     ],
     docs: [{ label: 'PostgreSQL aggregate functions', url: AGGREGATE }, { label: 'PostgreSQL table expressions and joins', url: GROUPING }],
-    datasets: datasetsFor(['nulls', 'boundary']),
+    datasets: datasetsFor(['nulls', 'boundary', 'precision']),
   },
 ];

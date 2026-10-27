@@ -77,6 +77,9 @@ export const lesson2: Lesson = {
         { mistake: 'NOT_IN_NULL', text: 'If the list in NOT IN contains NULL, the test is never true, so no rows return. Filter the NULLs out of the list first.' },
       ],
       citations: ['pg-count-col', 'pg-count-star', 'pg-left-join', 'pg-not-in-null'],
+      demonstrations: [
+        { claim: "GROUP BY puts all the NULL values in one group, as it does for any other value.", sql: "SELECT driver_id, COUNT(*)::integer AS shipments FROM shipments WHERE customer_id = 1 GROUP BY driver_id ORDER BY driver_id;" },
+      ],
     },
   ],
 };

@@ -76,6 +76,8 @@ describe('content check: references and wrong variants on the engine', () => {
       const failures: string[] = [];
       for (const item of items) {
         const caught = new Map<string, number>();
+        // The visible sample must separate at least one wrong variant, so a learner can see a wrong answer without hidden data.
+        const visibleCatches = new Set<string>();
         for (const dataset of item.datasets) {
           await db.exec(`SET search_path TO check_${dataset.id};`);
           const reference = await db.query(item.referenceSql, [], { rowMode: 'array' }).catch((error: unknown) => {
@@ -95,9 +97,11 @@ describe('content check: references and wrong variants on the engine', () => {
             if (!wrong) continue;
             const same = sameRows({ fields: reference.fields, rows: reference.rows as unknown[][] }, { fields: wrong.fields, rows: wrong.rows as unknown[][] }, item.ordered);
             if (!same) caught.set(key, (caught.get(key) ?? 0) + 1);
+            if (!same && dataset.id === 'sample') visibleCatches.add(key);
             else caught.set(key, caught.get(key) ?? 0);
           }
         }
+        if (visibleCatches.size === 0) failures.push(`${item.id} has no wrong variant that fails on the visible sample`);
         for (const variant of item.wrongVariants) {
           const count = caught.get(variant.id) ?? 0;
           if (count < 2) failures.push(`${item.id}/${variant.id} (${variant.mistake}) caught by ${count} dataset(s); need at least 2`);
@@ -124,6 +128,11 @@ describe('content check: lessons', () => {
           const answers = section.predict.options.filter((option) => option.id === section.predict.answer);
           expect(answers, `${section.id} answer id`).toHaveLength(1);
           expect(new Set(section.predict.options.map((option) => option.id)).size, `${section.id} option ids`).toBe(section.predict.options.length);
+          // Claims without a verbatim quote are shown as engine demonstrations; each must run on the visible sample.
+          for (const demonstration of section.demonstrations ?? []) {
+            await parsedStatements(demonstration.sql, { mode: 'read' });
+            await db.query(demonstration.sql).catch((error: unknown) => { throw new Error(`${section.id} demonstration failed: ${String(error)}`); });
+          }
           for (const mistake of section.commonMistakes) expect(mistakeTags, `${section.id} mistake`).toContain(mistake.mistake);
           for (const id of section.citations) expect(citations.some((citation) => citation.id === id), `${section.id} citation ${id}`).toBe(true);
         }
