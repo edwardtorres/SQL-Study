@@ -29,6 +29,17 @@ Author commits as Edward Torres with email
 and confirm HEAD equals origin/main and the actual remote main. Never reset
 or force-push user work to make that check pass.
 
+## Audit after every prompt
+
+End every response to a user prompt with an audit, including small changes,
+status-only replies, and work stopped by a blocker. Scale its length to the task.
+State what changed or was completed, what checks actually ran and their results,
+any untested work, uncertainties or deviations, and remaining blockers or next
+steps. For repository changes, include the commit/push status and verify HEAD
+against origin/main and remote main after pushing. Do not imply tests ran when
+they did not. These per-prompt audits supplement the full end-of-step audits;
+they do not authorize starting the next roadmap step without user approval.
+
 ## Apply lessons from previous study apps
 
 - Shuffle multiple-choice options at render time, preserving stable option IDs.
