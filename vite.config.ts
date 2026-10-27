@@ -99,6 +99,9 @@ function browserAssets(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), browserAssets()],
   worker: { format: 'es' },
+  // Prebundle lazy worker dependencies before the first SQL screen; discovering
+  // them on first use otherwise triggers a development-page reload.
+  optimizeDeps: { include: ['@electric-sql/pglite', 'libpg-query'] },
   build: {
     target: 'es2022',
     rolldownOptions: { input: { main: resolve('index.html'), lab: resolve('engine-lab.html') } },
