@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-27T22:05:01.701Z",
-  "total": 60,
-  "verified": 60,
+  "checkedAt": "2026-10-27T22:17:21.358Z",
+  "total": 83,
+  "verified": 83,
   "results": [
     {
       "id": "pg-select-where",
@@ -360,6 +360,144 @@
     {
       "id": "pg-except-all",
       "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-row-number",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-rank-gaps",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-dense-rank",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-peers",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-lag",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-lag-default",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-lead",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-whole-partition",
+      "url": "https://www.postgresql.org/docs/18/functions-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-row-number-ties",
+      "url": "https://www.postgresql.org/docs/18/tutorial-window.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-partition-by",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-frame-default",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-frame-default-meaning",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-rows-mode",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-window-where",
+      "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-pk-meaning",
+      "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-pk-unique-notnull",
+      "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-unique",
+      "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-fk",
+      "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-tx-all-or-nothing",
+      "url": "https://www.postgresql.org/docs/18/tutorial-transactions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-rollback",
+      "url": "https://www.postgresql.org/docs/18/sql-rollback.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-commit",
+      "url": "https://www.postgresql.org/docs/18/sql-commit.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-update",
+      "url": "https://www.postgresql.org/docs/18/sql-update.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-delete-absent",
+      "url": "https://www.postgresql.org/docs/18/sql-delete.html",
       "status": "verified",
       "httpStatus": 200
     }

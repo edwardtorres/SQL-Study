@@ -27,6 +27,7 @@ export const mistakeTags = [
   'CASE_ORDER', 'STRING_INDEX', 'CONCAT_NULL', 'TIMEZONE_ASSUMED', 'CAST_ROUNDING',
   'UNION_DEDUPES', 'SET_OPERATOR_CHOICE', 'PARTITION_MISSING', 'FRAME_DEFAULT', 'RANK_VS_ROW_NUMBER',
   'LAG_NULL_FIRST', 'MISSING_WHERE_ON_UPDATE', 'CONSTRAINT_MISSING', 'ROLLBACK_MISSING', 'SET_LIMIT_SCOPE',
+  'DENSE_VS_RANK', 'FRAME_OFF_BY_ONE', 'COMMIT_MISSING',
 ] as const;
 export type MistakeTag = typeof mistakeTags[number];
 export interface WrongVariant { id: string; sql: string; mistake: MistakeTag; explanation: string }

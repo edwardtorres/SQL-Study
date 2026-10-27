@@ -5,7 +5,7 @@ import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
 import { readPolicy } from '../grader/policy';
 import { sameState, stateDiff } from '../grader/state';
-import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, WorkerRequest, WorkerResponse } from './protocol';
+import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, StatePreview, WorkerRequest, WorkerResponse } from './protocol';
 import { WarmEngine, type StateOptions, type StateResult } from './runtime';
 
 let initialization: Promise<WarmEngine> | undefined;
@@ -89,6 +89,16 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
 }
 
 // Write tickets: learner statements, then trusted checks and constraint tests, inside one rolled-back transaction per dataset.
+// A write ticket's sample view: the learner's statements, then the same checks and constraint tests a submission uses.
+async function statePreview(runtime: WarmEngine, challengeId: string, sql: string): Promise<StatePreview> {
+  const challenge = items.find((item) => item.id === challengeId);
+  if (!challenge?.checks) throw new Error('This ticket is graded by its query result, not by database state.');
+  const policy = challenge.policy ?? readPolicy;
+  return runtime.runState(sampleDataset.id, sql, {
+    allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks, tests: challenge.constraintTests ?? [],
+  });
+}
+
 async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string, start: number): Promise<GradedSubmission> {
   const policy = challenge.policy ?? readPolicy;
   const options: StateOptions = { allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks ?? [], tests: challenge.constraintTests ?? [] };
@@ -172,6 +182,7 @@ async function handle(request: EngineRequest): Promise<EngineValue> {
   }
   const runtime = await engine();
   if (request.type === 'preview') return runtime.run('sample', request.sql);
+  if (request.type === 'state') return statePreview(runtime, request.challengeId, request.sql);
   if (request.type === 'schema') {
     if (!schema.some((table) => table.name === request.table)) throw new Error('Unknown table.');
     return runtime.run('sample', `SELECT * FROM "${request.table}" ORDER BY 1 LIMIT 5;`);

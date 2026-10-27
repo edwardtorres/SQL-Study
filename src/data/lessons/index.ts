@@ -6,6 +6,8 @@ import { lesson4 } from './ch4';
 import { lesson5 } from './ch5';
 import { lesson6 } from './ch6';
 import { lesson7 } from './ch7';
+import { lesson8 } from './ch8';
+import { lesson9 } from './ch9';
 
 // Lesson text is loaded by the lesson view only; the grading worker never imports it.
-export const lessons: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7];
+export const lessons: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, lesson9];

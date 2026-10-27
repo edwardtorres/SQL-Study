@@ -43,6 +43,8 @@ async function validatedTree(sql: string, options: SqlOptions): Promise<Ast> {
   if (!Array.isArray(tree.stmts) || tree.stmts.length === 0) reject('Write a SQL statement before running.');
   const mode = options.mode ?? 'read';
   const allowed = new Set<string>(options.allow ?? (mode === 'schema' ? SCHEMA_DEFAULT : ['SelectStmt']));
+  // A ticket that sets transactions accepts transaction control; its isolation rules still apply below.
+  if (options.transactions) allowed.add('TransactionStmt');
   if (mode === 'read' && tree.stmts.length !== 1) reject('Query tickets accept one SELECT statement.');
   let windowFound = false;
   let cteFound = false;

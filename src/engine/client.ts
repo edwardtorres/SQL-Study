@@ -1,5 +1,5 @@
 import type { QueryResult } from '../core/types';
-import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, WarmBenchmark, WorkerResponse } from './protocol';
+import type { EngineInfo, EngineRequest, EngineValue, GradedSubmission, StatePreview, WarmBenchmark, WorkerResponse } from './protocol';
 
 interface Pending { resolve: (value: EngineValue) => void; reject: (error: Error) => void; timer?: ReturnType<typeof setTimeout> }
 export class EngineClient {
@@ -96,6 +96,9 @@ export class EngineClient {
   }
   preview(sql: string): Promise<QueryResult> {
     return this.operate({ type: 'preview', sql }, 3500);
+  }
+  previewState(challengeId: string, sql: string): Promise<StatePreview> {
+    return this.operate({ type: 'state', challengeId, sql }, 3500);
   }
   grade(challengeId: string, sql: string): Promise<GradedSubmission> {
     return this.operate({ type: 'grade', challengeId, sql }, 6000);

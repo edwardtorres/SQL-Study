@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { ChevronRight, Leaf, LoaderCircle, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
-import { curriculum } from '../data';
+import { curriculum, openChapterCount } from '../data';
 import { items } from '../data/catalog';
 import type { Challenge } from '../core/types';
 import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV2, type TicketProgress } from '../save/progress';
@@ -79,7 +79,7 @@ export default function App() {
         <div className="rail-divider" />
         <span className="rail-eyebrow">THE DATA DESK</span>
         <nav aria-label="Chapters" className="chapter-nav">
-          {curriculum.slice(0, 6).map((chapter) => {
+          {curriculum.slice(0, openChapterCount).map((chapter) => {
             const summary = summarizeChapter(items, save, chapter.id, lessonSectionIds(chapter.id));
             return <button key={chapter.id} className={`nav-button ${current?.id === chapter.id ? 'is-current' : ''}`} aria-current={current?.id === chapter.id ? 'page' : undefined} onClick={() => { go({ name: 'chapter', chapterId: chapter.id }); }}>
               <span>{chapter.id}. {chapter.title}</span><span className="nav-count">{summary.passed}/{summary.graded}</span>
@@ -102,7 +102,7 @@ export default function App() {
         <main id="main" className={view.name === 'item' || view.name === 'scratch' ? 'workspace-main' : 'board-main'}>
           {saveFailed && <p role="alert" className="save-warning">{restored.status === 'future' ? 'Your save belongs to a newer app version. This session will not overwrite it.' : restored.status === 'corrupt' ? 'Your saved progress could not be read. The original is preserved; this session continues without saving.' : 'Progress could not be saved on this browser. Keep this tab open to retain this session.'}</p>}
           <Suspense fallback={<div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the desk…</div>}>
-            {view.name === 'home' && <HomeView chapters={curriculum.slice(0, 6)} items={items} save={save} onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onScratch={() => { go({ name: 'scratch' }); }} onItem={openItem} />}
+            {view.name === 'home' && <HomeView chapters={curriculum.slice(0, openChapterCount)} items={items} save={save} onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onScratch={() => { go({ name: 'scratch' }); }} onItem={openItem} />}
             {view.name === 'chapter' && current && <ChapterView chapter={current} items={items} save={save} onLesson={() => { go({ name: 'lesson', chapterId: current.id }); }} onItem={openItem} onScratch={() => { go({ name: 'scratch' }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'lesson' && current && <LessonView chapter={current} lessonProgress={save.lessons} onAnswer={answerLesson} onBack={() => { go({ name: 'chapter', chapterId: current.id }); }} onPractice={() => { go({ name: 'chapter', chapterId: current.id }); }} />}
             {view.name === 'scratch' && <Scratchpad onBack={() => { go({ name: 'home' }); }} />}

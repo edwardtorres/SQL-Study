@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, Chev
 import type { Challenge, GradeReport, QueryResult } from '../core/types';
 import { schema } from '../data';
 import { sqlEngine } from '../engine/client';
-import type { EngineInfo } from '../engine/protocol';
+import type { EngineInfo, StatePreview } from '../engine/protocol';
+import StateSample from './StateSample';
 import { recordGrade, rewardFor, useHint, type TicketProgress } from '../save/progress';
 import SqlEditor, { type SqlEditorHandle } from '../components/SqlEditor';
 import ResultsTable, { cellText } from '../components/ResultsTable';
@@ -15,6 +16,7 @@ export default function Workspace({ challenge, code, partLabel, backLabel, progr
   const [engineError, setEngineError] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
+  const [statePreview, setStatePreview] = useState<StatePreview | null>(null);
   const [report, setReport] = useState<GradeReport | null>(null);
   const [message, setMessage] = useState('');
   const [showLesson, setShowLesson] = useState(false);
@@ -39,15 +41,19 @@ export default function Workspace({ challenge, code, partLabel, backLabel, progr
   }, [engineInfo, table, showSchema]);
   const preview = useCallback(async (sql: string) => {
     setBusy(true); setMessage(''); setReport(null);
-    try { setResult(await sqlEngine.preview(sql)); }
+    try {
+      // Write tickets show database state after the learner's statements; read tickets show their query rows.
+      if (challenge.checks) { setStatePreview(await sqlEngine.previewState(challenge.id, sql)); setResult(null); }
+      else { setResult(await sqlEngine.preview(sql)); }
+    }
     catch (error) { setMessage(error instanceof Error ? error.message : String(error)); }
     finally { setBusy(false); }
-  }, []);
+  }, [challenge.id, challenge.checks]);
   const submit = async () => {
     setBusy(true); setMessage('');
     try {
       const graded = await sqlEngine.grade(challenge.id, progress.draft);
-      setReport(graded.report); setResult(graded.preview);
+      setReport(graded.report); setStatePreview(null); setResult(graded.preview);
       update((previous) => recordGrade(previous, graded.report.passed));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
@@ -70,7 +76,7 @@ export default function Workspace({ challenge, code, partLabel, backLabel, progr
         </section>
         {message && <div className="query-error" role="alert"><XCircle size={18} /><span>{message}</span></div>}
         {report && <section className={`grade-card ${report.passed ? 'grade-passed' : 'grade-failed'}`} aria-label="Submission feedback"><div className="grade-title" role="status">{report.passed ? <CheckCircle2 size={22} /> : <CircleHelp size={22} />}<div><h2>{report.passed ? 'Ticket passed. Nice work.' : 'Not quite there. Keep investigating.'}</h2><p>{report.passed ? `Your query matched on all {report.outcomes.length} datasets. ${rewardFor(progress)} XP available for this ticket.` : report.error ?? 'Check the feedback below, then try another query.'}</p></div><span className="grade-time"><Clock3 size={13} />{Math.round(report.elapsedMs)} ms</span></div>{report.mistake && <div className="mistake-feedback" role="note"><strong>This looks like a known mistake</strong><p>{report.mistake.explanation}</p></div>}{report.outcomes.map((outcome) => <details key={outcome.id} className="dataset-feedback"><summary><span>{outcome.passed ? <Check size={15} /> : <XCircle size={15} />}{outcome.label}{outcome.hidden && <small>Hidden checks</small>}</span><strong>{outcome.passed ? 'Passed' : 'Needs work'}</strong></summary><p>{outcome.diff.message}</p>{outcome.diff.missing.length > 0 && <div><strong>Missing rows · small diff</strong><pre>{outcome.diff.missing.map((row) => row.map(cellText).join(' | ')).join('\n')}</pre></div>}{outcome.diff.extra.length > 0 && <div><strong>Extra or misplaced rows · small diff</strong><pre>{outcome.diff.extra.map((row) => row.map(cellText).join(' | ')).join('\n')}</pre></div>}</details>)}</section>}
-        <section className="results-card" aria-label="Sample output"><div className="panel-heading"><span><Database size={16} />Sample results</span><span className="muted">{result ? `${result.rows.length} rows` : 'Run your query to inspect the data'}</span></div>{result ? <ResultsTable result={result} /> : <div className="results-empty"><Table2 size={27} strokeWidth={1.3} /><p>Your results will arrive here.</p><small>Run against the visible sample first. Submit to check all three datasets.</small></div>}</section>
+        <section className="results-card" aria-label="Sample output"><div className="panel-heading"><span><Database size={16} />{statePreview ? 'Sample state' : 'Sample results'}</span><span className="muted">{statePreview ? 'After your statements' : result ? `${result.rows.length} rows` : 'Run your query to inspect the data'}</span></div>{statePreview ? <StateSample state={statePreview} /> : result ? <ResultsTable result={result} /> : <div className="results-empty"><Table2 size={27} strokeWidth={1.3} /><p>Your results will arrive here.</p><small>Run against the visible sample first. Submit to check all three datasets.</small></div>}</section>
         <section className="help-card"><div className="help-heading"><CircleHelp size={18} /><div><h2>A little help with the heavy lifting</h2><p>Hints cost 10 XP each. They’re always available, even at zero XP.</p></div></div>{challenge.hints.slice(0, progress.hintTier).map((hint, index) => <div key={hint} className="hint"><span>HINT {index + 1}</span><pre>{hint}</pre></div>)}<div className="button-row"><button className="secondary-button" disabled={progress.hintTier >= 3} onClick={() => { update(useHint); }}>{progress.hintTier >= 3 ? 'All three hints revealed' : `Reveal hint ${progress.hintTier + 1} · −10 XP`}</button><button className="text-button" onClick={() => { update((previous) => ({ ...previous, solutionRevealed: true })); }}><Eye size={14} />Show solution · reduced XP</button></div>{progress.failures >= 3 && !progress.solutionRevealed && <p className="table-caption">Three tries in: the solution is available whenever you want it.</p>}{progress.solutionRevealed && <div className="solution"><p><strong>Reference solution</strong> · solving after reveal earns at most 25 XP before hint costs.</p><pre>{challenge.referenceSql}</pre><button className="text-button" onClick={() => { update((previous) => ({ ...previous, draft: challenge.referenceSql })); }}>Load solution into editor<ArrowRight size={14} /></button></div>}</section>
       </div>
       {showSchema && <aside className="schema-panel" id="schema-panel" aria-label="Schema browser"><div className="panel-heading"><span><Table2 size={17} />Schema explorer</span><span className="muted">8 tables</span></div><div className="schema-body"><label htmlFor="table-select">Explore a table</label><select id="table-select" value={table} onChange={(event) => { setTable(event.target.value); }}>{schema.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select><p>{selectedTable.description}</p><div className="schema-columns">{selectedTable.columns.map((column) => <div key={column.name}><span>{column.primaryKey ? <KeyRound size={12} /> : <span className="column-dot" />}<code>{column.name}</code></span><small>{column.type}{column.nullable ? ' · NULL' : ''}</small></div>)}</div><h3>Sample rows</h3><p className="table-caption">First five rows from the visible dataset.</p>{tableError ? <p role="alert">{tableError}</p> : tableRows ? <ResultsTable result={tableRows} label={`${table} sample rows`} maxRows={5} /> : <p role="status" className="muted">Loading sample rows…</p>}<div className="schema-note"><Database size={15} /><p>Tables stay consistent between runs. Query changes roll back automatically.</p></div></div></aside>}

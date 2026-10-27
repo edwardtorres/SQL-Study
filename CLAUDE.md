@@ -96,9 +96,32 @@ Step 2 rules (enforced by the content check and its Vitest suite):
   a runnable example labeled "Demonstrated by the engine", run by the content check.
 - Hidden datasets are seeded after the editor is ready. A Submit waits for them if needed.
 
-Step 3 plan note (recorded, not built): chapters 9 and 11 need a per-ticket
-statement policy that allows DDL and DML. Grading will run the learner's statements,
-then query the resulting table state, all inside the same rolled-back transaction.
+## Step 3 rules (write tickets, constraint tests, transactions)
+
+- Each ticket declares a `policy`: an allow-list of statement kinds (libpg-query node
+  names). Read tickets default to `SelectStmt`. Session and server statements (SET, DO,
+  COPY, roles, GRANT, LOCK, VACUUM, PREPARE, LISTEN, schema-qualified names) are refused
+  in every ticket, whatever its policy.
+- A write ticket (one with `checks`) is graded by database state, not rows. The grader
+  runs the learner's statements, then the trusted `checks` (information_schema and
+  pg_constraint reads, or table contents), then each `constraintTests` entry, all inside
+  one transaction that is rolled back. The reference runs through the same path on every
+  dataset. A state that differs from the reference's state fails the dataset.
+- A constraint test runs its statement in a savepoint and states `expect: 'ok'` or
+  `'error'`. An error test names a SQLSTATE class (two characters, such as `23`) or an
+  exact code (such as `23505`). Every test must pass on the reference.
+- `policy.transactions: true` adds TransactionStmt to the allow-list. The learner's
+  BEGIN, COMMIT, ROLLBACK and savepoints are translated onto savepoints inside the grader's
+  transaction, so a learner's COMMIT never reaches the real transaction. Isolation levels,
+  READ ONLY, DEFERRABLE, AND CHAIN and two-phase commit are refused.
+- Bare skeletons apply to write tickets too: CREATE TABLE with no column list, or a DML
+  statement with no WHERE, subquery, join or ordering.
+- Every write-ticket wrong variant must change the state on at least two datasets, and at
+  least one of them must change it on the visible sample.
+- Every lesson example and predict count is checked by the content test; examples are
+  read-only and cannot name another schema.
+- Chapter 9 DDL and transaction tickets are blind-reviewed with the constraint names and
+  expected outcomes, not the probe statements. Reviewers write their own probes.
 
 ## Execution findings and cross-browser checks
 

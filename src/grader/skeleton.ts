@@ -17,11 +17,34 @@ const present = (value: unknown): boolean => (Array.isArray(value) ? value.lengt
  * A bare skeleton is one SELECT that names plain columns (optionally aliased) from one table and
  * nothing else. Write-query starters must be at most this much.
  */
+// Write statements (DDL and DML) get the same bar: a table name and no filtering, joins, subqueries or ordering.
+// CREATE TABLE may not list columns, because the column definitions are what the learner writes.
+const WRITE_SKELETONS = ['CreateStmt', 'InsertStmt', 'UpdateStmt', 'DeleteStmt'] as const;
+const FORBIDDEN_IN_WRITE = ['whereClause', 'sortClause', 'groupClause', 'havingClause', 'withClause', 'windowClause', 'limitCount', 'selectStmt', 'SubLink', 'JoinExpr', 'CaseExpr', 'over', 'fromClause'] as const;
+
+function containsForbidden(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(containsForbidden);
+  if (value === null || typeof value !== 'object') return false;
+  return Object.entries(value as Node).some(([key, child]) => {
+    if (FORBIDDEN_IN_WRITE.includes(key as (typeof FORBIDDEN_IN_WRITE)[number]) && present(child)) return true;
+    return containsForbidden(child);
+  });
+}
+
+function isBareWriteSkeleton(statement: Node): boolean {
+  const kind = Object.keys(statement)[0];
+  if (!WRITE_SKELETONS.includes(kind as (typeof WRITE_SKELETONS)[number])) return false;
+  const body = statement[kind!] as Node;
+  if (kind === 'CreateStmt' && present(body.tableElts)) return false;
+  return !containsForbidden(body);
+}
+
 export async function isBareSkeleton(sql: string): Promise<boolean> {
   const tree = await parse(sql) as unknown as { stmts?: { stmt: Node }[] };
   if (!tree.stmts || tree.stmts.length !== 1) return false;
-  const select = tree.stmts[0]!.stmt.SelectStmt as Node | undefined;
-  if (!select) return false;
+  const statement = tree.stmts[0]!.stmt;
+  if (!statement.SelectStmt) return isBareWriteSkeleton(statement);
+  const select = statement.SelectStmt as Node;
   if (FORBIDDEN_CLAUSES.some((clause) => present(select[clause]))) return false;
   if (select.op !== undefined && select.op !== PARSER_DEFAULTS.op) return false;
   if (select.limitOption !== undefined && select.limitOption !== PARSER_DEFAULTS.limitOption) return false;
