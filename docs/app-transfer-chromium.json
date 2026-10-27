@@ -1,0 +1,95 @@
+{
+  "recordedAt": "2026-10-27T17:21:38.620Z",
+  "browser": "chromium",
+  "browserVersion": "154.0.8037.57",
+  "scope": "Fresh browser context, 1280px touch viewport; actual observed requests replayed with browser Accept-Encoding and encoded body bytes counted before decompression. Excludes headers/TLS; no mobile-network timing claim.",
+  "boardBytes": 159999,
+  "sqlAdditionalBytes": 5017699,
+  "totalBytes": 5177698,
+  "requests": [
+    {
+      "asset": "",
+      "screen": "board",
+      "bytes": 317,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/main-CmY-fhFs.css",
+      "screen": "board",
+      "bytes": 6683,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+      "screen": "board",
+      "bytes": 342,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/preload-helper-CFijIu3R.js",
+      "screen": "board",
+      "bytes": 983,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/main-D50V1o6Q.js",
+      "screen": "board",
+      "bytes": 74338,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/dm-sans-latin-wght-normal-Xz1IZZA0.woff2",
+      "screen": "board",
+      "bytes": 36932,
+      "encoding": "identity"
+    },
+    {
+      "asset": "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+      "screen": "board",
+      "bytes": 40404,
+      "encoding": "identity"
+    },
+    {
+      "asset": "assets/client-ivWQ3ESG.js",
+      "screen": "sql",
+      "bytes": 774,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/Workspace-Clsso1Cm.js",
+      "screen": "sql",
+      "bytes": 133749,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/game.worker-BPJMWEd6.js",
+      "screen": "sql",
+      "bytes": 126856,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/libpg-query.wasm",
+      "screen": "sql",
+      "bytes": 285511,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/pglite-C2k-M10h.wasm",
+      "screen": "sql",
+      "bytes": 3042065,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/initdb-D3nwUMsW.wasm",
+      "screen": "sql",
+      "bytes": 131799,
+      "encoding": "br"
+    },
+    {
+      "asset": "assets/pglite-k6Y9avCD.data",
+      "screen": "sql",
+      "bytes": 1296945,
+      "encoding": "br"
+    }
+  ]
+}

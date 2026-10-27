@@ -6,7 +6,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     const errors: string[] = [];
     page.on('pageerror', (error) => { errors.push(error.message); });
-    await page.goto('/');
+    await page.goto('/engine-lab.html');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await page.getByRole('button', { name: 'Run engine experiment' }).tap();
     await expect(page.getByRole('status')).toHaveText('All engine checks passed.', { timeout: 35_000 });

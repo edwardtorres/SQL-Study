@@ -48,19 +48,20 @@ try {
     const responses = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('request', (request) => {
-      if (new URL(request.url()).hostname !== '127.0.0.1') externalRequests.push(new URL(request.url()).hostname);
+      const url = new URL(request.url());
+      if (['http:', 'https:'].includes(url.protocol) && url.hostname !== '127.0.0.1') externalRequests.push(url.hostname);
     });
     page.on('response', (response) => {
-      responses.push(response);
+      if (['http:', 'https:'].includes(new URL(response.url()).protocol)) responses.push(response);
     });
-    await page.goto('http://127.0.0.1:4173');
+    await page.goto('http://127.0.0.1:4173/engine-lab.html');
     await page.getByRole('button', { name: 'Run engine experiment' }).tap();
     await page.waitForFunction(() => Boolean(document.querySelector('#results')?.textContent), undefined, { timeout: 35_000 });
     const result = JSON.parse(await page.locator('#results').innerText());
     const requests = [];
     for (const response of responses) {
       await response.finished();
-      const sizes = await response.request().sizes();
+      const sizes = await response.request().sizes().catch(() => ({ responseBodySize: null }));
       const pathname = new URL(response.url()).pathname;
       const headers = await response.allHeaders();
       const sentHeaders = await response.request().allHeaders();
@@ -83,8 +84,17 @@ try {
     }
     await context.close();
   }
+  const warmContext = await browser.newContext();
+  const warmPage = await warmContext.newPage();
+  await warmPage.goto('http://127.0.0.1:4173/engine-lab.html');
+  await warmPage.getByRole('button', { name: 'Run warm grading benchmark' }).click();
+  await warmPage.waitForFunction(() => Boolean(document.querySelector('#warm-results')?.textContent), undefined, { timeout: 60_000 });
+  const warmGrading = JSON.parse(await warmPage.locator('#warm-results').innerText());
+  if (!warmGrading.ok || warmGrading.benchmarks.some((item) => item.maxMs >= 1000)) throw new Error(`Warm benchmark failed: ${JSON.stringify(warmGrading)}`);
+  await warmContext.close();
   const assets = [];
   for (const file of await readdir('dist/assets')) {
+    if (/\.(gz|br)$/.test(file)) continue;
     const data = await readFile(`dist/assets/${file}`);
     assets.push({ name: file, bytes: data.length, gzipBytes: gzipSync(data).length });
   }
@@ -98,6 +108,7 @@ try {
     memoryScope: 'wasmMemoryBytes is allocated WebAssembly linear memory only; excludes JavaScript, filesystem, renderer, and browser overhead. Total or peak memory is not measured.',
     downloadScope: 'Browser-reported sizes may be incomplete for workers. replayPayloadBytes measures each observed request replayed via Node HTTP with the browser Accept-Encoding, counting the encoded body before decompression. Excludes HTTP headers/TLS. Built asset bytes and computed gzip estimates are separate. This is not a mobile-network benchmark.',
     runs,
+    warmGrading,
     assets,
   };
   await writeFile(`docs/spike-${engine}.json`, `${JSON.stringify(report, null, 2)}\n`);
@@ -112,6 +123,7 @@ try {
     gzipAssetBytes: assets.reduce((total, item) => total + item.gzipBytes, 0),
     replayPayloadBytes: runs.map((run) => run.requests.reduce((total, request) => total + request.replayPayloadBytes, 0)),
     checksPerRun: runs[0].checks.length,
+    warmGrading,
   }, null, 2));
 } finally {
   await browser?.close();

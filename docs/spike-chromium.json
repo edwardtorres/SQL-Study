@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-27T05:26:29.893Z",
+  "recordedAt": "2026-10-27T17:19:53.716Z",
   "engine": "PGlite 0.5.12",
   "browser": "chromium",
   "browserVersion": "154.0.8037.57",
@@ -10,7 +10,7 @@
   "runs": [
     {
       "ok": true,
-      "startupMs": 1958.7000000029802,
+      "startupMs": 2268.7999999970198,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -95,72 +95,99 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 2046.6000000014901,
-      "heartbeats": 127,
-      "maxGapMs": 22.900000005960464,
+      "workerRoundTripMs": 2317.8999999910593,
+      "heartbeats": 144,
+      "maxGapMs": 19.200000002980232,
       "requests": [
         {
-          "asset": "",
+          "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 937,
-          "contentLength": null,
-          "encoding": "identity",
-          "replayPayloadBytes": 925,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 604,
+          "contentLength": 604,
+          "encoding": "br",
+          "replayPayloadBytes": 604,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-tM71Cvr9.css",
+          "asset": "assets/lab-tM71Cvr9.css",
           "status": 200,
-          "reportedBodyBytes": 651,
-          "contentLength": 651,
-          "encoding": "identity",
-          "replayPayloadBytes": 651,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-BAFKnaRW.js",
+          "asset": "assets/lab-DKmtckhr.js",
           "status": 200,
-          "reportedBodyBytes": 865,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 848,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 766,
+          "contentLength": 766,
+          "encoding": "br",
+          "replayPayloadBytes": 766,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 983,
+          "contentLength": 983,
+          "encoding": "br",
+          "replayPayloadBytes": 983,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
           "status": 200,
           "reportedBodyBytes": 0,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 146957,
-          "replayEncoding": "gzip"
+          "contentLength": 995,
+          "encoding": "br",
+          "replayPayloadBytes": 995,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 106379,
+          "contentLength": 106379,
+          "encoding": "br",
+          "replayPayloadBytes": 106379,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 342,
+          "contentLength": 342,
+          "encoding": "br",
+          "replayPayloadBytes": 342,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-C2k-M10h.wasm",
           "status": 200,
-          "reportedBodyBytes": 10123263,
-          "contentLength": 10123263,
-          "encoding": "identity",
-          "replayPayloadBytes": 10123263,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 3042065,
+          "contentLength": 3042065,
+          "encoding": "br",
+          "replayPayloadBytes": 3042065,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/initdb-D3nwUMsW.wasm",
           "status": 200,
-          "reportedBodyBytes": 395242,
-          "contentLength": 395242,
-          "encoding": "identity",
-          "replayPayloadBytes": 395242,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 131799,
+          "contentLength": 131799,
+          "encoding": "br",
+          "replayPayloadBytes": 131799,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-k6Y9avCD.data",
           "status": 200,
-          "reportedBodyBytes": 2142651,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 2141052,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 1296945,
+          "contentLength": 1296945,
+          "encoding": "br",
+          "replayPayloadBytes": 1296945,
+          "replayEncoding": "br"
         }
       ],
       "errors": [],
@@ -169,7 +196,7 @@
     },
     {
       "ok": true,
-      "startupMs": 1979.5,
+      "startupMs": 2184.5,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -254,72 +281,99 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 2043.6000000014901,
-      "heartbeats": 127,
-      "maxGapMs": 23.299999997019768,
+      "workerRoundTripMs": 2241.0999999940395,
+      "heartbeats": 140,
+      "maxGapMs": 21.700000002980232,
       "requests": [
         {
-          "asset": "",
+          "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 937,
-          "contentLength": null,
-          "encoding": "identity",
-          "replayPayloadBytes": 925,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 604,
+          "contentLength": 604,
+          "encoding": "br",
+          "replayPayloadBytes": 604,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-tM71Cvr9.css",
+          "asset": "assets/lab-tM71Cvr9.css",
           "status": 200,
-          "reportedBodyBytes": 651,
-          "contentLength": 651,
-          "encoding": "identity",
-          "replayPayloadBytes": 651,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-BAFKnaRW.js",
+          "asset": "assets/lab-DKmtckhr.js",
           "status": 200,
-          "reportedBodyBytes": 865,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 848,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 766,
+          "contentLength": 766,
+          "encoding": "br",
+          "replayPayloadBytes": 766,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 983,
+          "contentLength": 983,
+          "encoding": "br",
+          "replayPayloadBytes": 983,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
           "status": 200,
           "reportedBodyBytes": 0,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 146957,
-          "replayEncoding": "gzip"
+          "contentLength": 995,
+          "encoding": "br",
+          "replayPayloadBytes": 995,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 106379,
+          "contentLength": 106379,
+          "encoding": "br",
+          "replayPayloadBytes": 106379,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 342,
+          "contentLength": 342,
+          "encoding": "br",
+          "replayPayloadBytes": 342,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-C2k-M10h.wasm",
           "status": 200,
-          "reportedBodyBytes": 10123263,
-          "contentLength": 10123263,
-          "encoding": "identity",
-          "replayPayloadBytes": 10123263,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 3042065,
+          "contentLength": 3042065,
+          "encoding": "br",
+          "replayPayloadBytes": 3042065,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/initdb-D3nwUMsW.wasm",
           "status": 200,
-          "reportedBodyBytes": 395242,
-          "contentLength": 395242,
-          "encoding": "identity",
-          "replayPayloadBytes": 395242,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 131799,
+          "contentLength": 131799,
+          "encoding": "br",
+          "replayPayloadBytes": 131799,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-k6Y9avCD.data",
           "status": 200,
-          "reportedBodyBytes": 2142651,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 2141052,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 1296945,
+          "contentLength": 1296945,
+          "encoding": "br",
+          "replayPayloadBytes": 1296945,
+          "replayEncoding": "br"
         }
       ],
       "errors": [],
@@ -328,7 +382,7 @@
     },
     {
       "ok": true,
-      "startupMs": 1910.3000000044703,
+      "startupMs": 2197.0999999940395,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -413,72 +467,99 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 1980.7000000029802,
-      "heartbeats": 123,
-      "maxGapMs": 20.200000002980232,
+      "workerRoundTripMs": 2237.6000000089407,
+      "heartbeats": 139,
+      "maxGapMs": 19.599999994039536,
       "requests": [
         {
-          "asset": "",
+          "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 937,
-          "contentLength": null,
-          "encoding": "identity",
-          "replayPayloadBytes": 925,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 604,
+          "contentLength": 604,
+          "encoding": "br",
+          "replayPayloadBytes": 604,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-tM71Cvr9.css",
+          "asset": "assets/lab-tM71Cvr9.css",
           "status": 200,
-          "reportedBodyBytes": 651,
-          "contentLength": 651,
-          "encoding": "identity",
-          "replayPayloadBytes": 651,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/index-BAFKnaRW.js",
+          "asset": "assets/lab-DKmtckhr.js",
           "status": 200,
-          "reportedBodyBytes": 865,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 848,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 766,
+          "contentLength": 766,
+          "encoding": "br",
+          "replayPayloadBytes": 766,
+          "replayEncoding": "br"
         },
         {
-          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 983,
+          "contentLength": 983,
+          "encoding": "br",
+          "replayPayloadBytes": 983,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
           "status": 200,
           "reportedBodyBytes": 0,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 146957,
-          "replayEncoding": "gzip"
+          "contentLength": 995,
+          "encoding": "br",
+          "replayPayloadBytes": 995,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 106379,
+          "contentLength": 106379,
+          "encoding": "br",
+          "replayPayloadBytes": 106379,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 342,
+          "contentLength": 342,
+          "encoding": "br",
+          "replayPayloadBytes": 342,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-C2k-M10h.wasm",
           "status": 200,
-          "reportedBodyBytes": 10123263,
-          "contentLength": 10123263,
-          "encoding": "identity",
-          "replayPayloadBytes": 10123263,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 3042065,
+          "contentLength": 3042065,
+          "encoding": "br",
+          "replayPayloadBytes": 3042065,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/initdb-D3nwUMsW.wasm",
           "status": 200,
-          "reportedBodyBytes": 395242,
-          "contentLength": 395242,
-          "encoding": "identity",
-          "replayPayloadBytes": 395242,
-          "replayEncoding": "identity"
+          "reportedBodyBytes": 131799,
+          "contentLength": 131799,
+          "encoding": "br",
+          "replayPayloadBytes": 131799,
+          "replayEncoding": "br"
         },
         {
           "asset": "assets/pglite-k6Y9avCD.data",
           "status": 200,
-          "reportedBodyBytes": 2142651,
-          "contentLength": null,
-          "encoding": "gzip",
-          "replayPayloadBytes": 2141052,
-          "replayEncoding": "gzip"
+          "reportedBodyBytes": 1296945,
+          "contentLength": 1296945,
+          "encoding": "br",
+          "replayPayloadBytes": 1296945,
+          "replayEncoding": "br"
         }
       ],
       "errors": [],
@@ -486,26 +567,159 @@
       "horizontalOverflow": false
     }
   ],
+  "warmGrading": {
+    "ok": true,
+    "initialization": {
+      "initializationMs": 2435.5,
+      "memoryBytes": 134217728
+    },
+    "benchmarks": [
+      {
+        "challengeId": "dispatch",
+        "samplesMs": [
+          31.799999997019768,
+          16.900000005960464,
+          21.399999991059303,
+          13.700000002980232,
+          23.700000002980232,
+          14.899999991059303,
+          28.400000005960464,
+          29.400000005960464,
+          22,
+          13
+        ],
+        "medianMs": 22,
+        "maxMs": 31.799999997019768,
+        "memoryBytes": 134217728
+      },
+      {
+        "challengeId": "unbilled",
+        "samplesMs": [
+          20.200000002980232,
+          16.099999994039536,
+          14.799999997019768,
+          16.899999991059303,
+          17.30000001192093,
+          16.799999997019768,
+          15.700000002980232,
+          19.5,
+          14.299999997019768,
+          18.299999997019768
+        ],
+        "medianMs": 16.899999991059303,
+        "maxMs": 20.200000002980232,
+        "memoryBytes": 134217728
+      },
+      {
+        "challengeId": "latest-event",
+        "samplesMs": [
+          34.3999999910593,
+          30.399999991059303,
+          27.400000005960464,
+          25.099999994039536,
+          26.69999998807907,
+          27,
+          28.700000002980232,
+          32.1000000089407,
+          26.19999998807907,
+          28.600000008940697
+        ],
+        "medianMs": 28.600000008940697,
+        "maxMs": 34.3999999910593,
+        "memoryBytes": 134217728
+      }
+    ]
+  },
   "assets": [
     {
-      "name": "engine.worker-1KWPkVBa.js",
-      "bytes": 648186,
-      "gzipBytes": 146957
+      "name": "Workspace-Clsso1Cm.js",
+      "bytes": 450057,
+      "gzipBytes": 144971
     },
     {
-      "name": "index-BAFKnaRW.js",
-      "bytes": 1585,
-      "gzipBytes": 848
+      "name": "__vite-browser-external-B8YGsjl0.js",
+      "bytes": 129,
+      "gzipBytes": 136
     },
     {
-      "name": "index-tM71Cvr9.css",
-      "bytes": 651,
-      "gzipBytes": 391
+      "name": "client-ivWQ3ESG.js",
+      "bytes": 1871,
+      "gzipBytes": 849
+    },
+    {
+      "name": "dist-Dx1HnlJ5.js",
+      "bytes": 619639,
+      "gzipBytes": 141345
+    },
+    {
+      "name": "dm-sans-latin-wght-normal-Xz1IZZA0.woff2",
+      "bytes": 36932,
+      "gzipBytes": 36852
+    },
+    {
+      "name": "engine.worker-B-ybSpiE.js",
+      "bytes": 2078,
+      "gzipBytes": 1042
+    },
+    {
+      "name": "game.worker-BPJMWEd6.js",
+      "bytes": 708945,
+      "gzipBytes": 170756
     },
     {
       "name": "initdb-D3nwUMsW.wasm",
       "bytes": 395242,
       "gzipBytes": 147183
+    },
+    {
+      "name": "jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+      "bytes": 40404,
+      "gzipBytes": 40437
+    },
+    {
+      "name": "lab-DKmtckhr.js",
+      "bytes": 1743,
+      "gzipBytes": 853
+    },
+    {
+      "name": "lab-tM71Cvr9.css",
+      "bytes": 651,
+      "gzipBytes": 391
+    },
+    {
+      "name": "libpg-query.wasm",
+      "bytes": 1717872,
+      "gzipBytes": 344487
+    },
+    {
+      "name": "main-CmY-fhFs.css",
+      "bytes": 28336,
+      "gzipBytes": 7081
+    },
+    {
+      "name": "main-D50V1o6Q.js",
+      "bytes": 253949,
+      "gzipBytes": 79722
+    },
+    {
+      "name": "nodefs-63rxKlZB.js",
+      "bytes": 560,
+      "gzipBytes": 390
+    },
+    {
+      "name": "nodefs-DvDYEGA1.js",
+      "bytes": 477,
+      "gzipBytes": 341
+    },
+    {
+      "name": "opfs-ahp-BYT_1EGm.js",
+      "bytes": 10164,
+      "gzipBytes": 3052
+    },
+    {
+      "name": "opfs-ahp-CAM4eyqH.js",
+      "bytes": 10171,
+      "gzipBytes": 3057
     },
     {
       "name": "pglite-C2k-M10h.wasm",
@@ -516,6 +730,16 @@
       "name": "pglite-k6Y9avCD.data",
       "bytes": 6291000,
       "gzipBytes": 2141052
+    },
+    {
+      "name": "preload-helper-CFijIu3R.js",
+      "bytes": 2193,
+      "gzipBytes": 1065
+    },
+    {
+      "name": "rolldown-runtime-WkwZ5CU-.js",
+      "bytes": 599,
+      "gzipBytes": 368
     }
   ]
 }

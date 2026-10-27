@@ -1,6 +1,9 @@
 # Step 1 implementation plan
 
-Status: engine spike in progress. This is a plan, not a completed Step 1 audit.
+Status: this original implementation plan has been carried into code and is in
+final validation. Current evidence lives in the README and findings documents.
+The user removed WebKit as a build prerequisite; local WebKit now runs.
+This plan is retained for design context, not as a current completion audit.
 The original requirements are preserved in [step-1-prompt.md](step-1-prompt.md).
 
 ## Gate 0: choose the engine with evidence

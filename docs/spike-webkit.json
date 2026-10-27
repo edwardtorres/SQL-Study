@@ -1,0 +1,745 @@
+{
+  "recordedAt": "2026-10-27T17:20:06.089Z",
+  "engine": "PGlite 0.5.12",
+  "browser": "webkit",
+  "browserVersion": "27.2",
+  "viewport": "390 x 844, touch enabled",
+  "context": "Unthrottled cloud Linux host; three fresh browser contexts; local production preview with CSP. Not an iPhone performance measurement.",
+  "memoryScope": "wasmMemoryBytes is allocated WebAssembly linear memory only; excludes JavaScript, filesystem, renderer, and browser overhead. Total or peak memory is not measured.",
+  "downloadScope": "Browser-reported sizes may be incomplete for workers. replayPayloadBytes measures each observed request replayed via Node HTTP with the browser Accept-Encoding, counting the encoded body before decompression. Excludes HTTP headers/TLS. Built asset bytes and computed gzip estimates are separate. This is not a mobile-network benchmark.",
+  "runs": [
+    {
+      "ok": true,
+      "startupMs": 2019,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 2067,
+      "heartbeats": 99,
+      "maxGapMs": 108,
+      "requests": [
+        {
+          "asset": "engine-lab.html",
+          "status": 200,
+          "reportedBodyBytes": 708,
+          "contentLength": 708,
+          "encoding": "gzip",
+          "replayPayloadBytes": 708,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-DKmtckhr.js",
+          "status": 200,
+          "reportedBodyBytes": 853,
+          "contentLength": 853,
+          "encoding": "gzip",
+          "replayPayloadBytes": 853,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 1065,
+          "contentLength": 1065,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1065,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 391,
+          "contentLength": 391,
+          "encoding": "gzip",
+          "replayPayloadBytes": 391,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
+          "status": 200,
+          "reportedBodyBytes": 1042,
+          "contentLength": 1042,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1042,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 141230,
+          "contentLength": 141230,
+          "encoding": "gzip",
+          "replayPayloadBytes": 141230,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 368,
+          "contentLength": 368,
+          "encoding": "gzip",
+          "replayPayloadBytes": 368,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 3452854,
+          "contentLength": 3452854,
+          "encoding": "gzip",
+          "replayPayloadBytes": 3452854,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 147399,
+          "contentLength": 147399,
+          "encoding": "gzip",
+          "replayPayloadBytes": 147399,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2138827,
+          "contentLength": 2138827,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2138827,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    },
+    {
+      "ok": true,
+      "startupMs": 1849,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 1888,
+      "heartbeats": 88,
+      "maxGapMs": 98,
+      "requests": [
+        {
+          "asset": "engine-lab.html",
+          "status": 200,
+          "reportedBodyBytes": 708,
+          "contentLength": 708,
+          "encoding": "gzip",
+          "replayPayloadBytes": 708,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-DKmtckhr.js",
+          "status": 200,
+          "reportedBodyBytes": 853,
+          "contentLength": 853,
+          "encoding": "gzip",
+          "replayPayloadBytes": 853,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 1065,
+          "contentLength": 1065,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1065,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 391,
+          "contentLength": 391,
+          "encoding": "gzip",
+          "replayPayloadBytes": 391,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
+          "status": 200,
+          "reportedBodyBytes": 1042,
+          "contentLength": 1042,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1042,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 141230,
+          "contentLength": 141230,
+          "encoding": "gzip",
+          "replayPayloadBytes": 141230,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 368,
+          "contentLength": 368,
+          "encoding": "gzip",
+          "replayPayloadBytes": 368,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 3452854,
+          "contentLength": 3452854,
+          "encoding": "gzip",
+          "replayPayloadBytes": 3452854,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 147399,
+          "contentLength": 147399,
+          "encoding": "gzip",
+          "replayPayloadBytes": 147399,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2138827,
+          "contentLength": 2138827,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2138827,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    },
+    {
+      "ok": true,
+      "startupMs": 1995,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 2023,
+      "heartbeats": 94,
+      "maxGapMs": 107,
+      "requests": [
+        {
+          "asset": "engine-lab.html",
+          "status": 200,
+          "reportedBodyBytes": 708,
+          "contentLength": 708,
+          "encoding": "gzip",
+          "replayPayloadBytes": 708,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-DKmtckhr.js",
+          "status": 200,
+          "reportedBodyBytes": 853,
+          "contentLength": 853,
+          "encoding": "gzip",
+          "replayPayloadBytes": 853,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/preload-helper-CFijIu3R.js",
+          "status": 200,
+          "reportedBodyBytes": 1065,
+          "contentLength": 1065,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1065,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 391,
+          "contentLength": 391,
+          "encoding": "gzip",
+          "replayPayloadBytes": 391,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-B-ybSpiE.js",
+          "status": 200,
+          "reportedBodyBytes": 1042,
+          "contentLength": 1042,
+          "encoding": "gzip",
+          "replayPayloadBytes": 1042,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/dist-Dx1HnlJ5.js",
+          "status": 200,
+          "reportedBodyBytes": 141230,
+          "contentLength": 141230,
+          "encoding": "gzip",
+          "replayPayloadBytes": 141230,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+          "status": 200,
+          "reportedBodyBytes": 368,
+          "contentLength": 368,
+          "encoding": "gzip",
+          "replayPayloadBytes": 368,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 3452854,
+          "contentLength": 3452854,
+          "encoding": "gzip",
+          "replayPayloadBytes": 3452854,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 147399,
+          "contentLength": 147399,
+          "encoding": "gzip",
+          "replayPayloadBytes": 147399,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2138827,
+          "contentLength": 2138827,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2138827,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    }
+  ],
+  "warmGrading": {
+    "ok": true,
+    "initialization": {
+      "initializationMs": 2030,
+      "memoryBytes": 134217728
+    },
+    "benchmarks": [
+      {
+        "challengeId": "dispatch",
+        "samplesMs": [
+          13,
+          11,
+          10,
+          10,
+          9,
+          8,
+          8,
+          10,
+          9,
+          12
+        ],
+        "medianMs": 10,
+        "maxMs": 13,
+        "memoryBytes": 134217728
+      },
+      {
+        "challengeId": "unbilled",
+        "samplesMs": [
+          16,
+          14,
+          17,
+          21,
+          17,
+          10,
+          11,
+          10,
+          11,
+          11
+        ],
+        "medianMs": 14,
+        "maxMs": 21,
+        "memoryBytes": 134217728
+      },
+      {
+        "challengeId": "latest-event",
+        "samplesMs": [
+          19,
+          21,
+          21,
+          18,
+          21,
+          17,
+          16,
+          15,
+          14,
+          21
+        ],
+        "medianMs": 19,
+        "maxMs": 21,
+        "memoryBytes": 134217728
+      }
+    ]
+  },
+  "assets": [
+    {
+      "name": "Workspace-Clsso1Cm.js",
+      "bytes": 450057,
+      "gzipBytes": 144971
+    },
+    {
+      "name": "__vite-browser-external-B8YGsjl0.js",
+      "bytes": 129,
+      "gzipBytes": 136
+    },
+    {
+      "name": "client-ivWQ3ESG.js",
+      "bytes": 1871,
+      "gzipBytes": 849
+    },
+    {
+      "name": "dist-Dx1HnlJ5.js",
+      "bytes": 619639,
+      "gzipBytes": 141345
+    },
+    {
+      "name": "dm-sans-latin-wght-normal-Xz1IZZA0.woff2",
+      "bytes": 36932,
+      "gzipBytes": 36852
+    },
+    {
+      "name": "engine.worker-B-ybSpiE.js",
+      "bytes": 2078,
+      "gzipBytes": 1042
+    },
+    {
+      "name": "game.worker-BPJMWEd6.js",
+      "bytes": 708945,
+      "gzipBytes": 170756
+    },
+    {
+      "name": "initdb-D3nwUMsW.wasm",
+      "bytes": 395242,
+      "gzipBytes": 147183
+    },
+    {
+      "name": "jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+      "bytes": 40404,
+      "gzipBytes": 40437
+    },
+    {
+      "name": "lab-DKmtckhr.js",
+      "bytes": 1743,
+      "gzipBytes": 853
+    },
+    {
+      "name": "lab-tM71Cvr9.css",
+      "bytes": 651,
+      "gzipBytes": 391
+    },
+    {
+      "name": "libpg-query.wasm",
+      "bytes": 1717872,
+      "gzipBytes": 344487
+    },
+    {
+      "name": "main-CmY-fhFs.css",
+      "bytes": 28336,
+      "gzipBytes": 7081
+    },
+    {
+      "name": "main-D50V1o6Q.js",
+      "bytes": 253949,
+      "gzipBytes": 79722
+    },
+    {
+      "name": "nodefs-63rxKlZB.js",
+      "bytes": 560,
+      "gzipBytes": 390
+    },
+    {
+      "name": "nodefs-DvDYEGA1.js",
+      "bytes": 477,
+      "gzipBytes": 341
+    },
+    {
+      "name": "opfs-ahp-BYT_1EGm.js",
+      "bytes": 10164,
+      "gzipBytes": 3052
+    },
+    {
+      "name": "opfs-ahp-CAM4eyqH.js",
+      "bytes": 10171,
+      "gzipBytes": 3057
+    },
+    {
+      "name": "pglite-C2k-M10h.wasm",
+      "bytes": 10123263,
+      "gzipBytes": 3455827
+    },
+    {
+      "name": "pglite-k6Y9avCD.data",
+      "bytes": 6291000,
+      "gzipBytes": 2141052
+    },
+    {
+      "name": "preload-helper-CFijIu3R.js",
+      "bytes": 2193,
+      "gzipBytes": 1065
+    },
+    {
+      "name": "rolldown-runtime-WkwZ5CU-.js",
+      "bytes": 599,
+      "gzipBytes": 368
+    }
+  ]
+}

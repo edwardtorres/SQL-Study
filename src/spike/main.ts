@@ -42,3 +42,24 @@ run.addEventListener('click', () => {
   };
   worker.postMessage({ type: 'run' });
 });
+
+const warmRun = document.querySelector<HTMLButtonElement>('#warm-run')!;
+const warmStatus = document.querySelector<HTMLElement>('#warm-status')!;
+const warmResults = document.querySelector<HTMLElement>('#warm-results')!;
+warmRun.addEventListener('click', async () => {
+  warmRun.disabled = true;
+  warmStatus.textContent = 'Loading one warm engine and three dataset schemas…';
+  try {
+    const { sqlEngine } = await import('../engine/client');
+    const initialization = await sqlEngine.initialize();
+    const benchmarks = [];
+    for (const challengeId of ['dispatch', 'unbilled', 'latest-event']) {
+      benchmarks.push({ challengeId, ...await sqlEngine.benchmark(challengeId) });
+    }
+    warmResults.textContent = JSON.stringify({ ok: true, initialization, benchmarks }, null, 2);
+    warmStatus.textContent = 'Warm grading benchmark completed.';
+  } catch (error) {
+    warmResults.textContent = JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) });
+    warmStatus.textContent = 'Warm grading benchmark failed.';
+  } finally { warmRun.disabled = false; }
+});

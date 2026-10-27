@@ -1,57 +1,118 @@
-# Juniper SQL Desk
+# Juniper Freight · The Data Desk
 
-A planned SQL learning game set at a fictional freight-company data desk.
+A browser-only PostgreSQL practice game. Pick up a ticket from a fictional
+colleague, try a worked example, edit SQL, and check your answer against three
+deterministic datasets.
 
-**Current status: prerequisite engine lab only. Step 1 is not complete.**
-PGlite runs in a browser worker in Chromium. Playwright WebKit cannot yet be
-downloaded because the environment returns `403 Domain forbidden` from the
-official download hosts. This blocks the required engine decision and game build.
+Step 1 contains three playable sample tickets and the foundation for a
+13-chapter curriculum. The complete chapter lessons, rank/skill-tree game loop,
+interview mode, PWA/offline support, and deployment remain later roadmap steps.
 
-- [Original Step 1 requirements](docs/step-1-prompt.md)
-- [Implementation plan and proposed curriculum/schema](docs/implementation-plan.md)
-- [Engine evidence and outstanding checks](docs/engine-spike.md)
-- [Raw Chromium measurements](docs/spike-chromium.json)
-- [Working rules and roadmap](CLAUDE.md)
+## Start developing
 
-## Run the lab
-
-Use Node 22.12 or newer (validated with Node 24). From the repository root:
+Use Node 24 (Node 22.12 or newer is supported). From the repository root:
 
 ```sh
 npm ci
-npm test
-npm run build
 npm run dev
 ```
 
-Open the address printed by Vite in your own development environment and press
-**Run engine experiment**. The engine loads on demand into a fresh worker. This
-probe has a 30-second startup watchdog; it is not the future challenge grader.
-No database or credentials are needed, and the lab does not save user progress.
+Open the development address printed by Vite. The ticket board does not load
+PostgreSQL; opening a SQL workspace loads its worker and engine lazily.
+No credentials, backend, or database service is required.
 
-For repeatable production browser measurements:
+## Checks
 
 ```sh
-npm run browsers:install
+npm run check
+npm run test:e2e:chromium
+npm run benchmark:warm
+```
+
+`check` runs lint, Vitest, strict TypeScript/build, and the production debug-hook
+scan. Browser journeys use taps at 390px and 1280px and include axe checks,
+saved progress, autocomplete, bounded results, and timeout recovery.
+
+Install Playwright browsers and supported Linux dependencies when needed:
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install --with-deps chromium webkit
+npm run test:e2e
 npm run spike:chromium
 npm run spike:webkit
 ```
 
-For the committed tap-only and axe accessibility checks at phone and desktop
-widths, run `npm run test:e2e:chromium`. Run `npm run test:e2e` for both browsers
-once WebKit is installed; its tests are currently unrun because installation is
-blocked. Chromium's two lab tests passed after correcting an invalid ARIA label.
+The cross-browser GitHub Actions workflow runs this installation and both browser
+projects on every push to main, pull request, or manual dispatch. It saves current
+measurements and test artifacts and writes a public job summary.
 
-The browser installer retains binaries under ignored dependencies. Chromium
-uses a system Chromium when available; `CHROMIUM_EXECUTABLE` can override it.
-WebKit uses the Playwright-managed browser. On Linux, missing system libraries
-may require Playwright's documented `install-deps` procedure with administrator
-access. No browser test is considered passed until it actually executes.
+On this unprivileged Debian trixie amd64 cloud host, system package installation
+is unavailable. The repeatable alternative downloads verified Debian packages
+into an ignored cache and links their libraries into Playwright's browser dirs:
 
-The runner builds/serves production assets, performs three independent phone-
-width touch runs under CSP, checks SQL results and UI heartbeats, and updates
-only the corresponding raw measurement report. It closes its browser and server.
-Do not run the two browser commands concurrently: they use the same preview port.
+```sh
+bash scripts/setup-local-webkit.sh
+PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 npm run test:e2e
+PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 npm run spike:webkit
+```
 
-The real React/Tailwind game, grader, datasets and save system follow after the
-WebKit gate passes. The current page is deliberately an engine experiment.
+The local switch skips a system-library-cache preflight that cannot see these
+user-space libraries. Actual linker checks and a real WebKit render are required
+by the setup script. Browser tests still execute; TLS, package signatures and
+artifact verification remain enabled. CI uses normal `--with-deps` without this
+switch. Chromium uses a system binary when available; `CHROMIUM_EXECUTABLE` can
+override that selection.
+
+Do not run browser commands concurrently: their production previews use port 4173.
+
+## Execution and grading
+
+One warm PGlite worker retains three isolated dataset schemas. Each learner and
+reference execution sets its dataset role, search path, and statement timeout
+inside a transaction that always rolls back. No learner table changes persist.
+AST validation rejects transaction/session escapes and unsupported SQL. Cursor
+fetches enforce the 1,000-row default limit before returning rows to the UI.
+
+PGlite's PostgreSQL statement timeout does not reliably interrupt blocking work
+in this WASM build. A main-thread deadline terminates the worker (3.5 seconds for
+sample queries; 6 seconds for a submission). The next request recreates it.
+Normal SQL mistakes roll back without restarting the engine.
+
+Grading compares the learner and reference on one visible and two hidden edge-
+case datasets. Ordered tickets compare order; the generic grader also supports
+multisets, exact numeric/bigint values, explicit columns/types, and bounded diffs.
+Schema-ticket support checks expected-success/failure inserts with savepoints.
+The three current tickets are read-query tickets; a schema-ticket UI is later work.
+
+Hidden fixtures are omitted from the normal interface, not encrypted. This is a
+client-only learning game; a determined user can inspect bundled content.
+
+## Progress
+
+Drafts, attempts, passes, hints, solution reveals and XP use a version 1
+localStorage save. Initial/prerelease migration and corrupt/future-save handling
+are tested. A newer or unreadable save is preserved rather than overwritten.
+Progress belongs to the current browser; GitHub preserves the application source,
+not an individual learner's localStorage. Cross-device sync is not implemented.
+
+Hints cost 10 XP each without locking access. Showing a solution reduces the
+available ticket reward. Repeated submissions cannot farm additional XP.
+
+## Evidence and design
+
+- [Original Step 1 prompt](docs/step-1-prompt.md)
+- [Curriculum, schema and challenge design](docs/content-design.md)
+- [Independent blind content review](docs/content-review.md)
+- [Warm execution, isolation, memory and timings](docs/warm-engine-findings.md)
+- [Bundle analysis and real compression](docs/bundle-findings.md)
+- [Engine experiments](docs/engine-spike.md)
+- [Chromium measurements](docs/spike-chromium.json)
+- [WebKit measurements](docs/spike-webkit.json)
+- [Fictional company name check](docs/name-check.md)
+- [Working rules and roadmap](CLAUDE.md)
+
+Fonts are self-hosted Latin subsets; their OFL licenses ship in `public/licenses`.
+No external font or SQL service is contacted at runtime. Production serving must
+retain the tested CSP (`wasm-unsafe-eval`, no general `unsafe-eval`) and real
+Content-Encoding headers for the precompressed WASM/data assets. Vite preview
+implements that configuration; later deployment must reproduce it.

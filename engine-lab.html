@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102c2c" />
+    <title>Juniper SQL Desk · Engine lab</title>
+  </head>
+  <body>
+    <main>
+      <p>JUNIPER SQL DESK / ENGINE LAB</p>
+      <h1>Postgres, inside your browser.</h1>
+      <p>This is the prerequisite engine experiment, not the playable game.</p>
+      <p>A fresh worker runs each experiment. Nothing is saved to a database.</p>
+      <button id="run" type="button">Run engine experiment</button>
+      <p id="status" role="status">Ready to test.</p>
+      <pre id="results" role="region" tabindex="0" aria-label="Experiment results"></pre>
+      <hr />
+      <h2>Warm grading benchmark</h2>
+      <p>One worker, three retained dataset schemas. Each measured submission runs the learner and reference on all three datasets inside rolled-back transactions.</p>
+      <button id="warm-run" type="button">Run warm grading benchmark</button>
+      <p id="warm-status" aria-live="polite">Ready to benchmark.</p>
+      <pre id="warm-results" role="region" tabindex="0" aria-label="Warm grading results"></pre>
+    </main>
+    <script type="module" src="/src/spike/main.ts"></script>
+  </body>
+</html>

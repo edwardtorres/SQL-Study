@@ -1,111 +1,101 @@
-# Engine spike: partial evidence, not Step 1 completion
+# PostgreSQL engine evidence
 
-PGlite 0.5.12 was the current npm release at the time of the experiment.
-The engine identifies itself as PostgreSQL 18.6. Its npm integrity digest is
-preserved in the lockfile. No verification was bypassed.
+## Engine choice
 
-## Decision
+**PGlite 0.5.12 / PostgreSQL 18.6.** Both Chromium and Playwright WebKit execute
+CREATE TABLE, INSERT, JOIN, CTE, ROW_NUMBER, ON CONFLICT and MERGE successfully.
+Each browser report contains three fresh-context capability runs. DuckDB-WASM
+was not needed: no PGlite-WebKit engine incompatibility was found.
 
-**Provisional recommendation: PGlite. Final engine decision blocked on WebKit.**
-It runs the target PostgreSQL dialect and passes the tested worker operations
-in Chromium. Do not substitute DuckDB just because a browser cannot be
-downloaded: no PGlite incompatibility has been observed. DuckDB is reserved
-for a demonstrated engine/browser capability failure.
+The capability probe intentionally starts fresh to measure startup. The game
+uses the separate warm transactional runtime described below; it does not create
+a database for every submission.
 
-## Chromium observations
+## Warm execution model
 
-The raw evidence is [spike-chromium.json](spike-chromium.json), produced by
-`npm run spike:chromium`. The latest run uses system Chromium 154.0.8037.57,
-three fresh contexts, a 390 × 844 viewport, touch input, production assets,
-and a same-origin CSP with `wasm-unsafe-eval` and without general `unsafe-eval`.
+The SQL screen lazily loads one worker. That worker prepares three dataset schemas
+once and retains them across tickets. Each learner/reference query sets a
+restricted schema-owner role, search_path and statement_timeout inside
+BEGIN/ROLLBACK. Parser checks disallow transaction/session escapes. Schema probes
+use independent savepoints and roll back candidate DDL and test inserts too.
 
-Measured runs (rounded; rerunning the script updates the raw file):
+PostgreSQL statement_timeout did not interrupt pg_sleep in this WASM build.
+The main thread therefore terminates a runaway worker at its hard deadline,
+then initializes a replacement for the next queued operation. Ordinary SQL errors
+roll back without replacing the engine. Request timers start when dispatched,
+not while waiting behind another operation.
 
-| Measurement | Observation |
-| --- | --- |
-| Worker import + PostgreSQL readiness | 1.91–1.98 seconds |
-| End-to-end worker result, including SQL checks | 1.98–2.05 seconds |
-| WASM linear memory after checks | 197,722,112 bytes / 188.56 MiB in every run |
-| Main-thread 16ms heartbeat callbacks during work | 123–127 callbacks |
-| Largest observed heartbeat interval | 20.2–23.3 ms |
-| Built asset payload (before HTTP encoding; excludes HTML) | 17,459,927 bytes / 17.46 MB |
-| Computed gzip size of the built assets | 5,892,258 bytes / 5.89 MB |
-| Encoded HTTP payload from replaying observed requests | 12,808,938 bytes / 12.81 MB per run |
-| SQL operation checks | 7 passed per run, 21 total |
-| Page errors / external runtime requests / horizontal overflow | 0 / 0 / none |
+## Local browser warm timings
 
-SQL operations: CREATE TABLE, INSERT, JOIN, CTE, ROW_NUMBER window function,
-INSERT ON CONFLICT and MERGE. Result-bearing queries are compared with expected
-rows; their actual returned values are in the raw evidence. Every run uses a
-new database and worker.
+Ten measured successful submissions per ticket after warm-up. Every submission
+runs learner plus reference across all three datasets (six transactions), parses
+SQL and compares results. The measured worker elapsed time excludes initial
+engine/schema loading and the main-thread message round trip. Measurements use
+an unthrottled Linux host, not an iPhone.
 
-### What these numbers mean
+| Browser | Dispatch median/max ms | Billing median/max ms | Window median/max ms | Warm WASM MiB |
+| --- | ---: | ---: | ---: | ---: |
+| chromium | 22.00 / 31.80 | 16.90 / 20.20 | 28.60 / 34.40 | 128.00 |
+| webkit | 10.00 / 13.00 | 14.00 / 21.00 | 19.00 / 21.00 | 128.00 |
 
-These are unthrottled cloud-host observations, not iPhone timings or guarantees.
-The contexts are fresh, but all three share one browser process; they are not
-three fully cold browser/process launches. The worker remains allocated for
-inspection until its context closes.
-WASM linear memory excludes JS heap, virtual filesystem, rendering and browser
-overhead. Total and peak memory have not been measured. This memory allocation
-makes the pending WebKit experiment especially important.
+All measured warm submissions were well under 1 second. Node measurements and
+repeatable memory configuration probes are in [warm-engine-findings.md](warm-engine-findings.md).
 
-The preview serves mixed encodings: WASM was uncompressed while JavaScript and
-the data file could be gzip-compressed. Browser request-size reporting returned
-zero for the worker script, so summing that field would undercount the download.
-The runner retains those raw values and separately replays the observed requests
-with the browser's accepted encodings, counting encoded response bytes directly.
-That replay excludes HTTP headers/TLS and does not measure an actual mobile
-connection. Computed full-asset gzip size is an estimate for a future host that
-compresses every asset, not the current browser's total transfer size.
+## Bundle and memory
 
-Vite warns about direct eval in PGlite's distributed JS. The tested browser
-path passed under the CSP without general `unsafe-eval`; the warning is recorded
-rather than suppressed. Verify the same CSP in WebKit before adopting the engine.
+Original engine-probe assets were 17,459,927 bytes raw; the original mixed-encoding
+HTTP replay transferred 12,808,938 bytes. The large files are core PostgreSQL WASM,
+its filesystem data, initialization WASM and the JS wrapper. No optional extension
+archives were imported originally or in the final build, so there were no unused
+extension archives to remove. Core WASM/data were not rewritten or stripped.
 
-## WebKit: blocked, not failed compatibility
+The final build includes the game, editor, parser, fonts and engine lab. Its raw
+asset-directory total is 20,696,275 bytes; not all those files load on a game screen.
+Actual request replays with the browsers' accepted encodings measure:
 
-`playwright install webkit` could not download Playwright WebKit 27.2 (v2370).
-The network proxy returned `403 Domain forbidden` from the official hosts:
+| Browser | Initial ticket board bytes | First SQL screen additional bytes | Total through first SQL screen bytes |
+| --- | ---: | ---: | ---: |
+| chromium | 159,999 | 5,017,699 | 5,177,698 |
+| webkit | 165,808 | 6,397,411 | 6,563,219 |
 
-- `cdn.playwright.dev`
-- `playwright.download.prss.microsoft.com`
+No WASM/data is requested before a SQL screen opens. WASM, data, parser JS and
+other eligible resources have real gzip/Brotli Content-Encoding headers and
+correct MIME types. Fonts use their native WOFF2 compression. These are encoded
+body-byte measurements from observed-request replays, excluding HTTP headers/TLS;
+they are not mobile download-time measurements. The full game adds features, so
+its payload scope differs from the original tiny engine probe.
 
-No WebKit browser was launched. No WebKit timing, memory, SQL or accessibility
-result exists. DuckDB-WebKit was not tested either. This does **not** establish
-that either engine fails in WebKit.
+initialMemory 64 MiB cannot instantiate the compiled 128 MiB-minimum module. Default
+and explicit 128 MiB alone grew to 188.56 MiB at readiness. Supported PostgreSQL
+buffer tuning instead lowers the actual warm allocation to 128 MiB, including the
+three loaded datasets. This is allocated linear memory, not total/peak browser
+memory. See the detailed [bundle findings](bundle-findings.md).
 
-The environment draft now includes these browser-download domains, the official
-documentation hosts, and a search host for the company-name check. A draft save
-does not apply the rules to the running machine. Review and save the changes in
-environment settings, then publish the environment as requested by the platform.
-After access is applied, run the browser installer and `npm run spike:webkit`.
-If the installed browser reports missing Linux libraries, diagnose and install
-its supported dependencies before making a compatibility claim.
+## CSP and cross-browser execution
 
-Official docs and the exact company-name search were also blocked by the proxy.
-Do not claim the company name has been cleared or explanations source-reviewed.
+The tested production policy allows wasm-unsafe-eval, does not enable general
+unsafe-eval, and restricts runtime origins to self. PGlite's distributed code still
+emits eval build warnings; no warning was suppressed by weakening the CSP.
 
-## Checks and remaining Step 1 work
+WebKit now installs locally. Its missing Debian libraries are installed into an
+ignored user cache via signed official packages. The documented local setup
+verifies all linked libraries and launches the real browser; its system-cache
+preflight switch skips no browser tests and bypasses no artifact verification.
+GitHub Actions uses the normal playwright install --with-deps route instead.
 
-Passed: strict TypeScript production build; 2 Vitest tests exercising the real
-engine and fresh-database isolation; three production Chromium worker runs.
-The SQL checks ran 21 times in Chromium, plus the separate Node test.
-Two additional Chromium Playwright tests passed at 390px and 1280px using
-tap-only interactions and axe before/after engine execution, with no remaining
-axe violations. The first axe run caught an invalid label on the results
-element; adding its labelled region role corrected it. No rules were disabled.
-The independent reviewer also reran the 2 Vitest tests successfully and checked
-the code, SQL outputs, raw evidence and documentation claims. This does not
-substitute for the later blind challenge review.
+The first CI Chromium job passed. Its first WebKit job timed out during browser
+installation on the migrating ubuntu-latest image, before engine execution.
+The permanent matrix now pins Ubuntu 24.04 and reruns both browsers. Consult the
+current Actions run and its public summaries for the final CI outcome; do not
+mistake a local report committed here for CI-generated evidence.
 
-Blocked: WebKit install and the required engine gate; official-document review;
-company-name collision check.
+## Raw evidence
 
-Planned but not implemented: React/Tailwind game UI, curriculum as tested data,
-eight-table freight seeds, grader/parser/diffs/query caps, three full challenges,
-CodeMirror/schema browser, localStorage saves and migrations, React effect lint
-rule, production debug-hook checks, Playwright game e2e with axe, and blind
-challenge review. The engine lab is not a replacement for these deliverables.
-The proposed curriculum and schema are in [implementation-plan.md](implementation-plan.md).
+- [Chromium capability and warm benchmark](spike-chromium.json)
+- [WebKit capability and warm benchmark](spike-webkit.json)
+- [Chromium complete app payload](app-transfer-chromium.json)
+- [WebKit complete app payload](app-transfer-webkit.json)
+- [Independent content review](content-review.md)
 
-No Step 1 completion audit or Step 2 approval is being requested yet.
+Actual iPhone hardware, production hosting and offline/PWA behavior remain later
+validation. No deployment has been performed.

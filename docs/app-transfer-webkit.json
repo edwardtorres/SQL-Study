@@ -1,0 +1,95 @@
+{
+  "recordedAt": "2026-10-27T17:21:44.720Z",
+  "browser": "webkit",
+  "browserVersion": "27.2",
+  "scope": "Fresh browser context, 1280px touch viewport; actual observed requests replayed with browser Accept-Encoding and encoded body bytes counted before decompression. Excludes headers/TLS; no mobile-network timing claim.",
+  "boardBytes": 165808,
+  "sqlAdditionalBytes": 6397411,
+  "totalBytes": 6563219,
+  "requests": [
+    {
+      "asset": "",
+      "screen": "board",
+      "bytes": 421,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/main-D50V1o6Q.js",
+      "screen": "board",
+      "bytes": 79559,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/rolldown-runtime-WkwZ5CU-.js",
+      "screen": "board",
+      "bytes": 368,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/preload-helper-CFijIu3R.js",
+      "screen": "board",
+      "bytes": 1065,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/main-CmY-fhFs.css",
+      "screen": "board",
+      "bytes": 7059,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/dm-sans-latin-wght-normal-Xz1IZZA0.woff2",
+      "screen": "board",
+      "bytes": 36932,
+      "encoding": "identity"
+    },
+    {
+      "asset": "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+      "screen": "board",
+      "bytes": 40404,
+      "encoding": "identity"
+    },
+    {
+      "asset": "assets/Workspace-Clsso1Cm.js",
+      "screen": "sql",
+      "bytes": 144649,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/client-ivWQ3ESG.js",
+      "screen": "sql",
+      "bytes": 848,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/game.worker-BPJMWEd6.js",
+      "screen": "sql",
+      "bytes": 170615,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/libpg-query.wasm",
+      "screen": "sql",
+      "bytes": 342219,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/pglite-C2k-M10h.wasm",
+      "screen": "sql",
+      "bytes": 3452854,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/initdb-D3nwUMsW.wasm",
+      "screen": "sql",
+      "bytes": 147399,
+      "encoding": "gzip"
+    },
+    {
+      "asset": "assets/pglite-k6Y9avCD.data",
+      "screen": "sql",
+      "bytes": 2138827,
+      "encoding": "gzip"
+    }
+  ]
+}
