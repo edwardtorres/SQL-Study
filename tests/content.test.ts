@@ -8,7 +8,10 @@ import { lessons } from '../src/data/lessons';
 import citations from '../src/data/citations.json';
 import { isBareSkeleton } from '../src/grader/skeleton';
 import { sameRows } from '../src/grader/compare';
-import { parsedStatements } from '../src/grader/structure';
+import { parsedStatements, validateSql } from '../src/grader/structure';
+import { sameState } from '../src/grader/state';
+import { readPolicy } from '../src/grader/policy';
+import { WarmEngine, type StateOptions } from '../src/engine/runtime';
 
 // The content check: every graded item must satisfy the Step 2 rules before it ships.
 // Wrong variants are measured against the engine on every dataset the item uses.
@@ -74,7 +77,7 @@ describe('content check: references and wrong variants on the engine', () => {
         await db.exec(seedSql(dataset.seed, dataset.variant));
       }
       const failures: string[] = [];
-      for (const item of items) {
+      for (const item of items.filter((candidate) => !candidate.checks)) {
         const caught = new Map<string, number>();
         // The visible sample must separate at least one wrong variant, so a learner can see a wrong answer without hidden data.
         const visibleCatches = new Set<string>();
@@ -143,9 +146,55 @@ describe('content check: lessons', () => {
   }, 60_000);
 });
 
+describe('content check: write items on the engine', () => {
+  test('every write reference passes its policy, checks and constraint tests on every dataset, is repeatable, and every wrong variant leaves a different state on at least two datasets, one of them the visible sample', async () => {
+    const engine = await WarmEngine.create();
+    try {
+      for (const dataset of datasetCatalog) await engine.prepare(dataset, seedSql(dataset.seed, dataset.variant));
+      const failures: string[] = [];
+      for (const item of items.filter((candidate) => candidate.checks)) {
+        const policy = item.policy ?? readPolicy;
+        const transactions = policy.transactions ?? false;
+        const options: StateOptions = { allow: policy.allow, transactions, checks: item.checks ?? [], tests: item.constraintTests ?? [] };
+        await validateSql(item.referenceSql, { mode: 'write', allow: policy.allow, transactions }).catch((error: unknown) => {
+          failures.push(`${item.id} reference breaks its policy: ${String(error)}`);
+        });
+        const caught = new Map<string, number>();
+        const visibleCatches = new Set<string>();
+        for (const dataset of item.datasets) {
+          const reference = await engine.runState(dataset.id, item.referenceSql, options);
+          if (reference.learnerError) failures.push(`${item.id} reference errors on ${dataset.id}: ${reference.learnerError}`);
+          for (const check of reference.checks) if (!check.result) failures.push(`${item.id} check ${check.id} errors on ${dataset.id}: ${check.error}`);
+          for (const test of reference.tests) if (!test.passed) failures.push(`${item.id} reference fails constraint "${test.name}" on ${dataset.id}: ${test.message}`);
+          const again = await engine.runState(dataset.id, item.referenceSql, options);
+          if (!sameState(reference, again)) failures.push(`${item.id} reference is not repeatable on ${dataset.id}`);
+          for (const variant of item.wrongVariants) {
+            await validateSql(variant.sql, { mode: 'write', allow: policy.allow, transactions }).catch((error: unknown) => {
+              failures.push(`${item.id}/${variant.id} breaks the policy: ${String(error)}`);
+            });
+            const wrong = await engine.runState(dataset.id, variant.sql, options);
+            if (!sameState(reference, wrong)) {
+              caught.set(variant.id, (caught.get(variant.id) ?? 0) + 1);
+              if (dataset.id === 'sample') visibleCatches.add(variant.id);
+            }
+          }
+        }
+        if (visibleCatches.size === 0) failures.push(`${item.id} has no wrong variant that changes the state on the visible sample`);
+        for (const variant of item.wrongVariants) {
+          const count = caught.get(variant.id) ?? 0;
+          if (count < 2) failures.push(`${item.id}/${variant.id} (${variant.mistake}) changes the state on ${count} dataset(s); need at least 2`);
+        }
+      }
+      expect(failures).toEqual([]);
+    } finally {
+      await engine.close();
+    }
+  }, 300_000);
+});
+
 describe('content check: parsed statements', () => {
   test('every reference is one statement with no transaction or session escapes', async () => {
-    for (const item of items) {
+    for (const item of items.filter((candidate) => !candidate.checks)) {
       const statements = await parsedStatements(item.referenceSql, { mode: 'read' });
       expect(statements.length, item.id).toBe(1);
     }

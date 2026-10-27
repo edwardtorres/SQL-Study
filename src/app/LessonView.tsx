@@ -22,6 +22,7 @@ async function loadLesson(chapterId: number): Promise<Lesson> {
     case 4: return (await import('../data/lessons/ch4')).lesson4;
     case 5: return (await import('../data/lessons/ch5')).lesson5;
     case 6: return (await import('../data/lessons/ch6')).lesson6;
+    case 7: return (await import('../data/lessons/ch7')).lesson7;
     default: throw new Error(`No lesson for chapter ${chapterId}`);
   }
 }

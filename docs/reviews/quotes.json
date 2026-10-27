@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-27T21:45:33.702Z",
-  "total": 51,
-  "verified": 51,
+  "checkedAt": "2026-10-27T22:05:01.701Z",
+  "total": 60,
+  "verified": 60,
   "results": [
     {
       "id": "pg-select-where",
@@ -306,6 +306,60 @@
     {
       "id": "pg-timezone-assumed",
       "url": "https://www.postgresql.org/docs/18/datatype-datetime.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-union-appends",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-union-dedupe",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-intersect-rows",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-except-rows",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-union-compatible",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-union-precedence",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-union-parens",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-intersect-all",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-except-all",
+      "url": "https://www.postgresql.org/docs/18/queries-union.html",
       "status": "verified",
       "httpStatus": 200
     }
