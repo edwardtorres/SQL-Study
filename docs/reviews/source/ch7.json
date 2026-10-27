@@ -1,0 +1,224 @@
+{
+  "chapterId": 7,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c7-s1",
+      "claim": "UNION places the rows of the second query after the rows of the first.",
+      "verdict": "partly",
+      "evidence": "pg-union-appends (https://www.postgresql.org/docs/18/queries-union.html): 'UNION effectively appends the result of query2 to the result of query1 (although there is no guarantee that this is the order in which the rows are actually returned)'. The page says the order of returned rows is not guaranteed, which the lesson omits.",
+      "suggestedFix": "UNION effectively appends the rows of the second query to the rows of the first, although there is no guarantee that this is the order in which the rows are actually returned."
+    },
+    {
+      "where": "c7-s1",
+      "claim": "It also removes duplicate rows, so a value that both queries return appears once in the result.",
+      "verdict": "supported",
+      "evidence": "pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html): 'it eliminates duplicate rows from its result, in the same way as DISTINCT'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "UNION ALL does the same placement and keeps every row.",
+      "verdict": "supported",
+      "evidence": "pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html): 'unless UNION ALL is used'. The keep-every-row part follows from this. The placement part carries the same no-order-guarantee caveat as the sentence above it.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "predict explanation: 'Each feed has four distinct statuses, and delivered is in both. UNION keeps one copy of each value, so seven values remain.'",
+      "verdict": "demonstration",
+      "evidence": "The seven total is covered by the recorded engine count, answerRows 7 (not re-run in this review). The per-feed count is checked against src/data/seed.ts: shipments.status takes queued, in_transit, delivered, cancelled (line 103); shipment_events.status takes booked, arrived, loaded, delivered (lines 130-134). That gives 4 + 4 - 1 = 7. The dedupe rule is pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html): 'it eliminates duplicate rows from its result, in the same way as DISTINCT'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "predict options: a 'Eight, with delivered listed twice'; b 'Seven, with delivered listed once' (answer); c 'Nine hundred and eighteen, one row for each shipment and each scan'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 7 rules out 8 and 918. The dedupe sentence in pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html) rules out the repeated listing in option a.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "commonMistakes UNION_DEDUPES: 'UNION removes repeats across both queries, so a value in both feeds is listed once. UNION ALL keeps every row, so a shared value appears twice.'",
+      "verdict": "supported",
+      "evidence": "pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html): 'it eliminates duplicate rows from its result, in the same way as DISTINCT' and 'unless UNION ALL is used'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "commonMistakes SET_OPERATOR_CHOICE: 'Both queries must return the same number of columns with compatible types. Add or remove a column in one query so the two lists line up.'",
+      "verdict": "supported",
+      "evidence": "pg-union-compatible (https://www.postgresql.org/docs/18/queries-union.html): 'they return the same number of columns and the corresponding columns have compatible data types'. The add-or-remove-a-column advice is not a documentation claim and is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s1",
+      "claim": "demonstration: 'UNION treats two NULL values as the same value, so it keeps one NULL row. UNION ALL keeps both.'",
+      "verdict": "demonstration",
+      "evidence": "The content check runs the NULL demonstration (not re-run in this review). The documentation chain also supports it: pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html) says UNION removes duplicates 'in the same way as DISTINCT', and https://www.postgresql.org/docs/18/queries-select-lists.html says 'Null values are considered equal in this comparison.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "INTERSECT keeps the rows that both queries return.",
+      "verdict": "supported",
+      "evidence": "pg-intersect-rows (https://www.postgresql.org/docs/18/queries-union.html): 'INTERSECT returns all rows that are both in the result of query1 and in the result of query2'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "EXCEPT keeps the rows of the first query that the second query does not return.",
+      "verdict": "supported",
+      "evidence": "pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'EXCEPT returns all rows that are in the result of query1 but not in the result of query2'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "Both also remove repeats unless ALL is written.",
+      "verdict": "supported",
+      "evidence": "pg-intersect-all (https://www.postgresql.org/docs/18/queries-union.html): 'Duplicate rows are eliminated unless INTERSECT ALL is used.' and pg-except-all: 'Again, duplicates are eliminated unless EXCEPT ALL is used.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "The order of the two sides matters for EXCEPT. Swapping them returns a different set",
+      "verdict": "supported",
+      "evidence": "Follows from pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'in the result of query1 but not in the result of query2'. The definition is asymmetric, so swapping the sides changes the result.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "predict explanation: 'EXCEPT keeps the first query’s rows that the second query lacks.'",
+      "verdict": "supported",
+      "evidence": "pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'EXCEPT returns all rows that are in the result of query1 but not in the result of query2'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "predict explanation: 'delivered is removed because shipments have it, and the three scan-only statuses remain.'",
+      "verdict": "demonstration",
+      "evidence": "The row count 3 is covered by the recorded engine count, answerRows 3 (not re-run in this review). The status sets are checked against src/data/seed.ts: shipments have queued, in_transit, delivered, cancelled (line 103); events have booked, arrived, loaded, delivered (lines 130-134). So delivered is the only shared status and booked, arrived and loaded remain.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "predict options: a 'Only delivered, because it is the one status both feeds share'; b 'Arrived, booked and loaded, the scan statuses that no shipment has' (answer); c 'All seven distinct statuses from both feeds'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 3 rules out option a (its reasoning describes INTERSECT, not EXCEPT) and option c (the UNION total of 7). The status sets in src/data/seed.ts match option b.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "commonMistakes SET_OPERATOR_CHOICE: 'INTERSECT keeps the values that both queries return. EXCEPT keeps the first query’s values that the second lacks.'",
+      "verdict": "supported",
+      "evidence": "pg-intersect-rows and pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'INTERSECT returns all rows that are both in the result of query1 and in the result of query2' and 'EXCEPT returns all rows that are in the result of query1 but not in the result of query2'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s2",
+      "claim": "commonMistakes SET_OPERATOR_CHOICE: 'A ticket that asks for values in one feed only needs EXCEPT.'",
+      "verdict": "partly",
+      "evidence": "pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'EXCEPT returns all rows that are in the result of query1 but not in the result of query2'. EXCEPT gives one direction only. The phrase 'values in one feed only' is ambiguous: if it means values in exactly one of the two feeds, EXCEPT alone does not return them.",
+      "suggestedFix": "A ticket that asks for the values of the first feed that the second feed lacks needs EXCEPT, with that feed on the left."
+    },
+    {
+      "where": "c7-s2",
+      "claim": "commonMistakes SET_OPERATOR_CHOICE: 'Swapping the two sides of EXCEPT returns the other feed’s leftovers.'",
+      "verdict": "supported",
+      "evidence": "Follows from pg-except-rows (https://www.postgresql.org/docs/18/queries-union.html): 'in the result of query1 but not in the result of query2'. Swapping the sides returns the second query's rows that the first lacks.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "The two queries in a set operation must return the same number of columns, and the corresponding columns must have compatible types.",
+      "verdict": "supported",
+      "evidence": "pg-union-compatible (https://www.postgresql.org/docs/18/queries-union.html): 'they return the same number of columns and the corresponding columns have compatible data types'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "The result takes its column names from the first query.",
+      "verdict": "unsupported",
+      "evidence": "none. https://www.postgresql.org/docs/18/queries-union.html (7.4) does not state a column-name rule, and no other cited page for this section does. The behaviour is shown only by the demonstration below, which the content check runs.",
+      "suggestedFix": "Delete this sentence. The demonstration below shows which query's column name the result keeps, and that is the only support for the claim."
+    },
+    {
+      "where": "c7-s3",
+      "claim": "INTERSECT binds more tightly than UNION and EXCEPT, so without parentheses the order of operations can differ from the one you read.",
+      "verdict": "supported",
+      "evidence": "pg-union-precedence (https://www.postgresql.org/docs/18/queries-union.html): 'Without parentheses, UNION and EXCEPT associate left-to-right, but INTERSECT binds more tightly than those two operators.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "A LIMIT or ORDER BY written after a set operation applies to the combined output unless each input is wrapped in parentheses.",
+      "verdict": "partly",
+      "evidence": "pg-union-parens (https://www.postgresql.org/docs/18/queries-union.html): 'the clause will be understood as applying to the output of the set operation rather than one of its inputs'. The page supports the combined-output reading. It does not say that wrapping the inputs changes where a trailing ORDER BY or LIMIT applies. The lesson's own example puts a trailing ORDER BY after parenthesized inputs and it still applies to the combined output.",
+      "suggestedFix": "A LIMIT or ORDER BY written after a set operation applies to the combined output. To limit one input, put that input in parentheses: without parentheses, 'the clause will be understood as applying to the output of the set operation rather than one of its inputs' (https://www.postgresql.org/docs/18/queries-union.html)."
+    },
+    {
+      "where": "c7-s3",
+      "claim": "predict explanation: 'Parentheses give each query its own LIMIT.'",
+      "verdict": "supported",
+      "evidence": "pg-union-parens (https://www.postgresql.org/docs/18/queries-union.html): 'You can also surround an individual query with parentheses. This is important if the query needs to use any of the clauses discussed in following sections, such as LIMIT.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "predict explanation: 'Three ids come from shipments and three from invoices, and UNION ALL keeps all six.'",
+      "verdict": "demonstration",
+      "evidence": "The count 6 is covered by the recorded engine count, answerRows 6 (not re-run in this review). UNION ALL keeping duplicates is supported by pg-union-dedupe (https://www.postgresql.org/docs/18/queries-union.html): 'unless UNION ALL is used'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "predict options: a 'Three, because the first LIMIT ends the whole result'; b 'Six, three from each table, because each LIMIT is inside its own parentheses' (answer); c 'Every shipment and invoice, because UNION ALL ignores LIMIT'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 6 rules out options a and c. Option c's reason is contradicted by pg-union-parens (https://www.postgresql.org/docs/18/queries-union.html): 'You can also surround an individual query with parentheses.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "commonMistakes SET_LIMIT_SCOPE: 'Without parentheses, a LIMIT after a set operation applies to the whole combined output, not to one input. Wrap each input in parentheses when it needs its own LIMIT.'",
+      "verdict": "supported",
+      "evidence": "pg-union-parens (https://www.postgresql.org/docs/18/queries-union.html): 'the clause will be understood as applying to the output of the set operation rather than one of its inputs' and 'You can also surround an individual query with parentheses.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "commonMistakes SET_OPERATOR_CHOICE: 'INTERSECT binds more tightly than UNION and EXCEPT. Write parentheses when the ticket names the order of the steps.'",
+      "verdict": "supported",
+      "evidence": "pg-union-precedence (https://www.postgresql.org/docs/18/queries-union.html): 'INTERSECT binds more tightly than those two operators.' The advice to write parentheses is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "demonstration: 'The column name of a set operation comes from its first query; the second query’s name is ignored.'",
+      "verdict": "demonstration",
+      "evidence": "No cited documentation sentence states this. The SQL is run by the content check, not by this review; the expected column name is first_name. The same claim is in paragraph 2 of this section, which is flagged unsupported above.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c7-s3",
+      "claim": "demonstration: 'INTERSECT binds more tightly than UNION, so the parentheses change the count from two rows to one.'",
+      "verdict": "demonstration",
+      "evidence": "The row counts 2 and 1 are the expected results; the content check runs the SQL, and this review did not. The precedence rule is supported by pg-union-precedence (https://www.postgresql.org/docs/18/queries-union.html): 'INTERSECT binds more tightly than those two operators.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL UNION removes duplicates and UNION ALL retains them.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/language-elements/set-operators-union-transact-sql: 'UNION ALL - Includes duplicates.' and 'UNION - Excludes duplicates.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark supports UNION, INTERSECT and EXCEPT with duplicate-handling variants.",
+      "verdict": "supported",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-setops.html: 'Spark SQL supports three types of set operators:' followed by the list EXCEPT or MINUS, INTERSECT, UNION. Each has an [ALL | DISTINCT] option, and 'UNION ALL does not remove duplicates from the result rows'.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 18, "partly": 3, "unsupported": 1, "unverified": 0, "demonstration": 9 }
+}

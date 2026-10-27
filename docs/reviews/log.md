@@ -52,3 +52,30 @@ Its alternative readings changed the sample result for four tickets, so those wo
 - `c3-i1`: customers with no invoices are not listed.
 
 The re-solve's other ambiguities (for example "ordered by name from A to Z") were checked against the reference and need no change. The content check passes after these edits.
+
+## Chapters 7 to 9 source pass (Step 3a)
+
+A fresh agent checked every lesson claim, predict explanation, common mistake and dialect note in chapters 7 to 9 against the cited pages. Output: `docs/reviews/source/ch7.json`, `ch8.json`, `ch9.json`.
+
+| Chapter | Supported | Partly | Unsupported | Unverified | Demonstration |
+|---|---|---|---|---|---|
+| 7 | 18 | 3 | 1 | 0 | 9 |
+| 8 | 22 | 3 | 0 | 0 | 5 |
+| 9 | 18 | 8 | 1 | 1 | 5 |
+
+Resolutions (applied in the lesson files and curriculum dialect notes):
+- c7-s1: UNION appends rows, with no guaranteed row order (quote `pg-union-appends`).
+- c7-s2: the EXCEPT mistake now says which feed is kept and where it sits.
+- c7-s3: removed the column-name sentence; the demonstration carries that claim. LIMIT and ORDER BY wording now follows `pg-union-parens`.
+- c8-s2: FRAME_OFF_BY_ONE says the frame holds up to three rows and fewer near a partition start (`pg-frame-fewer`). LAG_NULL_FIRST cites `pg-three-valued`.
+- c8-s3: PARTITION_MISSING cites `pg-no-partition`.
+- c8 Spark note: window frame defaults to CURRENT ROW when frame_end is omitted.
+- c9-s1: CHECK is a rule for a Boolean expression, not a rule for one column; the contract sentence was reworded.
+- c9-s2: DELETE without WHERE removes every row; UPDATE wording follows `pg-update`; the subquery sentence no longer states an execution order.
+- c9-s2: the AND/OR mistake no longer makes an uncited precedence claim.
+- c9-s3: open-transaction wording follows `pg-incomplete-hidden`; the predict option now says the dry run was discarded, not restored.
+- c9 T-SQL and Spark notes narrowed to what the Microsoft and Spark pages state.
+
+The c9-s1 "unverified" item was the contract sentence; it is reworded, not kept.
+
+Verification after these changes: `scripts/verify-quotes.mjs` 87 of 87 verbatim; `tests/content.test.ts` and `tests/data-curriculum.test.ts` 13 of 13 pass.

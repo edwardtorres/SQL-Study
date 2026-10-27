@@ -418,5 +418,20 @@
     "id": "pg-check",
     "url": "https://www.postgresql.org/docs/18/ddl-constraints.html",
     "quote": "It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression"
+  },
+  {
+    "id": "pg-no-partition",
+    "url": "https://www.postgresql.org/docs/18/tutorial-window.html",
+    "quote": "in which case there is a single partition containing all rows"
+  },
+  {
+    "id": "pg-incomplete-hidden",
+    "url": "https://www.postgresql.org/docs/18/tutorial-transactions.html",
+    "quote": "each one should not be able to see the incomplete changes made by others"
+  },
+  {
+    "id": "pg-frame-fewer",
+    "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+    "quote": "for rows near the partition ends the frame might contain fewer rows than elsewhere"
   }
 ]

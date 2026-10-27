@@ -105,11 +105,11 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
   ],
   8: [
     { dialect: 'T-SQL', note: 'ROW_NUMBER ordering can be nondeterministic when its ordering keys are not unique; include an explicit tie-breaker.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Spark window specifications also define partitioning, ordering and frames. Spell out the frame for running calculations.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-window.html' },
+    { dialect: 'Spark SQL', note: 'Spark window specifications define partitioning, ordering and an optional window frame. If frame_end is omitted, it defaults to CURRENT ROW.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-window.html' },
   ],
   9: [
-    { dialect: 'T-SQL', note: 'T-SQL has its own data-type and identity-column syntax. PostgreSQL schema tickets are graded against PostgreSQL constraints.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE ... USING names the data source (the input format) for the table; check the Spark reference for that source before assuming PostgreSQL-style constraints.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
+    { dialect: 'T-SQL', note: 'T-SQL has its own data-type and identity-column syntax (IDENTITY). This game’s schema tickets are graded against PostgreSQL constraints.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql' },
+    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE ... USING names the data source, which the Spark reference calls the input format used to create the table. That page does not describe constraints, so check the reference for the source before assuming PostgreSQL-style constraints.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
   ],
   10: [
     { dialect: 'T-SQL', note: 'SQL Server primary and foreign keys enforce referential integrity, as the PostgreSQL constraints in this game do.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/tables/primary-and-foreign-key-constraints' },

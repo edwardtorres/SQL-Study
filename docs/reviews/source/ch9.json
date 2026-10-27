@@ -1,0 +1,238 @@
+{
+  "chapterId": 9,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c9-s1",
+      "claim": "A table’s definition is its contract.",
+      "verdict": "unverified",
+      "evidence": "none. This is a figurative framing with no checkable fact, so no source can confirm or refute it. Not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "Column types say what a value can be; constraints say which values are allowed.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'Data types are a way to limit the kind of data that can be stored in a table' and 'SQL allows you to define constraints on columns and tables.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "A primary key identifies each row, and a foreign key ties a column to rows in another table.",
+      "verdict": "supported",
+      "evidence": "pg-pk-meaning (https://www.postgresql.org/docs/18/ddl-constraints.html): 'A primary key constraint indicates that a column, or group of columns, can be used as a unique identifier for rows in the table'. pg-fk: 'A foreign key constraint specifies that the values in a column (or a group of columns) must match the values appearing in some row of another table'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "The rules are enforced by the database, not by the query that writes the row.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'If a user attempts to store data in a column that would violate a constraint, an error is raised.' The page describes enforcement when data is stored, which is the database's job.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "A write that breaks a constraint fails, so the rule holds for every application that uses the table.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'an error is raised. This applies even if the value came from the default value definition.' The 'every application' part follows from enforcement in the table.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "predict explanation: 'weight_kg has no NOT NULL constraint, so the table stores a missing weight as NULL. The filter keeps those shipments.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'Instead, this simply selects the default behavior that the column might be null.' The seed defines weight_kg with nullable: true (src/data/seed.ts line 37). The count 12 is the recorded answerRows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "predict options: a 'Twelve rows, the shipments with no recorded weight, which the table allows' (answer); b 'No rows, because the table forbids a missing weight'; c 'Two hundred and forty rows, one for each shipment'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 12 rules out option c. Option b is contradicted by https://www.postgresql.org/docs/18/ddl-constraints.html: 'the default behavior that the column might be null'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "commonMistakes CONSTRAINT_MISSING: 'A primary key requires values to be both unique and not null. Leaving the key off lets a repeated or missing id through, and the table stops identifying rows.'",
+      "verdict": "supported",
+      "evidence": "pg-pk-unique-notnull (https://www.postgresql.org/docs/18/ddl-constraints.html): 'This requires that the values be both unique and not null'. Without the key, a repeat or NULL is not refused, which follows from pg-unique on the same page: 'Unique constraints ensure that the data contained in a column, or a group of columns, is unique among all the rows in the table'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "commonMistakes CONSTRAINT_MISSING: 'A CHECK constraint is the rule for one column.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'The check constraint expression should involve the column thus constrained' (a column CHECK). The same page says 'a column constraint is supposed to refer to only the column it is attached to', and a table constraint is one 'written separately from any one column definition'. So the one-column limit applies to column-level CHECKs. The page does not limit a table-level CHECK to one column, so the lesson's general sentence overstates it.",
+      "suggestedFix": "A CHECK constraint states a rule that a Boolean expression must satisfy. Written on one column, its expression should involve that column: 'The check constraint expression should involve the column thus constrained' (https://www.postgresql.org/docs/18/ddl-constraints.html)."
+    },
+    {
+      "where": "c9-s1",
+      "claim": "commonMistakes CONSTRAINT_MISSING: 'Without it, a value the ticket forbids is stored without any error.'",
+      "verdict": "supported",
+      "evidence": "Follows from pg-check (https://www.postgresql.org/docs/18/ddl-constraints.html): 'It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression', and from 'If a user attempts to store data in a column that would violate a constraint, an error is raised' on the same page.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s1",
+      "claim": "demonstration: 'Every shipments id is unique, as the primary key requires, so the distinct count equals the row count.'",
+      "verdict": "demonstration",
+      "evidence": "The equal counts are run by the content check, not by this review. The seed makes shipments.id the primary key (src/data/seed.ts line 30, primaryKey: true). The rule is pg-pk-unique-notnull (https://www.postgresql.org/docs/18/ddl-constraints.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "UPDATE changes the specified columns in every row that matches its condition.",
+      "verdict": "supported",
+      "evidence": "pg-update (https://www.postgresql.org/docs/18/sql-update.html): 'UPDATE changes the values of the specified columns in all rows that satisfy the condition'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "DELETE removes the rows its condition matches.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-delete.html: 'DELETE deletes rows that satisfy the WHERE clause from the specified table'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "Both statements act on all rows when the condition is missing, so a changed row set begins with a SELECT that uses the same condition.",
+      "verdict": "partly",
+      "evidence": "DELETE: pg-delete-absent (https://www.postgresql.org/docs/18/sql-delete.html): 'If the WHERE clause is absent, the effect is to delete all rows in the table'. UPDATE: the syntax at https://www.postgresql.org/docs/18/sql-update.html shows the WHERE clause in brackets, '[ WHERE condition | WHERE CURRENT OF cursor_name ]', and says UPDATE changes the values 'in all rows that satisfy the condition'. The page does not state the no-WHERE result for UPDATE in words. The SELECT advice is not scored.",
+      "suggestedFix": "DELETE with no WHERE clause removes every row: 'If the WHERE clause is absent, the effect is to delete all rows in the table' (https://www.postgresql.org/docs/18/sql-delete.html). UPDATE changes the specified columns in all rows that satisfy its condition, and its WHERE clause is optional in its syntax (https://www.postgresql.org/docs/18/sql-update.html)."
+    },
+    {
+      "where": "c9-s2",
+      "claim": "A subquery in the condition lets one table be filtered by another.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-update.html: 'Perform the same operation, using a sub-select in the WHERE clause'. https://www.postgresql.org/docs/18/functions-subquery.html: 'The right-hand side is a parenthesized subquery, which must return exactly one column.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "The subquery runs first and supplies the matching values, so the data change needs no join.",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/functions-subquery.html: 'The left-hand expression is evaluated and compared to each row of the subquery result' supports 'supplies the matching values'. No cited page says the subquery runs first. The same page warns: 'unwise to assume that the subquery will be evaluated completely'. 'No join' is supported by the sub-select alternative on https://www.postgresql.org/docs/18/sql-update.html.",
+      "suggestedFix": "A subquery in the condition supplies the values to match: 'The left-hand expression is evaluated and compared to each row of the subquery result' (https://www.postgresql.org/docs/18/functions-subquery.html). The same operation can be written 'using a sub-select in the WHERE clause' instead of a join (https://www.postgresql.org/docs/18/sql-update.html)."
+    },
+    {
+      "where": "c9-s2",
+      "claim": "predict explanation: 'The condition keeps only the shipments whose status is cancelled. An UPDATE or DELETE with the same WHERE changes exactly those rows.'",
+      "verdict": "supported",
+      "evidence": "pg-update (https://www.postgresql.org/docs/18/sql-update.html): 'UPDATE changes the values of the specified columns in all rows that satisfy the condition'. https://www.postgresql.org/docs/18/sql-delete.html: 'DELETE deletes rows that satisfy the WHERE clause'. The status 'cancelled' is in the seed (src/data/seed.ts line 103). The count 64 is the recorded answerRows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "predict options: a 'Every shipment, 240 rows'; b 'Only the cancelled shipments, which the condition keeps' (answer); c 'One row, because the statement names a status'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 64 rules out options a and c. Option c's reason is contradicted by https://www.postgresql.org/docs/18/sql-update.html: 'in all rows that satisfy the condition', which is a filter and not a single row.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s2",
+      "claim": "commonMistakes MISSING_WHERE_ON_UPDATE: 'An UPDATE or DELETE without WHERE applies to every row in the table.'",
+      "verdict": "partly",
+      "evidence": "DELETE: https://www.postgresql.org/docs/18/sql-delete.html: 'If the WHERE clause is absent, the effect is to delete all rows in the table.' UPDATE: the WHERE clause is optional in the syntax at https://www.postgresql.org/docs/18/sql-update.html, but no sentence says that UPDATE without WHERE changes every row. The advice to write the condition first is not scored.",
+      "suggestedFix": "An UPDATE or DELETE without a WHERE clause applies to every row in the table. For DELETE: 'If the WHERE clause is absent, the effect is to delete all rows in the table' (https://www.postgresql.org/docs/18/sql-delete.html). For UPDATE, the WHERE clause is optional in its syntax (https://www.postgresql.org/docs/18/sql-update.html)."
+    },
+    {
+      "where": "c9-s2",
+      "claim": "commonMistakes AND_OR_PRECEDENCE: 'OR widens a condition. A DELETE that adds OR to an AND-style condition removes rows that the ticket did not name.'",
+      "verdict": "partly",
+      "evidence": "No cited page covers this mistake, so the section has no citation for it. The mechanism depends on operator precedence, which https://www.postgresql.org/docs/18/sql-syntax-lexical.html states: 'Table 4.2 shows the precedence and associativity of the operators in PostgreSQL', and 'Add parentheses if you want an expression with multiple operators to be parsed in some other way than what the precedence rules imply.' Table 4.2 lists AND above OR. 'OR widens a condition' is supported only by the truth table on https://www.postgresql.org/docs/18/functions-logical.html, not by a sentence.",
+      "suggestedFix": "Table 4.2 lists AND above OR, so without parentheses 'a AND b OR c' selects the rows of (a AND b) OR c. 'Add parentheses if you want an expression with multiple operators to be parsed in some other way than what the precedence rules imply' (https://www.postgresql.org/docs/18/sql-syntax-lexical.html)."
+    },
+    {
+      "where": "c9-s2",
+      "claim": "demonstration: 'The number of invoices of cancelled shipments is the number of rows an UPDATE or DELETE with that subquery would change.'",
+      "verdict": "demonstration",
+      "evidence": "The count is run by the content check, not by this review. The documented rule is that UPDATE changes 'all rows that satisfy the condition' (https://www.postgresql.org/docs/18/sql-update.html) and that DELETE deletes 'rows that satisfy the WHERE clause' (https://www.postgresql.org/docs/18/sql-delete.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "A transaction bundles several statements.",
+      "verdict": "supported",
+      "evidence": "pg-tx-all-or-nothing (https://www.postgresql.org/docs/18/tutorial-transactions.html): 'bundles multiple steps into a single, all-or-nothing operation'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "COMMIT keeps every change in the group, and ROLLBACK discards them all.",
+      "verdict": "supported",
+      "evidence": "pg-commit (https://www.postgresql.org/docs/18/sql-commit.html): 'All changes made by the transaction become visible to others and are guaranteed to be durable if a crash occurs'. pg-rollback (https://www.postgresql.org/docs/18/sql-rollback.html): 'causes all the updates made by the transaction to be discarded'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "Use ROLLBACK to test a change: run it inside BEGIN, check the result, and end with ROLLBACK so the table is unchanged.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-transactions.html: 'a transaction is set up by surrounding the SQL commands of the transaction with BEGIN and COMMIT commands', and 'issue the command ROLLBACK instead of COMMIT' with 'all our updates so far will be canceled'. The testing purpose is advice and is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "A transaction that has no COMMIT or ROLLBACK is still open.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-transactions.html: 'The updates made so far by an open transaction are invisible to other transactions until the transaction completes'. The 'still open' reading follows from the BEGIN and COMMIT framing on the same page.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "Its changes are not kept by the session that ends it, so the ending statement is part of the work.",
+      "verdict": "unsupported",
+      "evidence": "none. The cited pages for this section (tutorial-transactions, sql-commit, sql-rollback) do not say what happens when a session ends with a transaction still open. The nearest sentence is 'The updates made so far by an open transaction are invisible to other transactions until the transaction completes'.",
+      "suggestedFix": "A transaction with no COMMIT or ROLLBACK stays open, and 'the updates made so far by an open transaction are invisible to other transactions until the transaction completes' (https://www.postgresql.org/docs/18/tutorial-transactions.html). Delete the session-end sentence unless a cited page states what happens when a session ends with an open transaction."
+    },
+    {
+      "where": "c9-s3",
+      "claim": "predict explanation: 'ROLLBACK discards the dry run. The first six invoices are still there, with their paid dates intact.'",
+      "verdict": "supported",
+      "evidence": "pg-rollback (https://www.postgresql.org/docs/18/sql-rollback.html): 'causes all the updates made by the transaction to be discarded'. The count six is the recorded answerRows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "predict options: a 'Six rows, with the paid dates restored by the ROLLBACK' (answer).",
+      "verdict": "partly",
+      "evidence": "pg-rollback (https://www.postgresql.org/docs/18/sql-rollback.html): 'causes all the updates made by the transaction to be discarded'. The page says the updates are discarded. It does not say the paid dates are 'restored', which implies they were changed and then put back.",
+      "suggestedFix": "Six rows, with the paid dates unchanged because the ROLLBACK discarded the dry run (https://www.postgresql.org/docs/18/sql-rollback.html)."
+    },
+    {
+      "where": "c9-s3",
+      "claim": "predict options: b 'Zero rows, because the dry run cleared the paid dates'; c 'One row, the last invoice that was paid'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 6 rules out both. Option b's reason is undone by the ROLLBACK, per pg-rollback (https://www.postgresql.org/docs/18/sql-rollback.html): 'to be discarded'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "commonMistakes ROLLBACK_MISSING: 'COMMIT keeps the changes made since BEGIN. A test that must leave the table as it was ends with ROLLBACK, not COMMIT.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/tutorial-transactions.html: 'issue the command ROLLBACK instead of COMMIT' and 'all our updates so far will be canceled'. pg-commit (https://www.postgresql.org/docs/18/sql-commit.html): 'All changes made by the transaction become visible to others'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c9-s3",
+      "claim": "commonMistakes COMMIT_MISSING: 'ROLLBACK discards every change in the transaction. A batch that must be kept as a whole needs COMMIT at the end.'",
+      "verdict": "supported",
+      "evidence": "pg-rollback (https://www.postgresql.org/docs/18/sql-rollback.html): 'causes all the updates made by the transaction to be discarded'. https://www.postgresql.org/docs/18/tutorial-transactions.html: 'bundles multiple steps into a single, all-or-nothing operation'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "T-SQL has its own data-type and identity-column syntax. PostgreSQL schema tickets are graded against PostgreSQL constraints.",
+      "verdict": "partly",
+      "evidence": "The first sentence is supported by https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql: 'column_name <data_type>' and 'IDENTITY [ ( seed , increment ) ]'. The second sentence is about this game's grader, not a T-SQL fact, and the Microsoft page cannot support it. Only the grader's code or a PostgreSQL page could back it; it is not checked here.",
+      "suggestedFix": "T-SQL has its own data-type and identity-column syntax, for example 'IDENTITY [ ( seed , increment ) ]' (https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql). PostgreSQL constraints are documented at https://www.postgresql.org/docs/18/ddl-constraints.html. Move any statement about how this game grades tickets out of the dialect note, or source it to the grader."
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark CREATE TABLE ... USING names the data source (the input format) for the table; check the Spark reference for that source before assuming PostgreSQL-style constraints.",
+      "verdict": "partly",
+      "evidence": "https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html: 'Data Source is the input format used to create the table' supports 'names the data source (the input format)'. The page never mentions constraints, so 'PostgreSQL-style constraints' is not supported by this page.",
+      "suggestedFix": "Spark CREATE TABLE ... USING names the data source, which Spark calls 'the input format used to create the table' (https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html). That page does not describe constraints, so check the reference for the data source before assuming PostgreSQL-style constraints."
+    }
+  ],
+  "summary": { "supported": 18, "partly": 8, "unsupported": 1, "unverified": 1, "demonstration": 5 }
+}

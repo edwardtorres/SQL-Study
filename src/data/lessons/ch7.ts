@@ -8,7 +8,7 @@ export const lesson7: Lesson = {
       id: 'c7-s1',
       title: 'UNION keeps each value once',
       paragraphs: [
-        'UNION places the rows of the second query after the rows of the first. It also removes duplicate rows, so a value that both queries return appears once in the result.',
+        'UNION effectively appends the rows of the second query to the rows of the first, although the order of returned rows is not guaranteed. It also removes duplicate rows, so a value that both queries return appears once in the result.',
         'UNION ALL does the same placement and keeps every row. Choose it when repeats are meaningful, such as one row per event, and choose UNION when the ticket asks for each value once.',
       ],
       example: 'SELECT status\nFROM shipments\nUNION\nSELECT status\nFROM shipment_events\nORDER BY status;',
@@ -52,7 +52,7 @@ export const lesson7: Lesson = {
         explanation: 'EXCEPT keeps the first query’s rows that the second query lacks. delivered is removed because shipments have it, and the three scan-only statuses remain.',
       },
       commonMistakes: [
-        { mistake: 'SET_OPERATOR_CHOICE', text: 'INTERSECT keeps the values that both queries return. EXCEPT keeps the first query’s values that the second lacks. A ticket that asks for values in one feed only needs EXCEPT.' },
+        { mistake: 'SET_OPERATOR_CHOICE', text: 'INTERSECT keeps the values that both queries return. EXCEPT keeps the first query’s values that the second lacks. A ticket that asks for values in the first feed that the second feed lacks needs EXCEPT, with that feed on the left.' },
         { mistake: 'SET_OPERATOR_CHOICE', text: 'Swapping the two sides of EXCEPT returns the other feed’s leftovers. Name the feed the ticket keeps first, and put it on the left.' },
       ],
       citations: ['pg-intersect-rows', 'pg-intersect-all', 'pg-except-rows', 'pg-except-all'],
@@ -61,8 +61,8 @@ export const lesson7: Lesson = {
       id: 'c7-s3',
       title: 'Column matching, parentheses and ORDER BY',
       paragraphs: [
-        'The two queries in a set operation must return the same number of columns, and the corresponding columns must have compatible types. The result takes its column names from the first query.',
-        'INTERSECT binds more tightly than UNION and EXCEPT, so without parentheses the order of operations can differ from the one you read. A LIMIT or ORDER BY written after a set operation applies to the combined output unless each input is wrapped in parentheses.',
+        'The two queries in a set operation must return the same number of columns, and the corresponding columns must have compatible types.',
+        'INTERSECT binds more tightly than UNION and EXCEPT, so without parentheses the order of operations can differ from the one you read. A LIMIT or ORDER BY written after a set operation applies to the combined output. To limit one input, put that input in parentheses.',
       ],
       example: '(SELECT id FROM shipments ORDER BY id LIMIT 3)\nUNION ALL\n(SELECT shipment_id FROM invoices ORDER BY shipment_id LIMIT 3)\nORDER BY id;',
       predict: {

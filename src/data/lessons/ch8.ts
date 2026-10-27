@@ -55,9 +55,9 @@ export const lesson8: Lesson = {
       commonMistakes: [
         { mistake: 'LAG_NULL_FIRST', text: 'The first row of LAG and the last row of LEAD are NULL unless a default is given. A comparison with NULL is not true, so filters on the window value need an explicit NULL test.' },
         { mistake: 'FRAME_DEFAULT', text: 'With ORDER BY and no frame, the default frame sums or counts every row up to the current row’s last peer. A running total therefore includes tied rows together.' },
-        { mistake: 'FRAME_OFF_BY_ONE', text: '2 PRECEDING reaches back two rows, so the frame holds three rows including the current one. Count the current row when you write the offset.' },
+        { mistake: 'FRAME_OFF_BY_ONE', text: '2 PRECEDING reaches back two rows, so the frame holds up to three rows including the current one. Near the start of a partition it holds fewer.' },
       ],
-      citations: ['pg-lag', 'pg-lag-default', 'pg-lead', 'pg-frame-default', 'pg-frame-default-meaning', 'pg-whole-partition', 'pg-rows-mode'],
+      citations: ['pg-lag', 'pg-lag-default', 'pg-lead', 'pg-frame-default', 'pg-frame-default-meaning', 'pg-whole-partition', 'pg-rows-mode', 'pg-frame-fewer', 'pg-three-valued'],
       demonstrations: [
         { claim: 'With ORDER BY, the default frame includes every tied peer, so two rows with the same value show the same running total. A ROWS frame gives each row its own total.', sql: 'SELECT v, SUM(v) OVER (ORDER BY v) AS default_frame, SUM(v) OVER (ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS rows_frame FROM (VALUES (1), (1), (2)) AS t(v) ORDER BY v, rows_frame;' },
       ],
@@ -82,10 +82,10 @@ export const lesson8: Lesson = {
         explanation: 'The window keeps one row per shipment that has events. Shipments with no events have no rows to number, so they are not in the result.',
       },
       commonMistakes: [
-        { mistake: 'PARTITION_MISSING', text: 'Without PARTITION BY, the whole table is one group, and position 1 is a single row. Name the column that defines a group in the PARTITION BY.' },
+        { mistake: 'PARTITION_MISSING', text: 'Without PARTITION BY, the rows form a single partition, so position 1 is a single row. Name the column that defines a group in the PARTITION BY.' },
         { mistake: 'TIE_NONDETERMINISTIC', text: 'If two rows in a group tie on the ORDER BY, the kept row is not defined. Add a unique tie-breaker, such as id, so the same row is kept every time.' },
       ],
-      citations: ['pg-partition-by', 'pg-window-where'],
+      citations: ['pg-partition-by', 'pg-no-partition', 'pg-window-where'],
     },
   ],
 };

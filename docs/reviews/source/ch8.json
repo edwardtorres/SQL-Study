@@ -1,0 +1,217 @@
+{
+  "chapterId": 8,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c8-s1",
+      "claim": "A window function computes a value for each row from a set of related rows, and every input row stays in the output.",
+      "verdict": "supported",
+      "evidence": "The window overview (https://www.postgresql.org/docs/18/tutorial-window.html): 'window functions do not cause rows to become grouped into a single output row' and 'the rows retain their separate identities'. Also https://www.postgresql.org/docs/18/sql-expressions.html: 'each row remains separate in the query output'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "OVER says which rows are related: PARTITION BY starts a separate calculation for each group, and ORDER BY sets the order inside it.",
+      "verdict": "supported",
+      "evidence": "pg-partition-by (https://www.postgresql.org/docs/18/sql-expressions.html): 'The PARTITION BY clause groups the rows of the query into partitions, which are processed separately by the window function' and 'The ORDER BY clause determines the order in which the rows of a partition are processed by the window function'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "ROW_NUMBER gives each row its own number, and the order of tied rows is not defined.",
+      "verdict": "supported",
+      "evidence": "pg-row-number (https://www.postgresql.org/docs/18/functions-window.html): 'Returns the number of the current row within its partition, counting from 1.' pg-row-number-ties (https://www.postgresql.org/docs/18/tutorial-window.html): 'with tied rows numbered in an unspecified order'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "RANK gives tied rows the same number and then skips ahead.",
+      "verdict": "supported",
+      "evidence": "pg-rank-gaps (https://www.postgresql.org/docs/18/functions-window.html): 'Returns the rank of the current row, with gaps; that is, the row_number of the first row in its peer group.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "DENSE_RANK gives tied rows the same number with no gap after them.",
+      "verdict": "supported",
+      "evidence": "pg-dense-rank (https://www.postgresql.org/docs/18/functions-window.html): 'Returns the rank of the current row, without gaps; this function effectively counts peer groups.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "predict explanation: 'Window functions do not collapse rows. Each shipment stays a row, and the ranks are extra columns. The three functions differ only in how they number shipments that share a due date.'",
+      "verdict": "supported",
+      "evidence": "The first two sentences follow from tutorial-window (https://www.postgresql.org/docs/18/tutorial-window.html): 'window functions do not cause rows to become grouped into a single output row'. The third follows from the definitions of row_number, rank and dense_rank on https://www.postgresql.org/docs/18/functions-window.html. The explanation states no row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "predict options: a 'Forty rows, one for each of the customer’s shipments' (answer); b 'About a dozen, one for each distinct due date'; c 'One row, because the three functions share one partition'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 40 rules out options b and c. Option c's reason is contradicted by tutorial-window (https://www.postgresql.org/docs/18/tutorial-window.html): 'window functions do not cause rows to become grouped into a single output row'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "commonMistakes TIE_NONDETERMINISTIC: 'ROW_NUMBER leaves the order of tied rows undefined. Add a unique column, such as id, to the window ORDER BY when the ticket needs one row per position.'",
+      "verdict": "supported",
+      "evidence": "pg-row-number-ties (https://www.postgresql.org/docs/18/tutorial-window.html): 'with tied rows numbered in an unspecified order'. The advice to add a unique column is not a documentation claim and is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "commonMistakes RANK_VS_ROW_NUMBER: 'RANK gives tied rows the same number. ROW_NUMBER gives each row its own.'",
+      "verdict": "supported",
+      "evidence": "pg-rank-gaps (https://www.postgresql.org/docs/18/functions-window.html): 'the row_number of the first row in its peer group' (tied rows share a number). pg-row-number: 'Returns the number of the current row within its partition'. The choose-when advice is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "commonMistakes DENSE_VS_RANK: 'After a tie, RANK skips numbers and DENSE_RANK does not. Two tied rows at the top make RANK continue at 3; DENSE_RANK continues at 2.'",
+      "verdict": "supported",
+      "evidence": "pg-rank-gaps and pg-dense-rank (https://www.postgresql.org/docs/18/functions-window.html): 'with gaps' and 'without gaps; this function effectively counts peer groups'. With two peers at row_number 1 and 2, the next row's RANK is its row_number 3 and its DENSE_RANK is 2.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s1",
+      "claim": "demonstration: 'After two tied rows, RANK continues at 3, while DENSE_RANK continues at 2.'",
+      "verdict": "demonstration",
+      "evidence": "The result is run by the content check, not by this review. The documented rules are pg-rank-gaps and pg-dense-rank (https://www.postgresql.org/docs/18/functions-window.html).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "LAG reads a value from an earlier row in the same partition, and LEAD reads one from a later row.",
+      "verdict": "supported",
+      "evidence": "pg-lag (https://www.postgresql.org/docs/18/functions-window.html): 'Returns value evaluated at the row that is offset rows before the current row within the partition'. pg-lead: 'Returns value evaluated at the row that is offset rows after the current row within the partition'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "When no such row exists, the default is NULL, so the first row of LAG and the last row of LEAD have no value.",
+      "verdict": "supported",
+      "evidence": "pg-lag-default (https://www.postgresql.org/docs/18/functions-window.html): 'if there is no such row, instead returns default' and 'If omitted, offset defaults to 1 and default to NULL'. The LEAD entry on the same page has the same default sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "A frame says which rows of the partition a window function uses.",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html: 'The frame_clause specifies the set of rows constituting the window frame, which is a subset of the current partition'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "With ORDER BY and no frame, the default frame runs from the start of the partition through the current row’s last peer.",
+      "verdict": "supported",
+      "evidence": "pg-frame-default-meaning (https://www.postgresql.org/docs/18/sql-expressions.html): 'all rows from the partition start up through the current row' (the page continues with the last ORDER BY peer).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "A ROWS frame counts rows one at a time, so tied rows can get different totals.",
+      "verdict": "supported",
+      "evidence": "Follows from https://www.postgresql.org/docs/18/sql-expressions.html: 'In ROWS mode, CURRENT ROW simply means the current row' and pg-rows-mode: 'the option means that the frame starts or ends the specified number of rows before or after the current row'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "predict explanation: 'Every scan of the shipment stays in the result. LAG has no earlier scan for the first row, so previous_status is NULL there.'",
+      "verdict": "supported",
+      "evidence": "The first sentence follows from tutorial-window (https://www.postgresql.org/docs/18/tutorial-window.html): 'the rows retain their separate identities'. The second follows from pg-lag-default: 'If omitted, offset defaults to 1 and default to NULL'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "predict options: a 'Two rows, because the first scan has no previous status to show'; b 'Three rows, and the first row shows NULL for previous_status' (answer); c 'Three rows, and the first row repeats its own status'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 3 rules out option a. Option c is ruled out by the NULL default in pg-lag-default (https://www.postgresql.org/docs/18/functions-window.html): 'If omitted, offset defaults to 1 and default to NULL'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "commonMistakes LAG_NULL_FIRST: 'The first row of LAG and the last row of LEAD are NULL unless a default is given. A comparison with NULL is not true, so filters on the window value need an explicit NULL test.'",
+      "verdict": "supported",
+      "evidence": "The first sentence follows from pg-lag-default (https://www.postgresql.org/docs/18/functions-window.html). The second follows from https://www.postgresql.org/docs/18/functions-comparison.html: 'Ordinary comparison operators yield null' and 'not true or false, when either input is null'. That page is not among this section's citations, so it should be added.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "commonMistakes FRAME_DEFAULT: 'With ORDER BY and no frame, the default frame sums or counts every row up to the current row’s last peer. A running total therefore includes tied rows together.'",
+      "verdict": "supported",
+      "evidence": "pg-frame-default-meaning (https://www.postgresql.org/docs/18/sql-expressions.html): 'all rows from the partition start up through the current row'. tutorial-window (https://www.postgresql.org/docs/18/tutorial-window.html): 'plus any following rows that are equal to the current row according to the ORDER BY clause'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s2",
+      "claim": "commonMistakes FRAME_OFF_BY_ONE: '2 PRECEDING reaches back two rows, so the frame holds three rows including the current one. Count the current row when you write the offset.'",
+      "verdict": "partly",
+      "evidence": "The first part is supported: 'the option means that the frame starts or ends the specified number of rows before or after the current row' (pg-rows-mode, https://www.postgresql.org/docs/18/sql-expressions.html). The 'holds three rows' part is not always true. The same page says 'for rows near the partition ends the frame might contain fewer rows than elsewhere'. Rows near the start of a partition have fewer than three rows in a 2 PRECEDING frame.",
+      "suggestedFix": "2 PRECEDING reaches back two rows, so the frame holds up to three rows including the current one. Near the start of a partition it holds fewer, because for rows near the partition ends the frame might contain fewer rows than elsewhere (https://www.postgresql.org/docs/18/sql-expressions.html)."
+    },
+    {
+      "where": "c8-s2",
+      "claim": "demonstration: 'With ORDER BY, the default frame includes every tied peer, so two rows with the same value show the same running total. A ROWS frame gives each row its own total.'",
+      "verdict": "demonstration",
+      "evidence": "The totals are run by the content check, not by this review. The documented rules are pg-frame-default-meaning and the ROWS-mode sentence on https://www.postgresql.org/docs/18/sql-expressions.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s3",
+      "claim": "Window functions are permitted only in the SELECT list and the ORDER BY clause, so a top-N filter needs a subquery or a WITH clause.",
+      "verdict": "supported",
+      "evidence": "pg-window-where (https://www.postgresql.org/docs/18/sql-expressions.html): 'Window function calls are permitted only in the SELECT list and the ORDER BY clause of the query'. The need for a subquery or WITH follows, because WHERE is not one of those places.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s3",
+      "claim": "The partition decides what counts as one group, so it must match the rule the ticket describes.",
+      "verdict": "supported",
+      "evidence": "pg-partition-by (https://www.postgresql.org/docs/18/sql-expressions.html): 'The PARTITION BY clause groups the rows of the query into partitions' and 'PARTITION BY works similarly to a query-level GROUP BY clause'. The must-match advice is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s3",
+      "claim": "predict explanation: 'The window keeps one row per shipment that has events. Shipments with no events have no rows to number, so they are not in the result.'",
+      "verdict": "supported",
+      "evidence": "Follows from pg-partition-by (https://www.postgresql.org/docs/18/sql-expressions.html): 'The PARTITION BY clause groups the rows of the query into partitions'. The query numbers only the rows of shipment_events, so a shipment with no events never appears. The count 218 is the recorded answerRows.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s3",
+      "claim": "predict options: a 'One row for each shipment event, 678 rows'; b 'One row for each shipment that has at least one event, 218 rows' (answer); c 'One row for each shipment, 240 rows, including shipments with no events'.",
+      "verdict": "demonstration",
+      "evidence": "The recorded answerRows 218 rules out options a and c. Option c's claim that shipments with no events are included is contradicted by the same PARTITION BY rule as the sentence above.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c8-s3",
+      "claim": "commonMistakes PARTITION_MISSING: 'Without PARTITION BY, the whole table is one group, and position 1 is a single row. Name the column that defines a group in the PARTITION BY.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html: 'all rows produced by the query are treated as a single partition'. The page says the rows produced by the query, not the whole table. The two differ when a WHERE clause or join narrows the rows. The second sentence is advice and is not scored.",
+      "suggestedFix": "Without PARTITION BY, all rows produced by the query are treated as a single partition, so position 1 is a single row (https://www.postgresql.org/docs/18/sql-expressions.html). Name the column that defines a group in the PARTITION BY."
+    },
+    {
+      "where": "c8-s3",
+      "claim": "commonMistakes TIE_NONDETERMINISTIC: 'If two rows in a group tie on the ORDER BY, the kept row is not defined. Add a unique tie-breaker, such as id, so the same row is kept every time.'",
+      "verdict": "supported",
+      "evidence": "pg-row-number-ties (https://www.postgresql.org/docs/18/tutorial-window.html): 'with tied rows numbered in an unspecified order'. The tie-breaker advice is not scored.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:T-SQL",
+      "claim": "ROW_NUMBER ordering can be nondeterministic when its ordering keys are not unique; include an explicit tie-breaker.",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/functions/row-number-transact-sql: 'There is no guarantee that the rows returned by a query using ROW_NUMBER() will be ordered exactly the same with each execution unless the following conditions are true.' The conditions include 'Values of the ORDER BY columns are unique.' The page's own alternative is 'consider using RANK() or DENSE_RANK()'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "dialect:Spark SQL",
+      "claim": "Spark window specifications also define partitioning, ordering and frames. Spell out the frame for running calculations.",
+      "verdict": "partly",
+      "evidence": "The first sentence is supported by the syntax on https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-window.html, which has PARTITION BY, ORDER BY and an optional window_frame. The second sentence is advice, and the page does not say to spell out the frame. The page's frame fact is: 'If frame_end is omitted it defaults to CURRENT ROW'.",
+      "suggestedFix": "Spark window specifications define partitioning, ordering and an optional window_frame. If frame_end is omitted it defaults to CURRENT ROW (https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-window.html)."
+    }
+  ],
+  "summary": { "supported": 22, "partly": 3, "unsupported": 0, "unverified": 0, "demonstration": 5 }
+}
