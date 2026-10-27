@@ -79,3 +79,26 @@ Resolutions (applied in the lesson files and curriculum dialect notes):
 The c9-s1 "unverified" item was the contract sentence; it is reworded, not kept.
 
 Verification after these changes: `scripts/verify-quotes.mjs` 87 of 87 verbatim; `tests/content.test.ts` and `tests/data-curriculum.test.ts` 13 of 13 pass.
+
+## Chapters 7 to 9 blind solve (Step 3a)
+
+A fresh agent solved the 24 independent and boss tickets for chapters 7 to 9 from the ticket text, the seed schema and the visible sample only. It did not read the reference SQL, the wrong variants or the grader. For constraint tests it wrote its own probes from the test names and expected outcomes. Output: `docs/reviews/blind/ch789/`, one file per ticket, and `compare.json`.
+
+Result on first comparison: 23 of 24 agreed. Confidence: 19 high, 5 medium, none low.
+
+Defect found and fixed:
+- `c7-b1-p1` reference: `A EXCEPT B UNION B EXCEPT A` has no parentheses. PostgreSQL evaluates set operators left to right, so it returned only the invoice-only shipments. The ticket asks for both kinds of mismatch. The reference is now `(A EXCEPT B) UNION (B EXCEPT A)`. The content check had passed the old reference because it only checks that wrong variants differ from it; it cannot detect a reference that is wrong on its own terms. The blind comparison (24 of 24 agree) is the check that caught it.
+
+Ambiguities and resolution:
+- `c8-i2`: "return the two shipments due soonest" now says "among all of its shipments", so no status filter is implied.
+- `c8-i5`: "whole seconds" now says "rounded to the nearest whole second"; the tie rule now says a scan at the same moment with a greater id is the next scan. The reference is unchanged.
+- `c9-i2`: the starter is described as a placeholder for carriers, to be replaced; the key pair wording is clarified.
+- `c9-b1-p1`: "two decimal places" is now the type `numeric(8,2)`.
+
+Readings left as written, because the ticket is explicit or every reading gives the same rows on every dataset the ticket uses: `c7-i3` ("Order by id"), `c7-b1-p2` ("Sort from A to Z"), `c8-i4` and `c9-b1-p2` (rounding), `c8-b1-p3` (average; both readings give the same sample rows), `c9-b1-p3` (UTC is stated), `c9-i6` (starter wording), and `c8-b1-p2` (a zero customer total, which no dataset has).
+
+Author questions answered:
+- `c9-i4` "keep them": the reference's COMMIT keeps the two rows inside the grader's rolled-back wrapper, so the checks see them. The content check proves it: the ROLLBACK wrong variant leaves a different state on the sample and on the hidden datasets.
+- Ticket `kind`: all 24 are labelled `write`. In this codebase `kind` names the starter convention (a bare skeleton for `write`, blanks for `guided`), not whether the statement changes data. Result-graded tickets whose starter is a SELECT keep `write` as they did in Step 2.
+
+After these edits: `tests/content.test.ts` 9 of 9 pass; the blind comparison agrees on 24 of 24.

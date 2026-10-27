@@ -142,7 +142,7 @@ export const chapter7Items: readonly Challenge[] = [
     summary: 'Find the shipments that were scanned but not billed, or billed but never scanned. Part 1 of 2.',
     instructions: 'Part 1 of 2. Return shipment_id for each shipment that has a shipment_events row but no invoices row, or has an invoices row but no shipment_events row. Each shipment_id appears once. Order by shipment_id. Column name and type: shipment_id (integer).',
     starterSql: 'SELECT shipment_id\nFROM shipment_events;\n',
-    referenceSql: 'SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices UNION SELECT shipment_id FROM invoices EXCEPT SELECT shipment_id FROM shipment_events ORDER BY shipment_id;',
+    referenceSql: '(SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices) UNION (SELECT shipment_id FROM invoices EXCEPT SELECT shipment_id FROM shipment_events) ORDER BY shipment_id;',
     wrongVariants: [
       { id: 'b7p1-one-side', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like only one side was kept. The ticket asks for both kinds of mismatch, so the invoice-only shipments are missing.' },
       { id: 'b7p1-intersect', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events INTERSECT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like INTERSECT was used. INTERSECT returns the shipments that match on both sides, which is the opposite of a mismatch.' },

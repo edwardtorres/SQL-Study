@@ -1,0 +1,28 @@
+{
+  "id": "c7-i2",
+  "solutionSql": "SELECT shipment_id FROM shipment_events WHERE status = 'delivered'\nINTERSECT\nSELECT shipment_id FROM invoices\nORDER BY shipment_id;",
+  "sampleRowCount": 21,
+  "sampleFirstRows": [
+    [
+      10
+    ],
+    [
+      19
+    ],
+    [
+      28
+    ],
+    [
+      37
+    ],
+    [
+      46
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "INTERSECT of delivered scans and invoiced shipments gives 21 rows; an EXISTS formulation returns the same rows."
+}

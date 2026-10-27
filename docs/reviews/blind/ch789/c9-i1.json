@@ -1,0 +1,19 @@
+{
+  "id": "c9-i1",
+  "solutionSql": "CREATE TABLE carriers (\n  id integer PRIMARY KEY,\n  code text NOT NULL UNIQUE,\n  name text NOT NULL\n);",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Columns of carriers": "id integer NOT NULL, code text NOT NULL, name text NOT NULL (3 columns).",
+    "Constraints on carriers": "PRIMARY KEY (id), UNIQUE (code), NOT NULL on id, code and name."
+  },
+  "constraintProbes": {
+    "duplicate code rejected": "Second insert with code AB failed with 23505 (carriers_code_key). Matches expected 23505.",
+    "missing code rejected": "Insert with NULL code failed with 23502 (not-null on code). Matches expected 23502.",
+    "distinct codes accepted": "Two inserts with distinct codes succeeded. Matches expected ok."
+  },
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Probes ran in savepoints inside a rolled-back transaction on the sample; each named test behaves as its name says."
+}

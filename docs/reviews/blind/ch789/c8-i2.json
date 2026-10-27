@@ -1,0 +1,44 @@
+{
+  "id": "c8-i2",
+  "solutionSql": "SELECT route_id, id, delivery_due\nFROM (\n  SELECT route_id, id, delivery_due,\n         ROW_NUMBER() OVER (PARTITION BY route_id ORDER BY delivery_due, id) AS rn\n  FROM shipments\n) ranked\nWHERE rn <= 2\nORDER BY route_id, delivery_due, id;",
+  "sampleRowCount": 12,
+  "sampleFirstRows": [
+    [
+      1,
+      1,
+      "2025-12-31"
+    ],
+    [
+      1,
+      13,
+      "2025-12-31"
+    ],
+    [
+      2,
+      2,
+      "2026-01-01"
+    ],
+    [
+      2,
+      14,
+      "2026-01-01"
+    ],
+    [
+      3,
+      3,
+      "2026-01-02"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "return the two shipments due soonest",
+      "readingChosen": "All shipments on the route, whatever their status, including delivered and cancelled ones.",
+      "alternativeReading": "Only open shipments (queued or in_transit). On the sample this changes routes 3, 5 and 6 (3 of 12 rows)."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "ROW_NUMBER with (delivery_due, id) ordering. The ticket does not say whether closed shipments count, and that choice changes sample rows."
+}

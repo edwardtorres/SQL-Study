@@ -1,0 +1,15 @@
+{
+  "id": "c9-i3",
+  "solutionSql": "UPDATE invoices\nSET paid_at = NULL\nWHERE shipment_id IN (SELECT id FROM shipments WHERE status = 'cancelled');",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Paid invoices by shipment status": "Before: cancelled 34, delivered 43, in_transit 26, queued 34. After: no cancelled rows, others unchanged. The UPDATE matched 55 invoices.",
+    "First ten invoices": "10 rows. Invoices 7 and 9 (cancelled shipments) are now NULL, invoice 8 was already NULL, and the rest are unchanged."
+  },
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Single UPDATE with an IN subquery on shipments. The ticket fixes the statement shape, so there is no real alternative."
+}

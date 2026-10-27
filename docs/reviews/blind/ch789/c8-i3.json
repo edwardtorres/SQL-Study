@@ -1,0 +1,38 @@
+{
+  "id": "c8-i3",
+  "solutionSql": "SELECT s.customer_id, i.id,\n       SUM(i.amount) OVER (\n         PARTITION BY s.customer_id\n         ORDER BY i.issued_at, i.id\n         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_total\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nORDER BY s.customer_id, i.issued_at, i.id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      1,
+      6,
+      "150.00"
+    ],
+    [
+      1,
+      11,
+      "250.00"
+    ],
+    [
+      1,
+      16,
+      "400.00"
+    ],
+    [
+      1,
+      21,
+      "600.00"
+    ],
+    [
+      1,
+      26,
+      "750.00"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "SUM window with ROWS UNBOUNDED PRECEDING ordered by (issued_at, id). A correlated-subquery formulation agrees on all 205 rows."
+}

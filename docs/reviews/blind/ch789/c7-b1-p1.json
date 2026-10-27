@@ -1,0 +1,28 @@
+{
+  "id": "c7-b1-p1",
+  "solutionSql": "SELECT e.shipment_id FROM shipment_events e\nWHERE NOT EXISTS (SELECT 1 FROM invoices i WHERE i.shipment_id = e.shipment_id)\nUNION\nSELECT i.shipment_id FROM invoices i\nWHERE NOT EXISTS (SELECT 1 FROM shipment_events e WHERE e.shipment_id = i.shipment_id)\nORDER BY shipment_id;",
+  "sampleRowCount": 49,
+  "sampleFirstRows": [
+    [
+      8
+    ],
+    [
+      12
+    ],
+    [
+      15
+    ],
+    [
+      22
+    ],
+    [
+      23
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Two NOT EXISTS branches joined by UNION give 49 rows; a FULL JOIN formulation returns the same rows."
+}

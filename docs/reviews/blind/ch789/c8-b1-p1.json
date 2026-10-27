@@ -1,0 +1,33 @@
+{
+  "id": "c8-b1-p1",
+  "solutionSql": "SELECT customer_id, id\nFROM (\n  SELECT customer_id, id,\n         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY booked_at DESC, id DESC) AS rn\n  FROM shipments\n) latest\nWHERE rn = 1\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      3,
+      237
+    ],
+    [
+      4,
+      238
+    ],
+    [
+      5,
+      239
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Six customers have shipments. Customers 1 and 2 return shipments 1 and 2 because the seed gives those two the latest booked_at values. A DISTINCT ON formulation agrees."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "c8-b1-p3",
+  "solutionSql": "WITH invoice_rows AS (\n  SELECT s.customer_id, i.id, i.amount, i.issued_at\n  FROM invoices i\n  JOIN shipments s ON s.id = i.shipment_id\n),\nlatest AS (\n  SELECT customer_id, id, amount\n  FROM (\n    SELECT invoice_rows.*,\n           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY issued_at DESC, id DESC) AS rn\n    FROM invoice_rows\n  ) ranked\n  WHERE rn = 1\n),\naverages AS (\n  SELECT customer_id, AVG(amount) AS avg_amount\n  FROM invoice_rows\n  GROUP BY customer_id\n)\nSELECT l.customer_id, l.id, l.amount\nFROM latest l\nJOIN averages a ON a.customer_id = l.customer_id\nWHERE l.amount > a.avg_amount\nORDER BY l.customer_id;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      2,
+      202,
+      "225.00"
+    ],
+    [
+      4,
+      204,
+      "200.00"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "greater than the average of all the customer’s invoices",
+      "readingChosen": "The average includes the latest invoice, as the word \"all\" says.",
+      "alternativeReading": "Average only the other invoices. Both readings return the same two rows on the sample (invoices 202 and 204)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Latest invoice by (issued_at, greater id). ROW_NUMBER and DISTINCT ON formulations agree."
+}

@@ -121,7 +121,7 @@ export const chapter8Items: readonly Challenge[] = [
     id: 'c8-i2', chapterId: 8, role: 'independent', kind: 'write', title: 'Two soonest-due shipments per route',
     ...DISPATCH,
     summary: 'Keep exactly two shipments per route, the two due soonest, even when due dates tie.',
-    instructions: 'For each route, return the two shipments due soonest. If two shipments share a due date, the lower id comes first, and a route returns exactly two rows when it has at least two shipments. Return route_id, id and delivery_due, ordered by route_id, then delivery_due, then id. Column names and types: route_id (integer), id (integer), delivery_due (date).',
+    instructions: 'For each route, among all of its shipments, return the two due soonest. If two shipments share a due date, the lower id comes first, and a route returns exactly two rows when it has at least two shipments. Return route_id, id and delivery_due, ordered by route_id, then delivery_due, then id. Column names and types: route_id (integer), id (integer), delivery_due (date).',
     starterSql: 'SELECT route_id, id, delivery_due\nFROM shipments;\n',
     referenceSql: 'WITH ranked AS (SELECT route_id, id, delivery_due, ROW_NUMBER() OVER (PARTITION BY route_id ORDER BY delivery_due, id) AS position FROM shipments) SELECT route_id, id, delivery_due FROM ranked WHERE position <= 2 ORDER BY route_id, delivery_due, id;',
     wrongVariants: [
@@ -184,7 +184,7 @@ export const chapter8Items: readonly Challenge[] = [
     id: 'c8-i5', chapterId: 8, role: 'independent', kind: 'write', title: 'Seconds until each next scan',
     ...PIPELINE,
     summary: 'Measure how long each shipment waited from one scan until its next scan.',
-    instructions: 'For each scan, return the whole seconds from its occurred_at to the next scan of the same shipment. Order scans by occurred_at, then by id. The last scan of a shipment has no next scan, so its value is NULL. Return shipment_id, event_id (the scan’s id) and seconds_to_next (integer), ordered by shipment_id, then occurred_at, then event_id.',
+    instructions: 'For each scan, return the seconds from its occurred_at to the next scan of the same shipment, rounded to the nearest whole second. Order scans by occurred_at, then by id; a scan at the same moment with a greater id is the next scan. The last scan of a shipment has no next scan, so its value is NULL. Return shipment_id, event_id (the scan’s id) and seconds_to_next (integer), ordered by shipment_id, then occurred_at, then event_id.',
     starterSql: 'SELECT shipment_id, id AS event_id, occurred_at\nFROM shipment_events;\n',
     referenceSql: 'SELECT shipment_id, id AS event_id, EXTRACT(EPOCH FROM (LEAD(occurred_at) OVER (PARTITION BY shipment_id ORDER BY occurred_at, id) - occurred_at))::integer AS seconds_to_next FROM shipment_events ORDER BY shipment_id, occurred_at, id;',
     wrongVariants: [

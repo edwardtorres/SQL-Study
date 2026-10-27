@@ -1,0 +1,25 @@
+{
+  "id": "c9-b1-p1",
+  "solutionSql": "CREATE TABLE rate_card (\n  id integer PRIMARY KEY,\n  carrier_code text NOT NULL,\n  lane text NOT NULL,\n  rate_per_kg numeric(12,2) NOT NULL CHECK (rate_per_kg > 0),\n  UNIQUE (carrier_code, lane)\n);",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Columns of rate_card": "id integer, carrier_code text, lane text (all NOT NULL), rate_per_kg numeric(12,2) NOT NULL.",
+    "Constraints on rate_card": "PRIMARY KEY (id), UNIQUE (carrier_code, lane), CHECK (rate_per_kg > 0), NOT NULL on all four columns."
+  },
+  "constraintProbes": {
+    "zero rate rejected": "Rate 0 failed with 23514 (rate_card_rate_per_kg_check). Matches expected 23514.",
+    "repeated lane rejected": "Second DHL / LANE1 row failed with 23505 (rate_card_carrier_code_lane_key). Matches expected 23505.",
+    "valid rate accepted": "Rate 4.25 inserted without error. Matches expected ok."
+  },
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "a numeric value with two decimal places",
+      "readingChosen": "numeric(12,2), matching the invoice amount column type.",
+      "alternativeReading": "Another total precision with scale 2, such as numeric(10,2). Values are the same for practical amounts, but a column-type check may compare precision."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "The behaviour of all three probes matches the test names. Only the declared precision is open, so a strict column-type check could go either way."
+}

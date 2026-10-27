@@ -1,0 +1,44 @@
+{
+  "id": "c8-b1-p2",
+  "solutionSql": "SELECT s.customer_id, i.id,\n       ROUND(i.amount / SUM(i.amount) OVER (PARTITION BY s.customer_id), 4) AS share\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nORDER BY s.customer_id, i.id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      1,
+      6,
+      "0.0245"
+    ],
+    [
+      1,
+      11,
+      "0.0163"
+    ],
+    [
+      1,
+      16,
+      "0.0245"
+    ],
+    [
+      1,
+      21,
+      "0.0327"
+    ],
+    [
+      1,
+      26,
+      "0.0245"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "its share of its customer’s total billed amount",
+      "readingChosen": "Invoice amount divided by the sum of all that customer’s invoices, with a plain division.",
+      "alternativeReading": "A customer total of zero (allowed by the amount >= 0 check) makes the division fail. The ticket does not say whether the share should be NULL or 0."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Smallest customer total on the sample is 6075.00, so the zero-total case cannot occur on the visible data. A scalar-subquery formulation agrees on all 205 rows."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "c9-b1-p3",
+  "solutionSql": "BEGIN;\nUPDATE shipments SET status = 'delivered' WHERE id = 3;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note)\nVALUES (1000, 3, 'delivered', '2026-02-01 10:00:00+00', NULL);\nCOMMIT;",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Shipment 3": "Status changed from queued to delivered.",
+    "Scan 1000": "One row: id 1000, shipment 3, delivered, 2026-02-01 10:00 UTC, note NULL. The events count went from 678 to 679."
+  },
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "occurred at 2026-02-01 10:00 UTC",
+      "readingChosen": "Explicit +00 offset on the timestamptz literal.",
+      "alternativeReading": "A literal with no zone, read in the session time zone. The same result when the session is UTC, which it is here."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Ran as written with BEGIN and COMMIT in a disposable in-memory copy. The two changes landed together."
+}

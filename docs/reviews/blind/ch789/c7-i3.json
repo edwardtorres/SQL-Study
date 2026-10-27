@@ -1,0 +1,34 @@
+{
+  "id": "c7-i3",
+  "solutionSql": "(SELECT id FROM shipments ORDER BY id LIMIT 3)\nUNION ALL\n(SELECT id FROM invoices ORDER BY id LIMIT 3)\nORDER BY id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Order by id.",
+      "readingChosen": "One combined list sorted by id, so equal ids sit next to each other (1, 1, 2, 2, 3, 3).",
+      "alternativeReading": "Two blocks: the three shipment ids in order, then the three invoice ids in order (1, 2, 3, 1, 2, 3)."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "UNION ALL keeps the repeats. The ticket does not say whether the two lists should interleave, so the block-ordered answer would differ."
+}

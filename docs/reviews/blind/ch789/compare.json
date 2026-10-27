@@ -1,0 +1,271 @@
+{
+  "comparedAt": "2026-10-27T22:48:06.143Z",
+  "total": 24,
+  "agreeing": 24,
+  "results": [
+    {
+      "id": "c7-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c7-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c7-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c7-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c7-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c7-b1-p2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i1",
+      "datasets": [
+        "sample",
+        "ties",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "ties"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i3",
+      "datasets": [
+        "sample",
+        "boundary",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i4",
+      "datasets": [
+        "sample",
+        "ties",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i5",
+      "datasets": [
+        "sample",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-i6",
+      "datasets": [
+        "sample",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-b1-p1",
+      "datasets": [
+        "sample",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-b1-p2",
+      "datasets": [
+        "sample",
+        "ties",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c8-b1-p3",
+      "datasets": [
+        "sample",
+        "ties",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i2",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i3",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i4",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i5",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-i6",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-b1-p1",
+      "datasets": [
+        "sample",
+        "nulls",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-b1-p2",
+      "datasets": [
+        "sample",
+        "boundary",
+        "precision"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    },
+    {
+      "id": "c9-b1-p3",
+      "datasets": [
+        "sample",
+        "ties",
+        "boundary"
+      ],
+      "agrees": true,
+      "mismatches": [],
+      "error": null
+    }
+  ]
+}

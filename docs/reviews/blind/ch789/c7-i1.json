@@ -1,0 +1,28 @@
+{
+  "id": "c7-i1",
+  "solutionSql": "SELECT id FROM shipments WHERE status = 'queued'\nUNION\nSELECT shipment_id FROM invoices\nORDER BY id;",
+  "sampleRowCount": 213,
+  "sampleFirstRows": [
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      4
+    ],
+    [
+      5
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "UNION of queued shipment ids and invoice shipment ids gives 213 rows on the sample; an EXISTS formulation returns the same rows."
+}

@@ -1,0 +1,20 @@
+{
+  "id": "c9-i6",
+  "solutionSql": "BEGIN;\nCREATE TABLE trial_notes (\n  id integer PRIMARY KEY,\n  note text\n);\nROLLBACK;",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Tables in this dataset": "Inside the transaction trial_notes exists. After ROLLBACK only the 8 seed tables remain."
+  },
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "The starter line is the CREATE TABLE statement; add the BEGIN and the ending.",
+      "readingChosen": "BEGIN before the CREATE and ROLLBACK after it. The empty column list is filled with id integer PRIMARY KEY and note text.",
+      "alternativeReading": "Keep the empty column list and add only BEGIN and ROLLBACK. That creates a table with no id or note column, which the ticket does not allow."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The table is visible inside the transaction and gone after ROLLBACK, as the ticket asks."
+}

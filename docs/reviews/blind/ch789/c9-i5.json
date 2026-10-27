@@ -1,0 +1,14 @@
+{
+  "id": "c9-i5",
+  "solutionSql": "DELETE FROM invoices\nWHERE shipment_id IN (SELECT id FROM shipments WHERE status = 'cancelled');",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Invoices and cancelled-shipment invoices": "Before: 205 invoices, 55 for cancelled shipments. After: 150 invoices, 0 for cancelled shipments. The DELETE removed 55."
+  },
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Single DELETE with an IN subquery. No table references invoices, so no cascade issue arises."
+}

@@ -1,0 +1,34 @@
+{
+  "id": "c7-b1-p2",
+  "solutionSql": "(SELECT status FROM shipments EXCEPT SELECT status FROM shipment_events)\nUNION\n(SELECT status FROM shipment_events EXCEPT SELECT status FROM shipments)\nORDER BY status;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      "arrived"
+    ],
+    [
+      "booked"
+    ],
+    [
+      "cancelled"
+    ],
+    [
+      "in_transit"
+    ],
+    [
+      "loaded"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Sort from A to Z.",
+      "readingChosen": "Ascending ORDER BY status with the default collation.",
+      "alternativeReading": "Case-insensitive or locale-specific ordering. Every status on the sample is lowercase, so the output is the same."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Symmetric difference of the two status sets: six values on the sample."
+}

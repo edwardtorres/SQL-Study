@@ -1,0 +1,43 @@
+{
+  "id": "c8-i6",
+  "solutionSql": "SELECT shipment_id, event_id, status, occurred_at\nFROM (\n  SELECT shipment_id, id AS event_id, status, occurred_at,\n         ROW_NUMBER() OVER (PARTITION BY shipment_id, occurred_at ORDER BY id DESC) AS rn\n  FROM shipment_events\n) kept\nWHERE rn = 1\nORDER BY shipment_id, occurred_at, event_id;",
+  "sampleRowCount": 654,
+  "sampleFirstRows": [
+    [
+      2,
+      1,
+      "booked",
+      "2025-12-28T02:00:00.000Z"
+    ],
+    [
+      2,
+      3,
+      "loaded",
+      "2025-12-28T06:00:00.000Z"
+    ],
+    [
+      2,
+      2,
+      "arrived",
+      "2025-12-28T10:00:00.000Z"
+    ],
+    [
+      3,
+      4,
+      "booked",
+      "2025-12-28T04:00:00.000Z"
+    ],
+    [
+      3,
+      6,
+      "loaded",
+      "2025-12-28T08:00:00.000Z"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "678 scans minus 24 same-timestamp scans with the lower id gives 654 rows. A DISTINCT ON formulation agrees."
+}
