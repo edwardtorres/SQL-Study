@@ -1,0 +1,52 @@
+name: Cross-browser SQL checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-browser-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    name: PostgreSQL and game — ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install both browsers and their Linux dependencies
+        run: npx playwright install --with-deps chromium webkit
+      - run: npm test
+      - run: npm run build
+      - name: Engine capability, transfer, and timing checks
+        run: node scripts/engine-spike.mjs ${{ matrix.browser }}
+      - name: Tap journeys and accessibility at both widths
+        run: npx playwright test --project=${{ matrix.browser }}
+      - name: Preserve browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-${{ matrix.browser }}-${{ github.sha }}
+          path: |
+            docs/spike-${{ matrix.browser }}.json
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
