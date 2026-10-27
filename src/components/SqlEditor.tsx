@@ -3,7 +3,7 @@ import { basicSetup } from 'codemirror';
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { EditorView, keymap } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Prec } from '@codemirror/state';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
 import { schema } from '../data';
 export interface SqlEditorHandle { insert: (keyword: string) => void }
@@ -35,7 +35,8 @@ const SqlEditor = forwardRef<SqlEditorHandle, Props>(function SqlEditor({ value,
           { tag: tags.comment, color: '#53634c', fontStyle: 'italic' },
         ])), sql({ dialect: PostgreSQL, schema: Object.fromEntries(schema.map((table) => [table.name, table.columns.map((column) => column.name)])), upperCaseKeywords: true }), EditorView.lineWrapping,
           EditorView.contentAttributes.of({ 'aria-label': 'SQL query', 'aria-describedby': 'query-help', 'aria-multiline': 'true', spellcheck: 'false', autocapitalize: 'off' }),
-          keymap.of([{ key: 'Mod-Enter', run() { runCallback.current(); return true; } }]),
+          // basicSetup binds Mod-Enter to insertBlankLine; the run shortcut must take precedence.
+          Prec.highest(keymap.of([{ key: 'Mod-Enter', run() { runCallback.current(); return true; } }])),
           EditorView.updateListener.of((update) => { if (update.docChanged) changeCallback.current(update.state.doc.toString()); }),
           EditorView.theme({ '&': { fontSize: '13px', backgroundColor: '#fffefa' }, '.cm-content': { fontFamily: '"JetBrains Mono Variable", monospace', minHeight: '220px', padding: '18px 0', caretColor: '#173b3b' }, '.cm-line': { padding: '0 12px' }, '.cm-gutters': { background: '#f5f5ef', color: '#66756f', border: 'none', fontFamily: '"JetBrains Mono Variable", monospace' }, '&.cm-focused': { outline: '2px solid #487568', outlineOffset: '-2px' }, '.cm-scroller': { lineHeight: '1.8' }, '.cm-activeLine': { backgroundColor: '#173b3b05' } }),
         ],

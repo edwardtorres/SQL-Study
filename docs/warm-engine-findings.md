@@ -1,6 +1,6 @@
 # Warm-engine execution findings
 
-Recorded at 2026-10-27T17:02:24.722Z (UTC).
+Recorded at 2026-10-27T18:41:57.716Z (UTC).
 
 ## Execution model
 
@@ -14,9 +14,9 @@ Ten measured submissions per challenge, following one warm-up. Each submission i
 
 | Challenge | Minimum ms | Median ms | Maximum ms |
 | --- | ---: | ---: | ---: |
-| dispatch | 12.24 | 14.85 | 23.06 |
-| unbilled | 15.31 | 17.09 | 19.76 |
-| latest-event | 24.30 | 28.87 | 32.40 |
+| dispatch | 18.13 | 19.52 | 24.28 |
+| unbilled | 22.95 | 25.06 | 28.99 |
+| latest-event | 31.87 | 34.36 | 38.09 |
 
 PGlite WASM linear memory after all benchmark queries: 134,217,728 bytes (128.00 MiB). Total/peak process memory is not measured.
 
@@ -37,4 +37,4 @@ Runtime tests exercise CREATE + INSERT, INSERT into retained tables, DROP, UPDAT
 | 64 MiB | not instantiated | WebAssembly LinkError: memory import has 1024 pages which is smaller than the declared initial of 2048 |
 | application tuning: 16 MB shared buffers | 134217728 | started |
 
-A direct PGlite probe with SET LOCAL statement_timeout = 10 ms and SELECT pg_sleep(0.5) completed in 501.67 ms despite a 10 ms statement_timeout. The main-thread worker deadline must therefore remain the authoritative interrupt/restart path.
+A direct PGlite probe with SET LOCAL statement_timeout = 10 ms and SELECT pg_sleep(0.5) completed in 502.76 ms despite a 10 ms statement_timeout. The main-thread worker deadline must therefore remain the authoritative interrupt/restart path.

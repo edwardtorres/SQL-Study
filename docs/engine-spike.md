@@ -77,17 +77,36 @@ The tested production policy allows wasm-unsafe-eval, does not enable general
 unsafe-eval, and restricts runtime origins to self. PGlite's distributed code still
 emits eval build warnings; no warning was suppressed by weakening the CSP.
 
-WebKit now installs locally. Its missing Debian libraries are installed into an
-ignored user cache via signed official packages. The documented local setup
-verifies all linked libraries and launches the real browser; its system-cache
-preflight switch skips no browser tests and bypasses no artifact verification.
-GitHub Actions uses the normal playwright install --with-deps route instead.
+## Final local measurements (October 27, 2026)
 
-The first CI Chromium job passed. Its first WebKit job timed out during browser
-installation on the migrating ubuntu-latest image, before engine execution.
-The permanent matrix now pins Ubuntu 24.04 and reruns both browsers. Consult the
-current Actions run and its public summaries for the final CI outcome; do not
-mistake a local report committed here for CI-generated evidence.
+On this Ubuntu 24.04 host, which has administrator rights, Playwright's own
+`install-deps` supplied WebKit's libraries, and no preflight skip was needed. Both
+browsers launch and render. The spike and the full e2e suite pass locally in both
+browsers. The warm-grading figures below are measured against the production build:
+
+| Browser | Startup (3 runs) | Engine checks | Warm medians (dispatch / unbilled / latest-event) | Warm maxima |
+| --- | --- | --- | --- | --- |
+| Chromium 156 | 3.4–3.6 s | 7/7 each run | 34.8 / 22.6 / 36.3 ms | 70.3 / 27.7 / 45.5 ms |
+| WebKit 27.2 | 3.3–3.7 s | 7/7 each run | 19 / 26 / 35 ms | 26 / 32 / 38 ms |
+
+Node measurements of the same warm runtime are in
+[warm-engine-findings.md](warm-engine-findings.md). Every figure is far below the
+one-second target. These are unthrottled cloud-host numbers, not iPhone numbers.
+
+Memory has two different measurements. The capability probe creates an untuned
+PGlite instance, and its WebAssembly memory reaches 188.56 MiB (197,722,112 bytes) at
+readiness. The warm game runtime uses the `shared_buffers` tuning and three loaded
+datasets, and reports 128 MiB (134,217,728 bytes) at initialization and after warm
+grading. Neither figure is total or peak browser memory.
+
+## CI status
+
+The first CI Chromium job passed, and the Chromium job on `0804d72` passed every
+step. Its WebKit job was cancelled by its 25-minute limit during browser
+dependency installation, before any engine or browser test ran. The workflow now
+gives WebKit a 45-minute limit and splits installation into binary and dependency
+steps, with a retry loop for the dependency step. The CI outcome for the pushed
+commit is recorded in the audit, not here, because this file reflects a local run.
 
 ## Raw evidence
 

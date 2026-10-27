@@ -1,4 +1,4 @@
-# Juniper Freight · The Data Desk
+# Larkspur Freight · The Data Desk
 
 A browser-only PostgreSQL practice game. Pick up a ticket from a fictional
 colleague, try a worked example, edit SQL, and check your answer against three
@@ -46,7 +46,14 @@ The cross-browser GitHub Actions workflow runs this installation and both browse
 projects on every push to main, pull request, or manual dispatch. It saves current
 measurements and test artifacts and writes a public job summary.
 
-On this unprivileged Debian trixie amd64 cloud host, system package installation
+With administrator rights (verified on Ubuntu 24.04 on 2026-10-27), Playwright's own
+installer provides WebKit's libraries, and no preflight switch is needed:
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install-deps chromium webkit
+```
+
+On an unprivileged Debian trixie amd64 cloud host, system package installation
 is unavailable. The repeatable alternative downloads verified Debian packages
 into an ignored cache and links their libraries into Playwright's browser dirs:
 

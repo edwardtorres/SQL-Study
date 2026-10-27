@@ -46,7 +46,7 @@ export default function App() {
       <aside className="rail" aria-label="Data desk navigation">
         <button className="brand" onClick={() => { setActive(null); }} title="Return to ticket board">
           <span className="brand-symbol"><Leaf size={24} strokeWidth={1.7} /></span>
-          <span>JUNIPER <span className="brand-small">FREIGHT</span></span>
+          <span>LARKSPUR <span className="brand-small">FREIGHT</span></span>
         </button>
         <div className="rail-divider" />
         <span className="rail-eyebrow">THE DATA DESK</span>

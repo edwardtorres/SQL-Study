@@ -17,7 +17,9 @@ jobs:
   browser:
     name: PostgreSQL and game — ${{ matrix.browser }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # WebKit's media and GTK dependencies took the full 25 minutes on a hosted runner
+    # (run 40551396895). Chromium keeps its original limit.
+    timeout-minutes: ${{ matrix.browser == 'webkit' && 45 || 25 }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,8 +33,19 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - name: Install both browsers and their Linux dependencies
-        run: npx playwright install --with-deps chromium webkit
+      - name: Install both browser binaries
+        run: npx playwright install chromium webkit
+      - name: Install browser Linux dependencies
+        id: deps
+        timeout-minutes: 25
+        run: |
+          # Apt mirrors can stall mid-download; retry before failing the job.
+          for attempt in 1 2 3; do
+            if npx playwright install-deps chromium webkit; then exit 0; fi
+            echo "install-deps attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 15))
+          done
+          exit 1
       - name: Lint
         id: lint
         run: npm run lint

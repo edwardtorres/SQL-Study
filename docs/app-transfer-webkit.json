@@ -1,22 +1,22 @@
 {
-  "recordedAt": "2026-10-27T17:21:44.720Z",
+  "recordedAt": "2026-10-27T18:43:30.158Z",
   "browser": "webkit",
   "browserVersion": "27.2",
   "scope": "Fresh browser context, 1280px touch viewport; actual observed requests replayed with browser Accept-Encoding and encoded body bytes counted before decompression. Excludes headers/TLS; no mobile-network timing claim.",
-  "boardBytes": 165808,
-  "sqlAdditionalBytes": 6397411,
-  "totalBytes": 6563219,
+  "boardBytes": 165809,
+  "sqlAdditionalBytes": 6397420,
+  "totalBytes": 6563229,
   "requests": [
     {
       "asset": "",
       "screen": "board",
-      "bytes": 421,
+      "bytes": 419,
       "encoding": "gzip"
     },
     {
-      "asset": "assets/main-D50V1o6Q.js",
+      "asset": "assets/main-COQrjjmj.js",
       "screen": "board",
-      "bytes": 79559,
+      "bytes": 79562,
       "encoding": "gzip"
     },
     {
@@ -50,9 +50,9 @@
       "encoding": "identity"
     },
     {
-      "asset": "assets/Workspace-Clsso1Cm.js",
+      "asset": "assets/Workspace-DwEAF9sq.js",
       "screen": "sql",
-      "bytes": 144649,
+      "bytes": 144658,
       "encoding": "gzip"
     },
     {

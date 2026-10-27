@@ -1,4 +1,4 @@
-export const SAVE_KEY = 'juniper-sql-desk.progress';
+export const SAVE_KEY = 'larkspur-sql-desk.progress';
 export interface TicketProgress {
   draft: string;
   attempts: number;

@@ -3,7 +3,9 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { generateSeed, seedSql } from '../src/data/seed';
 import type { Variant } from '../src/core/types';
 
-// Written from the ticket specifications before opening the author's solutions.
+// Solutions from an independent agent that saw only the user-visible ticket text,
+// the starter queries, and the datasets (no reference SQL). Its report is in
+// docs/content-review.md. The post-blind test below compares them with the references.
 const blindSolutions = {
   dispatch: `SELECT id, tracking_code, weight_kg
     FROM shipments

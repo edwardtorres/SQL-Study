@@ -1,6 +1,6 @@
 import type { Challenge, DatasetSpec } from '../core/types';
 
-export const companyName = 'Juniper Freight';
+export const companyName = 'Larkspur Freight';
 export const datasets: readonly DatasetSpec[] = [
   { id: 'sample', label: 'Dispatch sample', hidden: false, seed: 104729, variant: 'sample' },
   { id: 'nulls', label: 'Edge case A', hidden: true, seed: 130363, variant: 'nulls' },
@@ -29,6 +29,7 @@ export const challenges: readonly Challenge[] = [
     docs: [
       { label: 'PostgreSQL SELECT tutorial', url: 'https://www.postgresql.org/docs/18/tutorial-select.html' },
       { label: 'PostgreSQL LIMIT and OFFSET', url: 'https://www.postgresql.org/docs/18/queries-limit.html' },
+      { label: 'PostgreSQL ORDER BY and DESC', url: 'https://www.postgresql.org/docs/18/queries-order.html' },
     ],
     datasets,
   },

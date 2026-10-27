@@ -111,3 +111,29 @@ horizontal overflow. See `spike-webkit.json` for exact results and limitations.
 This resolves the original local WebKit download blocker. CI results and the
 full-game journeys are reported separately; engine-lab success does not replace
 those checks.
+
+## Current measurements (October 27, 2026)
+
+Rebuilt from the Larkspur Freight code with the editor fix.
+
+- No PGlite extension archive ships. `dist/` contains no `*.tar.gz`. The game
+  imports no extension index, so there was nothing to exclude. This is the answer
+  to "why 17.46 MB": the core PostgreSQL WASM (10.12 MB) and its filesystem data
+  (6.29 MB) are almost all of it.
+- Raw total of all `dist/assets` files: 20,696,290 bytes. The additional
+  1.72 MB is the SQL parser WASM, and the rest is the game and editor.
+- Engine files are served Brotli-encoded by the preview server. The WASM,
+  filesystem data, and initdb sizes are 3,042,065, 1,296,945, and 131,799 bytes
+  on the wire, and the parser is 285,511 bytes.
+- Transfer through the first SQL screen, counting encoded bodies only:
+  Chromium 5,177,707 bytes; WebKit 6,563,229 bytes. The earlier figures were
+  5,177,698 and 6,563,219. The engine WASM and data files have the same content hashes
+  as the earlier build, so the difference is measurement noise.
+- Memory: the warm runtime reports 128 MiB (134,217,728 bytes) with the
+  `shared_buffers` tuning. `initialMemory` cannot go lower, since 64 MiB fails
+  instantiation.
+
+Before and after: the original engine-only spike served 12,808,938 bytes with mixed
+encodings. Trimming changed nothing. The reduction comes from HTTP compression,
+which cut the payload by about half. Compression does not reduce decoded WASM
+memory.

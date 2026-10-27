@@ -1,8 +1,8 @@
 {
-  "recordedAt": "2026-10-27T17:19:53.716Z",
+  "recordedAt": "2026-10-27T18:42:44.958Z",
   "engine": "PGlite 0.5.12",
   "browser": "chromium",
-  "browserVersion": "154.0.8037.57",
+  "browserVersion": "156.0.8078.4",
   "viewport": "390 x 844, touch enabled",
   "context": "Unthrottled cloud Linux host; three fresh browser contexts; local production preview with CSP. Not an iPhone performance measurement.",
   "memoryScope": "wasmMemoryBytes is allocated WebAssembly linear memory only; excludes JavaScript, filesystem, renderer, and browser overhead. Total or peak memory is not measured.",
@@ -10,7 +10,7 @@
   "runs": [
     {
       "ok": true,
-      "startupMs": 2268.7999999970198,
+      "startupMs": 3414.399999999907,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -95,26 +95,17 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 2317.8999999910593,
-      "heartbeats": 144,
-      "maxGapMs": 19.200000002980232,
+      "workerRoundTripMs": 3480.8000000000466,
+      "heartbeats": 217,
+      "maxGapMs": 26.899999999906868,
       "requests": [
         {
           "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 604,
-          "contentLength": 604,
+          "reportedBodyBytes": 603,
+          "contentLength": 603,
           "encoding": "br",
-          "replayPayloadBytes": 604,
-          "replayEncoding": "br"
-        },
-        {
-          "asset": "assets/lab-tM71Cvr9.css",
-          "status": 200,
-          "reportedBodyBytes": 302,
-          "contentLength": 302,
-          "encoding": "br",
-          "replayPayloadBytes": 302,
+          "replayPayloadBytes": 603,
           "replayEncoding": "br"
         },
         {
@@ -124,6 +115,15 @@
           "contentLength": 766,
           "encoding": "br",
           "replayPayloadBytes": 766,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
           "replayEncoding": "br"
         },
         {
@@ -196,7 +196,7 @@
     },
     {
       "ok": true,
-      "startupMs": 2184.5,
+      "startupMs": 3584.5,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -281,26 +281,17 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 2241.0999999940395,
-      "heartbeats": 140,
-      "maxGapMs": 21.700000002980232,
+      "workerRoundTripMs": 3654.100000000093,
+      "heartbeats": 228,
+      "maxGapMs": 20.300000000046566,
       "requests": [
         {
           "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 604,
-          "contentLength": 604,
+          "reportedBodyBytes": 603,
+          "contentLength": 603,
           "encoding": "br",
-          "replayPayloadBytes": 604,
-          "replayEncoding": "br"
-        },
-        {
-          "asset": "assets/lab-tM71Cvr9.css",
-          "status": 200,
-          "reportedBodyBytes": 302,
-          "contentLength": 302,
-          "encoding": "br",
-          "replayPayloadBytes": 302,
+          "replayPayloadBytes": 603,
           "replayEncoding": "br"
         },
         {
@@ -310,6 +301,15 @@
           "contentLength": 766,
           "encoding": "br",
           "replayPayloadBytes": 766,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
           "replayEncoding": "br"
         },
         {
@@ -382,7 +382,7 @@
     },
     {
       "ok": true,
-      "startupMs": 2197.0999999940395,
+      "startupMs": 3526.6999999999534,
       "wasmMemoryBytes": 197722112,
       "version": [
         {
@@ -467,26 +467,17 @@
         }
       ],
       "workerContext": true,
-      "workerRoundTripMs": 2237.6000000089407,
-      "heartbeats": 139,
-      "maxGapMs": 19.599999994039536,
+      "workerRoundTripMs": 3589.100000000093,
+      "heartbeats": 224,
+      "maxGapMs": 22.300000000046566,
       "requests": [
         {
           "asset": "engine-lab.html",
           "status": 200,
-          "reportedBodyBytes": 604,
-          "contentLength": 604,
+          "reportedBodyBytes": 603,
+          "contentLength": 603,
           "encoding": "br",
-          "replayPayloadBytes": 604,
-          "replayEncoding": "br"
-        },
-        {
-          "asset": "assets/lab-tM71Cvr9.css",
-          "status": 200,
-          "reportedBodyBytes": 302,
-          "contentLength": 302,
-          "encoding": "br",
-          "replayPayloadBytes": 302,
+          "replayPayloadBytes": 603,
           "replayEncoding": "br"
         },
         {
@@ -496,6 +487,15 @@
           "contentLength": 766,
           "encoding": "br",
           "replayPayloadBytes": 766,
+          "replayEncoding": "br"
+        },
+        {
+          "asset": "assets/lab-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 302,
+          "contentLength": 302,
+          "encoding": "br",
+          "replayPayloadBytes": 302,
           "replayEncoding": "br"
         },
         {
@@ -570,71 +570,71 @@
   "warmGrading": {
     "ok": true,
     "initialization": {
-      "initializationMs": 2435.5,
+      "initializationMs": 3703.4000000001397,
       "memoryBytes": 134217728
     },
     "benchmarks": [
       {
         "challengeId": "dispatch",
         "samplesMs": [
-          31.799999997019768,
-          16.900000005960464,
-          21.399999991059303,
-          13.700000002980232,
-          23.700000002980232,
-          14.899999991059303,
-          28.400000005960464,
-          29.400000005960464,
-          22,
-          13
+          53,
+          38.39999999990687,
+          34.800000000046566,
+          18.5,
+          28.199999999953434,
+          31,
+          21.4000000001397,
+          70.30000000004657,
+          50.89999999990687,
+          17.5
         ],
-        "medianMs": 22,
-        "maxMs": 31.799999997019768,
+        "medianMs": 34.800000000046566,
+        "maxMs": 70.30000000004657,
         "memoryBytes": 134217728
       },
       {
         "challengeId": "unbilled",
         "samplesMs": [
-          20.200000002980232,
-          16.099999994039536,
-          14.799999997019768,
-          16.899999991059303,
-          17.30000001192093,
-          16.799999997019768,
-          15.700000002980232,
-          19.5,
-          14.299999997019768,
-          18.299999997019768
+          27.699999999953434,
+          26.800000000046566,
+          22.399999999906868,
+          19.699999999953434,
+          18.800000000046566,
+          22.600000000093132,
+          25.299999999813735,
+          23.800000000046566,
+          21.5,
+          21.800000000046566
         ],
-        "medianMs": 16.899999991059303,
-        "maxMs": 20.200000002980232,
+        "medianMs": 22.600000000093132,
+        "maxMs": 27.699999999953434,
         "memoryBytes": 134217728
       },
       {
         "challengeId": "latest-event",
         "samplesMs": [
-          34.3999999910593,
-          30.399999991059303,
-          27.400000005960464,
-          25.099999994039536,
-          26.69999998807907,
-          27,
-          28.700000002980232,
-          32.1000000089407,
-          26.19999998807907,
-          28.600000008940697
+          38.5,
+          36.300000000046566,
+          31.5,
+          33.299999999813735,
+          30.5,
+          31.4000000001397,
+          32.199999999953434,
+          37.60000000009313,
+          45.5,
+          39
         ],
-        "medianMs": 28.600000008940697,
-        "maxMs": 34.3999999910593,
+        "medianMs": 36.300000000046566,
+        "maxMs": 45.5,
         "memoryBytes": 134217728
       }
     ]
   },
   "assets": [
     {
-      "name": "Workspace-Clsso1Cm.js",
-      "bytes": 450057,
-      "gzipBytes": 144971
+      "name": "Workspace-DwEAF9sq.js",
+      "bytes": 450069,
+      "gzipBytes": 144981
     },
     {
       "name": "__vite-browser-external-B8YGsjl0.js",
@@ -692,14 +692,14 @@
       "gzipBytes": 344487
     },
     {
+      "name": "main-COQrjjmj.js",
+      "bytes": 253952,
+      "gzipBytes": 79724
+    },
+    {
       "name": "main-CmY-fhFs.css",
       "bytes": 28336,
       "gzipBytes": 7081
-    },
-    {
-      "name": "main-D50V1o6Q.js",
-      "bytes": 253949,
-      "gzipBytes": 79722
     },
     {
       "name": "nodefs-63rxKlZB.js",

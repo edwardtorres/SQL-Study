@@ -20,9 +20,9 @@ Only evaluate DuckDB-WASM if PGlite fails a supported browser capability test;
 a blocked browser download is not evidence that PGlite is incompatible.
 If neither engine works in WebKit, stop and report that finding.
 
-The initial name is provisional. Check the exact phrase "Juniper Freight" for
-a real freight-company collision before publishing the story. That check is
-currently blocked by the network policy; do not assert the name is available.
+The initial name was provisional. A later check found Juniper Freight Lines Inc,
+a registered freight carrier, so the company is now Larkspur Freight. See
+`docs/name-check.md` for the search evidence and its limits.
 
 ## Gate 1: foundations
 

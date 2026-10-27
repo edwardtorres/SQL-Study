@@ -1,20 +1,47 @@
 # Fictional company name check
 
-Checked on October 27, 2026 (America/Los_Angeles).
+Checked on October 27, 2026 with public web search. This is a scoped check, not a
+company-registry search, FMCSA SAFER lookup, or trademark clearance.
 
-The project uses **Juniper Freight** as an invented company. Searches performed:
+## Outcome
 
-- [Exact phrase](https://www.bing.com/search?q=%22Juniper%20Freight%22)
-- [Exact phrase with logistics](https://www.bing.com/search?q=%22Juniper%20Freight%22%20logistics)
-- [Exact phrase with trucking](https://www.bing.com/search?q=%22Juniper%20Freight%22%20trucking)
-- [Exact LLC name](https://www.bing.com/search?q=%22Juniper%20Freight%20LLC%22)
+The first name, **Juniper Freight**, is not used. A search found a registered
+freight carrier with that name:
 
-No exact-name freight or logistics company appeared in the returned results.
-The search engine instead returned broader, unrelated Juniper results, including
-Juniper Networks. No positive collision was found, so the invented name is
-retained. This is a scoped public-web search, not an exhaustive company-registry
-or trademark clearance. That remaining uncertainty is recorded rather than
-claiming that no such company exists anywhere.
+- **Juniper Freight Lines Inc**, Fremont, California. A third-party carrier
+  directory lists USDOT 3135311 and MC-095641, authority for property within
+  California, status inactive, one power unit, and a last MCS-150 filing dated
+  June 12, 2018.
 
-The company name is centralized in the content module. All colleague names,
-customer records, shipments, locations, and practice-company details are invented.
+The directory data may be out of date, so the carrier could be dormant rather
+than active. Either way, the name matches a real freight company, so the company
+was renamed. The replacement is **Larkspur Freight**.
+
+The earlier version of this note reported no collision. That conclusion rested on
+search-result links that were not reviewed, and it missed this carrier.
+
+## Searches for the replacement
+
+Each name was searched as an exact phrase, with freight, logistics, and trucking
+terms, in the same session.
+
+| Name | Result |
+| --- | --- |
+| Larkspur Freight | No freight company with this name. Nearby: Lolas Larkspur Market LLC (New Ulm, MN, a small active trucking carrier with a different name), Unis Logistics (LTL service, Larkspur, CA, not named Larkspur Freight). |
+| Harrow Creek Freight | No company with this name. Nearby: Hawthorne Creek Transport LLC, Hay Creek Express Inc, Diamond Creek Transport LLC, all different names. |
+| Tamarack Freight (considered, not chosen) | Tamarack Trucking appears in a Utah carrier directory, so it was avoided. |
+| Kestrel names (considered, not chosen) | Kestrel Logistics Group LLC and Kestrel Transport LLC are active carriers, so they were avoided. |
+
+## Limits
+
+- Public web search only. Search cannot rule out a small, unlisted, or
+  out-of-state business.
+- Before publishing, check **Larkspur Freight** against the FMCSA SAFER carrier
+  database and the relevant state business registry.
+- No trademark search was run.
+
+## Scope
+
+The company name is set in one place, `companyName` in `src/data/challenges.ts`.
+Colleague names, customers, shipments, locations, and practice-company details are
+all invented. The original step prompt keeps its original wording.

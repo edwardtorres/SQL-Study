@@ -1,4 +1,4 @@
-# Juniper SQL Desk working rules
+# Larkspur SQL Desk working rules
 
 ## Scope and source of truth
 

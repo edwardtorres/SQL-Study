@@ -59,25 +59,25 @@ const titles: Readonly<Record<string, string>> = {
 };
 
 const chapterDefinitions = [
-  ['Read the dispatch board', 5, 5, 'tutorial-select.html'],
-  ['Missing is meaningful', 3, 4, 'functions-comparison.html'],
-  ['Daily totals', 3, 5, 'tutorial-agg.html'],
-  ['Connect the network', 4, 7, 'queries-table-expressions.html'],
-  ['Queries within queries', 3, 5, 'queries-with.html'],
-  ['Shape the report', 3, 5, 'functions.html'],
-  ['Combine the feeds', 2, 4, 'queries-union.html'],
-  ['Rank and compare', 4, 7, 'tutorial-window.html'],
-  ['Own the data', 4, 6, 'ddl.html'],
-  ['Model the warehouse', 2, 4, 'ddl-constraints.html'],
-  ['Repair the pipeline', 3, 7, 'sql-insert.html'],
-  ['Make it efficient', 2, 4, 'using-explain.html'],
-  ['Interview dispatch', 1, 4, 'queries.html'],
+  ['Read the dispatch board', 5, 5, ['tutorial-select.html', 'queries-order.html', 'queries-limit.html']],
+  ['Missing is meaningful', 3, 4, ['functions-comparison.html']],
+  ['Daily totals', 3, 5, ['functions-aggregate.html', 'tutorial-agg.html']],
+  ['Connect the network', 4, 7, ['queries-table-expressions.html', 'functions-subquery.html']],
+  ['Queries within queries', 3, 5, ['queries-with.html']],
+  ['Shape the report', 3, 5, ['functions-string.html', 'functions-datetime.html']],
+  ['Combine the feeds', 2, 4, ['queries-union.html']],
+  ['Rank and compare', 4, 7, ['tutorial-window.html', 'functions-window.html']],
+  ['Own the data', 4, 6, ['ddl-constraints.html', 'datatype.html']],
+  ['Model the warehouse', 2, 4, ['ddl-constraints.html']],
+  ['Repair the pipeline', 3, 7, ['sql-insert.html']],
+  ['Make it efficient', 2, 4, ['using-explain.html']],
+  ['Interview dispatch', 1, 4, ['queries.html']],
 ] as const;
 
 const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
   1: [
     { dialect: 'T-SQL', note: 'T-SQL uses TOP for a simple row cap; PostgreSQL uses LIMIT. Use ORDER BY when selecting a predictable subset.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/queries/top-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Spark SQL also supports LIMIT. An ORDER BY is needed for a predictable ordered subset.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-limit.html' },
+    { dialect: 'Spark SQL', note: 'Spark SQL also supports LIMIT. Its reference pairs LIMIT with ORDER BY to make the returned rows deterministic.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-limit.html' },
   ],
   2: [
     { dialect: 'T-SQL', note: 'T-SQL has ISNULL as well as COALESCE; their typing and evaluation rules differ. Use this game’s PostgreSQL COALESCE examples as written.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/language-elements/coalesce-transact-sql' },
@@ -88,7 +88,7 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
     { dialect: 'Spark SQL', note: 'Spark aggregate functions also distinguish row counts from non-NULL expression counts.', source: 'https://spark.apache.org/docs/latest/sql-ref-null-semantics.html' },
   ],
   4: [
-    { dialect: 'T-SQL', note: 'T-SQL supports INNER and OUTER joins; always reason about join cardinality rather than assuming one row per entity.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/performance/joins' },
+    { dialect: 'T-SQL', note: 'T-SQL supports INNER joins and LEFT, RIGHT and FULL outer joins, the join types taught in this chapter.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/performance/joins' },
     { dialect: 'Spark SQL', note: 'Spark also has a direct LEFT ANTI JOIN syntax; this game teaches PostgreSQL NOT EXISTS and LEFT JOIN alternatives.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-join.html' },
   ],
   5: [
@@ -96,7 +96,7 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
     { dialect: 'Spark SQL', note: 'Spark supports common table expressions with WITH as temporary named results within a statement.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-cte.html' },
   ],
   6: [
-    { dialect: 'T-SQL', note: 'Date functions differ: T-SQL provides DATEADD; do not assume its syntax works in PostgreSQL.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/functions/dateadd-transact-sql' },
+    { dialect: 'T-SQL', note: 'T-SQL provides DATEADD(datepart, number, date). PostgreSQL date arithmetic uses interval expressions, documented on its date and time functions page.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/functions/dateadd-transact-sql' },
     { dialect: 'Spark SQL', note: 'Spark has its own catalog of date, timestamp and string functions. Check the documented function signatures before translating.', source: 'https://spark.apache.org/docs/latest/sql-ref-functions-builtin.html' },
   ],
   7: [
@@ -109,27 +109,27 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
   ],
   9: [
     { dialect: 'T-SQL', note: 'T-SQL has its own data-type and identity-column syntax. PostgreSQL schema tickets are graded against PostgreSQL constraints.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE behavior depends on the data source and catalog; do not assume PostgreSQL-style constraint enforcement.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table.html' },
+    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE ... USING names the data source (the input format) for the table; check the Spark reference for that source before assuming PostgreSQL-style constraints.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
   ],
   10: [
-    { dialect: 'T-SQL', note: 'SQL Server primary and foreign keys express relational integrity; surrogate keys do not replace selecting the correct table grain.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/tables/primary-and-foreign-key-constraints' },
-    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE USING describes the storage table; a star schema is a modeling choice above the syntax.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
+    { dialect: 'T-SQL', note: 'SQL Server primary and foreign keys enforce referential integrity, as the PostgreSQL constraints in this game do.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/tables/primary-and-foreign-key-constraints' },
+    { dialect: 'Spark SQL', note: 'Spark CREATE TABLE ... USING specifies the input format of the table. This reference does not define star-schema design, which this chapter teaches separately.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
   ],
   11: [
-    { dialect: 'T-SQL', note: 'T-SQL offers MERGE; PostgreSQL also offers INSERT ON CONFLICT. The syntax and concurrency details are engine-specific.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Databricks Delta supports MERGE; it is a Delta-table capability, not a promise that every Spark table supports upserts.', source: 'https://learn.microsoft.com/en-us/azure/databricks/delta/merge' },
+    { dialect: 'T-SQL', note: 'T-SQL offers MERGE; PostgreSQL also offers INSERT ON CONFLICT. Each engine documents its own syntax, so check the reference for the engine you target.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql' },
+    { dialect: 'Spark SQL', note: 'Databricks documents MERGE for Delta Lake tables.', source: 'https://learn.microsoft.com/en-us/azure/databricks/delta/merge' },
   ],
   12: [
-    { dialect: 'T-SQL', note: 'SQL Server execution plans use different operators and cost displays from PostgreSQL EXPLAIN.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans' },
-    { dialect: 'Spark SQL', note: 'Spark EXPLAIN shows distributed plans. PostgreSQL index and scan advice does not directly describe Spark execution.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-explain.html' },
+    { dialect: 'T-SQL', note: 'SQL Server documents its own execution plan operators and displays. PostgreSQL EXPLAIN is documented on postgresql.org.', source: 'https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans' },
+    { dialect: 'Spark SQL', note: 'Spark EXPLAIN displays logical and physical plans for a query. Read Spark plan output against its own reference, not PostgreSQL EXPLAIN.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-explain.html' },
   ],
   13: [
     { dialect: 'T-SQL', note: 'State the target dialect in an interview before using dialect-specific syntax such as TOP.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/queries/select-transact-sql' },
-    { dialect: 'Spark SQL', note: 'Explain both SQL result correctness and any distributed-execution assumptions when the interview specifies Spark SQL.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select.html' },
+    { dialect: 'Spark SQL', note: 'The Spark SELECT reference describes the statement and states that it conforms to the ANSI SQL standard. When an interview names Spark SQL, say which Spark behavior your answer depends on.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select.html' },
   ],
 };
 
-export const curriculum: readonly Chapter[] = chapterDefinitions.map(([title, guided, independent, page], index) => {
+export const curriculum: readonly Chapter[] = chapterDefinitions.map(([title, guided, independent, pages], index) => {
   const id = index + 1;
   return {
     id, title,
@@ -138,6 +138,6 @@ export const curriculum: readonly Chapter[] = chapterDefinitions.map(([title, gu
     objectives: (competencyObjectives[id] ?? []).map((objective) => ({ id: objective, title: titles[objective] ?? objective, competency: id })),
     plannedChallenges: { guided, independent, boss: 1 },
     dialectNotes: dialectNotes[id] ?? [],
-    sources: [{ label: `PostgreSQL: ${title}`, url: `https://www.postgresql.org/docs/18/${page}` }],
+    sources: pages.map((page) => ({ label: `PostgreSQL: ${title}`, url: `https://www.postgresql.org/docs/18/${page}` })),
   };
 });

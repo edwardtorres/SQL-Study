@@ -1,16 +1,16 @@
 {
-  "recordedAt": "2026-10-27T17:21:38.620Z",
+  "recordedAt": "2026-10-27T18:42:55.600Z",
   "browser": "chromium",
-  "browserVersion": "154.0.8037.57",
+  "browserVersion": "156.0.8078.4",
   "scope": "Fresh browser context, 1280px touch viewport; actual observed requests replayed with browser Accept-Encoding and encoded body bytes counted before decompression. Excludes headers/TLS; no mobile-network timing claim.",
-  "boardBytes": 159999,
-  "sqlAdditionalBytes": 5017699,
-  "totalBytes": 5177698,
+  "boardBytes": 160002,
+  "sqlAdditionalBytes": 5017705,
+  "totalBytes": 5177707,
   "requests": [
     {
       "asset": "",
       "screen": "board",
-      "bytes": 317,
+      "bytes": 318,
       "encoding": "br"
     },
     {
@@ -32,9 +32,9 @@
       "encoding": "br"
     },
     {
-      "asset": "assets/main-D50V1o6Q.js",
+      "asset": "assets/main-COQrjjmj.js",
       "screen": "board",
-      "bytes": 74338,
+      "bytes": 74340,
       "encoding": "br"
     },
     {
@@ -56,9 +56,9 @@
       "encoding": "br"
     },
     {
-      "asset": "assets/Workspace-Clsso1Cm.js",
+      "asset": "assets/Workspace-DwEAF9sq.js",
       "screen": "sql",
-      "bytes": 133749,
+      "bytes": 133755,
       "encoding": "br"
     },
     {
