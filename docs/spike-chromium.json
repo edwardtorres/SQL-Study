@@ -1,0 +1,521 @@
+{
+  "recordedAt": "2026-10-27T05:26:29.893Z",
+  "engine": "PGlite 0.5.12",
+  "browser": "chromium",
+  "browserVersion": "154.0.8037.57",
+  "viewport": "390 x 844, touch enabled",
+  "context": "Unthrottled cloud Linux host; three fresh browser contexts; local production preview with CSP. Not an iPhone performance measurement.",
+  "memoryScope": "wasmMemoryBytes is allocated WebAssembly linear memory only; excludes JavaScript, filesystem, renderer, and browser overhead. Total or peak memory is not measured.",
+  "downloadScope": "Browser-reported sizes may be incomplete for workers. replayPayloadBytes measures each observed request replayed via Node HTTP with the browser Accept-Encoding, counting the encoded body before decompression. Excludes HTTP headers/TLS. Built asset bytes and computed gzip estimates are separate. This is not a mobile-network benchmark.",
+  "runs": [
+    {
+      "ok": true,
+      "startupMs": 1958.7000000029802,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 2046.6000000014901,
+      "heartbeats": 127,
+      "maxGapMs": 22.900000005960464,
+      "requests": [
+        {
+          "asset": "",
+          "status": 200,
+          "reportedBodyBytes": 937,
+          "contentLength": null,
+          "encoding": "identity",
+          "replayPayloadBytes": 925,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 651,
+          "contentLength": 651,
+          "encoding": "identity",
+          "replayPayloadBytes": 651,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-BAFKnaRW.js",
+          "status": 200,
+          "reportedBodyBytes": 865,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 848,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "status": 200,
+          "reportedBodyBytes": 0,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 146957,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 10123263,
+          "contentLength": 10123263,
+          "encoding": "identity",
+          "replayPayloadBytes": 10123263,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 395242,
+          "contentLength": 395242,
+          "encoding": "identity",
+          "replayPayloadBytes": 395242,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2142651,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2141052,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    },
+    {
+      "ok": true,
+      "startupMs": 1979.5,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 2043.6000000014901,
+      "heartbeats": 127,
+      "maxGapMs": 23.299999997019768,
+      "requests": [
+        {
+          "asset": "",
+          "status": 200,
+          "reportedBodyBytes": 937,
+          "contentLength": null,
+          "encoding": "identity",
+          "replayPayloadBytes": 925,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 651,
+          "contentLength": 651,
+          "encoding": "identity",
+          "replayPayloadBytes": 651,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-BAFKnaRW.js",
+          "status": 200,
+          "reportedBodyBytes": 865,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 848,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "status": 200,
+          "reportedBodyBytes": 0,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 146957,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 10123263,
+          "contentLength": 10123263,
+          "encoding": "identity",
+          "replayPayloadBytes": 10123263,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 395242,
+          "contentLength": 395242,
+          "encoding": "identity",
+          "replayPayloadBytes": 395242,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2142651,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2141052,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    },
+    {
+      "ok": true,
+      "startupMs": 1910.3000000044703,
+      "wasmMemoryBytes": 197722112,
+      "version": [
+        {
+          "version": "PostgreSQL 18.6 (PGlite 0.5.12) on wasm32-unknown-emscripten, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+        }
+      ],
+      "checks": [
+        {
+          "name": "CREATE TABLE",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "INSERT",
+          "passed": true,
+          "rows": []
+        },
+        {
+          "name": "JOIN",
+          "passed": true,
+          "rows": [
+            {
+              "name": "Alder",
+              "kg": 300
+            },
+            {
+              "name": "Birch",
+              "kg": 300
+            }
+          ]
+        },
+        {
+          "name": "CTE",
+          "passed": true,
+          "rows": [
+            {
+              "total": 2
+            }
+          ]
+        },
+        {
+          "name": "Window function",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "position": 2
+            },
+            {
+              "id": 2,
+              "position": 1
+            },
+            {
+              "id": 3,
+              "position": 1
+            }
+          ]
+        },
+        {
+          "name": "INSERT ON CONFLICT",
+          "passed": true,
+          "rows": [
+            {
+              "id": 1,
+              "kg": 150
+            }
+          ]
+        },
+        {
+          "name": "MERGE",
+          "passed": true,
+          "rows": [
+            {
+              "id": 3,
+              "kg": 350
+            },
+            {
+              "id": 4,
+              "kg": 400
+            }
+          ]
+        }
+      ],
+      "workerContext": true,
+      "workerRoundTripMs": 1980.7000000029802,
+      "heartbeats": 123,
+      "maxGapMs": 20.200000002980232,
+      "requests": [
+        {
+          "asset": "",
+          "status": 200,
+          "reportedBodyBytes": 937,
+          "contentLength": null,
+          "encoding": "identity",
+          "replayPayloadBytes": 925,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-tM71Cvr9.css",
+          "status": 200,
+          "reportedBodyBytes": 651,
+          "contentLength": 651,
+          "encoding": "identity",
+          "replayPayloadBytes": 651,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/index-BAFKnaRW.js",
+          "status": 200,
+          "reportedBodyBytes": 865,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 848,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/engine.worker-1KWPkVBa.js",
+          "status": 200,
+          "reportedBodyBytes": 0,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 146957,
+          "replayEncoding": "gzip"
+        },
+        {
+          "asset": "assets/pglite-C2k-M10h.wasm",
+          "status": 200,
+          "reportedBodyBytes": 10123263,
+          "contentLength": 10123263,
+          "encoding": "identity",
+          "replayPayloadBytes": 10123263,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/initdb-D3nwUMsW.wasm",
+          "status": 200,
+          "reportedBodyBytes": 395242,
+          "contentLength": 395242,
+          "encoding": "identity",
+          "replayPayloadBytes": 395242,
+          "replayEncoding": "identity"
+        },
+        {
+          "asset": "assets/pglite-k6Y9avCD.data",
+          "status": 200,
+          "reportedBodyBytes": 2142651,
+          "contentLength": null,
+          "encoding": "gzip",
+          "replayPayloadBytes": 2141052,
+          "replayEncoding": "gzip"
+        }
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "horizontalOverflow": false
+    }
+  ],
+  "assets": [
+    {
+      "name": "engine.worker-1KWPkVBa.js",
+      "bytes": 648186,
+      "gzipBytes": 146957
+    },
+    {
+      "name": "index-BAFKnaRW.js",
+      "bytes": 1585,
+      "gzipBytes": 848
+    },
+    {
+      "name": "index-tM71Cvr9.css",
+      "bytes": 651,
+      "gzipBytes": 391
+    },
+    {
+      "name": "initdb-D3nwUMsW.wasm",
+      "bytes": 395242,
+      "gzipBytes": 147183
+    },
+    {
+      "name": "pglite-C2k-M10h.wasm",
+      "bytes": 10123263,
+      "gzipBytes": 3455827
+    },
+    {
+      "name": "pglite-k6Y9avCD.data",
+      "bytes": 6291000,
+      "gzipBytes": 2141052
+    }
+  ]
+}
