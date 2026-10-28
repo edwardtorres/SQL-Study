@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { items } from '../src/data/catalog';
 import { bossPartsOf, bossPassed, partLabel, shuffleOptions, summarizeChapter } from '../src/app/model';
-import { emptyLesson, emptyProgress, emptySave, recordGrade } from '../src/save/progress';
+import { emptyLesson, emptyProgress, emptySave } from '../src/save/progress';
 
 describe('chapter model', () => {
   test('boss parts are numbered in order and the boss passes only when every part passes', () => {
     const parts = bossPartsOf(items, 'c5-boss');
     expect(parts.map((part) => partLabel(part, items))).toEqual(parts.map((_, index) => `Part ${index + 1} of ${parts.length}`));
-    const pass = (save: ReturnType<typeof emptySave>, id: string) => ({ ...save, tickets: { ...save.tickets, [id]: recordGrade(emptyProgress(), true) } });
+    const pass = (save: ReturnType<typeof emptySave>, id: string) => ({ ...save, tickets: { ...save.tickets, [id]: { ...emptyProgress(), passed: true, firstOutcome: 'first-try' as const, firstPassAt: 0, passedAt: 0 } } });
     let save = pass(emptySave(), parts[0]!.id);
     expect(bossPassed(items, save, 'c5-boss')).toBe(false);
     for (const part of parts) save = pass(save, part.id);

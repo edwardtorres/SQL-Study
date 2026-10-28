@@ -160,6 +160,73 @@ Step 2 rules (enforced by the content check and its Vitest suite):
   re-solved blind by a fresh agent, and its earlier record moves to `superseded/` with the
   reason. A change only to hidden data is verified by re-running `tests/blind-compare.test.ts`.
 
+## Game loop rules (Step 4)
+
+The rules are pure functions in `src/game/rules.ts`. The numbers below are the source of truth, and
+`tests/game-rules.test.ts` pins them. Save version 3 is in `src/save/` (format, migrations, progress, transfer).
+
+**Gating and mastery.** Chapter 1 is open. Chapter n opens when chapter n−1 is mastered, and a mastered chapter
+stays open. A chapter is mastered when every part of its boss has a counting pass. Mastery is kept once earned,
+so a later reveal does not take it back. Each open chapter's boss can be attempted from the start.
+
+**Test-out.** A chapter is marked *Mastered by test-out* when its boss passes before any of its lesson sections is
+answered and before any of its non-boss tickets passes. Otherwise it is *Mastered*. Desks show *Locked*, *Open*,
+*In progress*, *Mastered* or *Mastered by test-out*.
+
+**Reveal rule.** Revealing never adds XP or mastery. A revealed boss part's pass is void, and the part counts again
+only after a passing submission made after the reveal whose query differs from the solution. Queries are compared
+after whitespace, letter case and a trailing semicolon are ignored. A revealed boss part passed with the reference
+query is refused with a message. Revealing a guided, independent or sample ticket never blocks its pass; it only
+sets the award.
+
+**Ranks** come from mastery, not XP: Intern (start), Junior Analyst (chapter 3 mastered), Analyst (chapter 6),
+Junior Data Engineer (chapter 9), Data Engineer I (chapter 13). A promotion card appears on the grade that changes
+the rank.
+
+**XP.** Sample tickets earn the independent award. Readiness scores only independent tickets and boss parts.
+
+| Item type | Base XP | First-try bonus (first submission passes, no hints, no reveal) |
+|---|---|---|
+| Guided | 10 | +5 |
+| Independent (and sample) | 25 | +10 |
+| Boss part | 50 | +15 |
+
+- The first pass sets the award. Each hint tier taken before it costs 5 XP, so 5, 10 and 15 in total. The award
+  never falls below 0. Hints taken after the pass cost nothing.
+- A pass after a reveal, on its first pass, earns a flat 5 XP.
+- A repeat pass of an item already passed earns 1 XP, at most once per local day for that item.
+- Passing never depends on XP.
+
+**Levels** come from total XP. Level n starts at 100(n−1) + 25(n−1)(n−2) XP:
+
+| Level | Starts at XP | Level | Starts at XP |
+|---|---|---|---|
+| 1 | 0 | 7 | 1,350 |
+| 2 | 100 | 8 | 1,750 |
+| 3 | 250 | 9 | 2,200 |
+| 4 | 450 | 10 | 2,700 |
+| 5 | 700 | 11 | 3,250 |
+| 6 | 1,000 | | |
+
+Each level needs 50 XP more than the one before.
+
+**Streak.** A local calendar day counts once three different items pass on it. Repeat passes of one item count once.
+Days are compared as calendar dates, so 1 November 2026 in a daylight-saving zone is one day. A missed day resets the
+current streak, and the longest streak is kept.
+
+**Badges** are never removed: each rank; Boss, first try (every part of a boss passed first try, with no hints and no
+reveal); Ten in a row (ten independent first-try passes in a row); Window functions and Pipelines (every item in
+chapter 8 or 11 passed with no reveal, hints allowed); a seven-day and a thirty-day streak; Every chapter mastered.
+
+**Readiness.** The thirteen competencies are the thirteen chapters. Each scored first pass earns credit by how it was
+earned: first try 1.0, hinted or passed after failures 0.5, revealed 0. Each competency uses its 10 most recent scored
+first passes. A score shows only from 5 scored items, and below that it reads *Not enough data*. A competency is
+*ready* at 0.80 or above. The entry-level signal appears only when all 13 competencies are ready.
+
+**Migration.** A version 2 save keeps its passes and drafts. Its XP is recalculated under the table above. Its
+outcomes are conservative: a pass after failures or hints is hinted, and a pass after a reveal is revealed. A revealed
+boss part is void until it passes again. Streaks and runs start at zero, and badges are derived with time 0.
+
 ## Execution findings and cross-browser checks
 
 Engine start (flake closed as machine contention, 2026-10-28). One full Chromium run at 390 px

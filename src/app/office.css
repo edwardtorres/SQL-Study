@@ -1,0 +1,57 @@
+/* Office map, desk cards, readiness panel and promotion card. Colours follow the palette in styles.css. */
+.office-intro { display: grid; gap: 14px; margin-bottom: 26px; }
+.office-intro h1 { font-size: clamp(30px, 3.2vw, 46px); font-weight: 600; letter-spacing: -1.6px; line-height: 1.15; color: #1d3834; }
+.office-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
+.office-stat { background: #fffefa; border: 1px solid #dce1d6; border-radius: 9px; padding: 14px 16px; min-width: 0; display: grid; gap: 6px; align-content: start; }
+.office-stat small { font-size: 9px; color: #5b7066; letter-spacing: .4px; }
+.office-stat strong { font-size: 15px; font-weight: 650; color: #1d3834; overflow-wrap: anywhere; }
+.level-bar { height: 4px; background: #e4e9de; border-radius: 4px; overflow: hidden; }
+.level-bar span { display: block; height: 100%; background: #a94320; transition: width .3s; }
+.desk-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.desk { background: #fffefa; border: 1px solid #dce1d6; border-radius: 9px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; align-items: center; min-width: 0; }
+.desk.is-locked { background: #f3f4ee; color: #56685e; }
+.desk.is-mastered, .desk.is-tested-out { border-color: #c2d5b1; }
+.desk h3 { font-size: 16px; font-weight: 600; letter-spacing: -.3px; margin-top: 6px; }
+.desk > p { grid-column: 1 / -1; font-size: 11px; line-height: 1.7; color: #5b7066; }
+.desk-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 9px; }
+.desk-title { min-width: 0; }
+.desk-status { border: 1px solid #dce1d5; border-radius: 4px; padding: 4px 7px; font-size: 9px; font-weight: 600; white-space: nowrap; color: #56694e; background: #fafbf4; }
+.desk-status.status-in-progress { background: #f8e9dc; border-color: #e2bfa6; color: #8a4a27; }
+.desk-status.status-mastered { background: #e5efdc; border-color: #c2d5b1; color: #3f6030; }
+.desk-status.status-tested-out { background: #e3ecf3; border-color: #b9cddd; color: #2f5a7a; }
+.desk-status.status-locked { background: #eceee6; color: #56685e; }
+.test-out-note { border-left: 3px solid #2f5a7a; padding: 6px 0 6px 12px; font-size: 11px; line-height: 1.7; color: #33506a; margin: 10px 0; }
+.readiness-panel, .office-footer { margin-top: 34px; }
+.readiness-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid #e5e8df; }
+.readiness-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e5e8df; font-size: 11px; min-width: 0; flex-wrap: wrap; }
+.readiness-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.readiness-ready { color: #3f6030; font-weight: 650; }
+.footer-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.promotion-backdrop { position: fixed; inset: 0; background: #173b3bd9; display: grid; place-items: center; padding: 20px; z-index: 50; }
+.promotion { background: #fffefa; border-radius: 10px; padding: 30px 28px; max-width: 420px; width: 100%; display: grid; gap: 12px; justify-items: start; }
+.promotion h2 { font-size: 26px; font-weight: 600; letter-spacing: -.8px; color: #1d3834; }
+.promotion p { font-size: 12px; line-height: 1.8; color: #4b6256; }
+.promotion-icon { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; background: #e5efdc; color: #3f6030; }
+.readiness-panel .section-heading { margin-top: 0; }
+@media (max-width: 900px) { .office-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) {
+  .office-strip { grid-template-columns: minmax(0, 1fr); }
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .desk-actions .primary-button, .desk-actions .secondary-button { flex: 1 1 100%; }
+}
+.rank-pill { border: 1px solid #c2d5b1; background: #e5efdc; border-radius: 4px; padding: 5px 9px; font-size: 9px; font-weight: 700; letter-spacing: .6px; color: #3f6030; white-space: nowrap; }
+.import-confirm { border: 1px solid #dfcfb8; background: #fcf5e9; border-radius: 7px; padding: 16px; display: grid; gap: 12px; font-size: 11px; line-height: 1.8; color: #5a4128; margin-bottom: 14px; }
+.import-confirm h2 { font-size: 14px; font-weight: 650; color: #3e2c1a; }
+.readiness-panel .table-caption, .office-footer .table-caption { padding: 10px 0 0; }
+.office-footer .query-error { margin-top: 12px; }
+.office-footer .table-caption[role='status'] { color: #3f6030; }
+.desk-status.status-open { background: #f6f8ef; color: #3d5c46; }
+.desk-status.status-locked { background: #eceee6; }
+.badge-panel { margin-top: 34px; }
+.badge-panel .section-heading { margin-top: 0; }
+.badge-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.badge { border: 1px solid #dce1d6; background: #f6f7f1; border-radius: 8px; padding: 12px 14px; display: grid; gap: 5px; color: #56685e; font-size: 11px; min-width: 0; }
+.badge small { font-size: 9px; letter-spacing: .4px; }
+.badge.is-earned { background: #fffefa; border-color: #c2d5b1; color: #1d3834; }
+.badge.is-earned small { color: #3f6030; font-weight: 650; }
+.readiness-row .muted { color: #56685e; }
