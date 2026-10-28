@@ -27,8 +27,8 @@
   ],
   "solveMinutes": 2,
   "ambiguities": [
-    "Rounding is read as PostgreSQL ROUND on numeric, which rounds exact halves away from zero. A half-cent average would round up under that reading. A probe found no half-cent averages in sample, ties or precision."
+    "'Round the average to two decimal places' is read as PostgreSQL ROUND on numeric, which rounds exact halves away from zero. The precision dataset has two exact half-cent averages, and a round-half-to-even reading would round those two rows down, so the convention changes the result there. Sample and ties have no half-cent averages. The instruction says only 'round', so I used the standard half-up ROUND."
   ],
-  "confidence": "high",
-  "notes": "Sample returns 205 rows, ties 154, precision 154. A correlated formulation that averages the last three rows explicitly gives 0 differences on all three datasets."
+  "confidence": "medium",
+  "notes": "Sample returns 205 rows, ties 154, precision 154. A correlated formulation that averages the last three rows explicitly gives 0 differences on all three datasets. The rounding convention is the only open point and affects 2 rows in the precision dataset."
 }
