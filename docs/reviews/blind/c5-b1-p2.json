@@ -1,0 +1,20 @@
+{
+  "id": "c5-b1-p2",
+  "solutionSql": "SELECT c.id, c.name FROM customers AS c WHERE EXISTS (SELECT 1 FROM shipments AS s WHERE s.customer_id = c.id AND s.weight_kg >= 900) ORDER BY c.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    { "id": 1, "name": "Aster Loomworks" },
+    { "id": 2, "name": "Brindle Pantry" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "customer-once", "howSolved": "EXISTS is a semi-join, so each customer appears at most once." },
+    { "id": "link-by-customer", "howSolved": "The correlation is s.customer_id = c.id." },
+    { "id": "at-least-900", "howSolved": "The filter is s.weight_kg >= 900, so exactly 900 qualifies." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls, ties and boundary. Solve time is an estimate."
+}

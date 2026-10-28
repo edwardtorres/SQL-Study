@@ -1,0 +1,20 @@
+{
+  "id": "c4-i6",
+  "solutionSql": "SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments AS s LEFT JOIN shipment_events AS e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    { "customer_id": 1, "shipments": 40, "events": 120 },
+    { "customer_id": 2, "shipments": 40, "events": 111 }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "customers-with-shipments", "howSolved": "Grouping over shipments means a customer with no shipment has no group, so it is not listed." },
+    { "id": "distinct-shipments", "howSolved": "shipments is COUNT(DISTINCT s.id), so the fan-out from joining events does not inflate it." },
+    { "id": "include-no-events", "howSolved": "LEFT JOIN keeps shipments with no event; their e.id is NULL, so COUNT(e.id) adds nothing while the shipment still counts once in shipments." }
+  ],
+  "solveMinutes": 4,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Read-only item. The fan-out trap is avoided by counting shipments with COUNT(DISTINCT) while events are counted per joined row. Ran without error on sample, nulls and boundary. Solve time is an estimate."
+}

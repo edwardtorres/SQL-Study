@@ -1,0 +1,22 @@
+{
+  "id": "c5-i5",
+  "solutionSql": "SELECT c.id, c.name FROM customers AS c WHERE (SELECT AVG(s.weight_kg) FROM shipments AS s WHERE s.customer_id = c.id) > (SELECT AVG(o.weight_kg) FROM shipments AS o) ORDER BY c.id;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    { "id": 2, "name": "Brindle Pantry" },
+    { "id": 4, "name": "Dovetail Lanterns" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "above-overall-average", "howSolved": "Each customer's AVG weight is compared with the table-wide AVG weight using >." },
+    { "id": "true-average", "howSolved": "Both sides use AVG, which returns numeric, so there is no integer division." },
+    { "id": "missing-not-counted", "howSolved": "AVG skips NULL weights for both the customer average and the table average." }
+  ],
+  "solveMinutes": 5,
+  "ambiguities": [
+    "A customer whose shipments all lack a weight, or who has no shipments, has a NULL average and is left out. The ticket does not say this in words; it follows from the comparison."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls, ties, boundary and nulltext. Solve time is an estimate."
+}

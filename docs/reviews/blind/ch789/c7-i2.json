@@ -1,0 +1,27 @@
+{
+  "id": "c7-i2",
+  "solutionSql": "SELECT s.id AS shipment_id\nFROM shipments s\nWHERE EXISTS (\n    SELECT 1 FROM shipment_events e\n    WHERE e.shipment_id = s.id AND e.status = 'delivered'\n  )\n  AND EXISTS (\n    SELECT 1 FROM invoices i\n    WHERE i.shipment_id = s.id\n  )\nORDER BY shipment_id;",
+  "sampleRowCount": 21,
+  "sampleFirstRows": [
+    {
+      "shipment_id": 10
+    },
+    {
+      "shipment_id": 19
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "delivered-and-invoiced",
+      "howSolved": "Two EXISTS checks on the shipment: one for a shipment_events row with status 'delivered', one for an invoices row, so both are required."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [
+    "The instruction says 'shipment' without naming the source table. I took shipment_id from shipments. Taking it from shipment_events gives identical rows on sample, nulls and ties, because those datasets have no orphan scans or invoices.",
+    "The status literal 'delivered' is matched exactly. The sample statuses are all lowercase."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 21 rows. A shipment_events-based formulation returns the same rows on sample, nulls and ties. Orphan counts are 0 on those datasets."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "c2-i2",
+  "solutionSql": "SELECT ROUND(AVG(weight_kg), 1) AS avg_weight_kg\nFROM shipments;",
+  "sampleRowCount": 1,
+  "sampleFirstRows": [
+    {
+      "avg_weight_kg": "1032.0"
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "no-weight-not-counted",
+      "howSolved": "Relied on AVG ignoring NULL weight_kg values, with no explicit filter."
+    },
+    {
+      "id": "one-decimal",
+      "howSolved": "Wrapped AVG(weight_kg) in ROUND(..., 1) and aliased it avg_weight_kg."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [
+    "The ticket does not name a rounding rule. I used PostgreSQL numeric ROUND, which rounds half away from zero."
+  ],
+  "confidence": "high",
+  "notes": "AVG over integer returns numeric, which matches the declared type. Sample returns a single row. Row counts per dataset: sample=1, nulls=1, boundary=1. Ran on every listed dataset without error."
+}

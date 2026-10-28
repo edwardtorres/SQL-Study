@@ -1,0 +1,22 @@
+{
+  "id": "c6-b1-p1",
+  "solutionSql": "SELECT s.status, CASE WHEN s.weight_kg IS NULL THEN 'unweighed' WHEN s.weight_kg < 1000 THEN 'light' ELSE 'heavy' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments AS s GROUP BY s.status, CASE WHEN s.weight_kg IS NULL THEN 'unweighed' WHEN s.weight_kg < 1000 THEN 'light' ELSE 'heavy' END ORDER BY s.status, weight_band;",
+  "sampleRowCount": 11,
+  "sampleFirstRows": [
+    { "status": "cancelled", "weight_band": "heavy", "shipments": 36 },
+    { "status": "cancelled", "weight_band": "light", "shipments": 26 }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "unweighed-band", "howSolved": "The CASE tests weight_kg IS NULL first and returns 'unweighed'." },
+    { "id": "light-under-1000", "howSolved": "The next branch returns 'light' for weight_kg < 1000; the ELSE branch returns 'heavy' for 1000 and above." }
+  ],
+  "solveMinutes": 4,
+  "ambiguities": [
+    "'heavy otherwise' is read as 1000 kg and above, so exactly 1000 is heavy. Only 'heavy otherwise' states this boundary, and no declared rule covers it.",
+    "ORDER BY weight_band uses the database's default text collation. The labels are plain lowercase words, so the order is the same under any common collation."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Each status and band that occurs is returned, so an empty band is not listed. Ran without error on sample, nulls and boundary. Solve time is an estimate."
+}

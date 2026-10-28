@@ -1,0 +1,23 @@
+{
+  "id": "c5-b1-p3",
+  "solutionSql": "WITH heavy AS (SELECT s.driver_id, COUNT(*) AS n FROM shipments AS s WHERE s.status = 'queued' AND s.weight_kg >= 1800 GROUP BY s.driver_id) SELECT d.id AS driver_id, COALESCE(h.n, 0)::integer AS heavy_queued FROM drivers AS d LEFT JOIN heavy AS h ON h.driver_id = d.id ORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    { "driver_id": 1, "heavy_queued": 1 },
+    { "driver_id": 2, "heavy_queued": 0 }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "every-driver-listed", "howSolved": "drivers is the left side of a LEFT JOIN to the heavy CTE, so every driver is returned." },
+    { "id": "zero-when-none", "howSolved": "COALESCE(h.n, 0) gives 0 for a driver with no matching CTE row." },
+    { "id": "queued-only", "howSolved": "The CTE filters s.status = 'queued'." },
+    { "id": "at-least-1800", "howSolved": "The CTE filters s.weight_kg >= 1800, so exactly 1800 is heavy." }
+  ],
+  "solveMinutes": 4,
+  "ambiguities": [
+    "Shipments with a NULL weight_kg are excluded from the count because a NULL comparison is not true. The ticket does not say this in words."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item, with the WITH clause named heavy as the ticket asks. Ran without error on sample, nulls, ties and boundary. Solve time is an estimate."
+}

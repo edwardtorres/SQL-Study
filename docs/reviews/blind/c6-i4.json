@@ -1,0 +1,23 @@
+{
+  "id": "c6-i4",
+  "solutionSql": "SELECT s.customer_id, ROUND(AVG(s.weight_kg))::integer AS avg_kg FROM shipments AS s WHERE s.customer_id BETWEEN 1 AND 6 GROUP BY s.customer_id ORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    { "customer_id": 1, "avg_kg": 1021 },
+    { "customer_id": 2, "avg_kg": 1047 }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "round-nearest", "howSolved": "ROUND is applied to the numeric AVG, then cast to integer." },
+    { "id": "average-of-weights", "howSolved": "AVG(weight_kg) over each customer's shipments." },
+    { "id": "missing-ignored", "howSolved": "AVG skips NULL weights." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "'rounded to the nearest whole kilogram' does not say how an exact .5 is rounded. PostgreSQL ROUND on numeric rounds half away from zero, which is what I used.",
+    "'For customers with ids 1 through 6' does not say whether a customer in that range with no shipments, or with only unweighed shipments, is listed. I grouped over shipments, so a customer with no shipments is not listed. All six customers have shipments in the sample, nulls and ties datasets."
+  ],
+  "confidence": "medium",
+  "notes": "Read-only item. Ran without error on sample, nulls and ties. The mechanics are standard; the uncertainty is the half-kilogram tie rule and the customer-listing wording. Solve time is an estimate."
+}

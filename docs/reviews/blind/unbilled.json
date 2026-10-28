@@ -1,0 +1,39 @@
+{
+  "id": "unbilled",
+  "solutionSql": "SELECT c.id AS customer_id, c.name AS customer_name,\n       COUNT(s.id) FILTER (WHERE i.id IS NULL)::integer AS unbilled_shipments\nFROM customers c\nLEFT JOIN shipments s ON s.customer_id = c.id\nLEFT JOIN invoices i ON i.shipment_id = s.id\nGROUP BY c.id, c.name\nORDER BY c.id;",
+  "sampleRowCount": 8,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "customer_name": "Aster Loomworks",
+      "unbilled_shipments": 6
+    },
+    {
+      "customer_id": 2,
+      "customer_name": "Brindle Pantry",
+      "unbilled_shipments": 6
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "every-customer",
+      "howSolved": "Kept customers as the driving table with LEFT JOINs to shipments and invoices, so every customer row survives."
+    },
+    {
+      "id": "real-shipments-counted",
+      "howSolved": "COUNT(s.id) counts only real shipment rows, so a customer with no shipments gets 0 instead of the placeholder count."
+    },
+    {
+      "id": "unbilled-means-no-invoice",
+      "howSolved": "Kept the LEFT JOIN to invoices and counted shipments where i.id IS NULL, meaning no invoice row references the shipment."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "The ticket says to repair the supplied query. I read its only defect as COUNT(*) counting the LEFT JOIN placeholder row, and changed it to COUNT(s.id) FILTER (WHERE i.id IS NULL). I found no other defect in the starter."
+  ],
+  "confidence": "high",
+  "notes": "The schema says there is at most one invoice per shipment; I checked this on all datasets used by the item (no shipment has more than one invoice), so the invoice join cannot multiply rows. Row counts per dataset: sample=8, nulls=8, ties=8, boundary=8. Ran on every listed dataset without error."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "c8-b1-p1",
+  "solutionSql": "SELECT customer_id, id\nFROM (\n  SELECT s.customer_id,\n         s.id,\n         ROW_NUMBER() OVER (PARTITION BY s.customer_id ORDER BY s.booked_at DESC, s.id DESC) AS rn\n  FROM shipments s\n) ranked\nWHERE rn = 1\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "id": 1
+    },
+    {
+      "customer_id": 2,
+      "id": 2
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "most-recent",
+      "howSolved": "ROW_NUMBER ordered by booked_at descending gives rank 1 to the latest booking."
+    },
+    {
+      "id": "per-customer",
+      "howSolved": "PARTITION BY customer_id."
+    },
+    {
+      "id": "no-shipments-absent",
+      "howSolved": "The query starts from shipments, so customers without shipments never appear."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "The instruction does not say how to break a tie on booked_at. In the ties and boundary datasets, one customer has two shipments with the same latest booked_at. I broke the tie with the higher id. A lower-id tie-break changes exactly one returned row in each of those datasets. The sample has no such tie."
+  ],
+  "confidence": "medium",
+  "notes": "Sample returns 6 rows. Tie-break probe: ties and boundary each differ by one row between the higher-id and lower-id choices."
+}

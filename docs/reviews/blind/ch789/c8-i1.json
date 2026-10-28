@@ -1,0 +1,35 @@
+{
+  "id": "c8-i1",
+  "solutionSql": "SELECT s.customer_id,\n       i.id,\n       DENSE_RANK() OVER (PARTITION BY s.customer_id ORDER BY i.amount DESC) AS amount_rank\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nORDER BY s.customer_id, amount_rank, i.id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "id": 42,
+      "amount_rank": 1
+    },
+    {
+      "customer_id": 1,
+      "id": 47,
+      "amount_rank": 1
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "equal-share-rank",
+      "howSolved": "DENSE_RANK partitioned by customer and ordered by amount DESC gives equal amounts the same rank."
+    },
+    {
+      "id": "next-rank-one-more",
+      "howSolved": "DENSE_RANK leaves no gap after a tie, so the next distinct amount gets one more than the previous rank."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "'Highest first' is read as amount DESC, so rank 1 is each customer's largest invoice amount.",
+    "The final order key 'then invoice id' is read as ascending."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 205 rows, ties 154, precision 154. A cross-check using COUNT(DISTINCT amount) over larger amounts gives 0 differences on all three. amount_rank is bigint (type 20), as specified."
+}

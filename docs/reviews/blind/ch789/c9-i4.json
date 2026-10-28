@@ -1,0 +1,19 @@
+{
+  "id": "c9-i4",
+  "solutionSql": "BEGIN;\nINSERT INTO customers (id, name, region)\nVALUES (9, 'Juniper Crate', 'North'),\n       (10, 'Kestrel Mills', NULL);\nCOMMIT;\n",
+  "sampleRowCount": 10,
+  "sampleFirstRows": "customers gains (9, 'Juniper Crate', 'North') and (10, 'Kestrel Mills', NULL). The 8 existing rows are unchanged, so customers ends with 10 rows.",
+  "sampleChecks": "Customers 9 and 10 exist after the transaction is committed, with the names and regions given in the instructions. Kestrel Mills has a NULL region.",
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "both-rows-kept", "howSolved": "BEGIN, one INSERT with both rows, then COMMIT, so both rows are committed together. A ROLLBACK after the script left both rows in place, which shows COMMIT ran." },
+    { "id": "region-null", "howSolved": "Kestrel Mills has an explicit NULL in the region position of the VALUES list." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "policy.allow for this item lists only InsertStmt, but the instructions require BEGIN and COMMIT. Either policy.transactions is true (my input shows the allow list only) or the item's policy would refuse the required transaction statements. Please confirm this from the item's policy, since I could not see it.",
+    "The instructions give column names but not types. I assumed the customers columns as they exist in the schema: id integer, name text, region text."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary with PGlite 0.5.12 (PostgreSQL 18.6). Customers 9 and 10 were absent before the script in all three datasets, and customers had 8 rows before and 10 after. A ROLLBACK after the script left both rows in place, so the COMMIT ran. The solve time is an estimate."
+}

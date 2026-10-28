@@ -1,0 +1,19 @@
+{
+  "id": "c6-b1-p2",
+  "solutionSql": "SELECT s.id, LEFT(s.tracking_code, 2) AS prefix, (s.booked_at AT TIME ZONE 'UTC')::date AS booked_day FROM shipments AS s WHERE s.id BETWEEN 1 AND 10 ORDER BY s.id;",
+  "sampleRowCount": 10,
+  "sampleFirstRows": [
+    { "id": 1, "prefix": "JF", "booked_day": "2026-01-31" },
+    { "id": 2, "prefix": "JF", "booked_day": "2026-01-31" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "prefix-first-two", "howSolved": "LEFT(tracking_code, 2) returns the first two characters." },
+    { "id": "utc-day", "howSolved": "booked_at AT TIME ZONE 'UTC' gives the UTC wall-clock time, and ::date keeps the calendar day." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Read-only item. The sample days match the ticket's stated values: shipments 1 and 2 on 2026-01-31, shipments 3 to 10 on 2025-12-28. Ran without error on sample, nulls and boundary. Solve time is an estimate."
+}

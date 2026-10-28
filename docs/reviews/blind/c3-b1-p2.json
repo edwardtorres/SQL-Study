@@ -1,0 +1,41 @@
+{
+  "id": "c3-b1-p2",
+  "solutionSql": "SELECT s.customer_id,\n       COUNT(*)::integer AS shipments,\n       SUM(b.billed_amt) AS billed\nFROM shipments s\nLEFT JOIN (\n  SELECT shipment_id, SUM(amount) AS billed_amt\n  FROM invoices\n  GROUP BY shipment_id\n) b ON b.shipment_id = s.id\nGROUP BY s.customer_id\nORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "shipments": 40,
+      "billed": "6125.00"
+    },
+    {
+      "customer_id": 2,
+      "shipments": 40,
+      "billed": "6700.00"
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "every-shipment-counted",
+      "howSolved": "Counted shipment rows with COUNT(*) over shipments, which includes shipments with no invoice."
+    },
+    {
+      "id": "unbilled-listed",
+      "howSolved": "Drove the query from shipments with a LEFT JOIN to pre-aggregated invoices, so a customer whose shipments are all unbilled still gets a row."
+    },
+    {
+      "id": "billed-null-when-none",
+      "howSolved": "SUM over the pre-aggregated invoice totals returns NULL when a customer has no invoice rows."
+    },
+    {
+      "id": "customers-with-shipments",
+      "howSolved": "Grouped shipments by customer_id, so only customers with at least one shipment appear."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Invoice totals are pre-aggregated per shipment, so the shipment count stays exact even if a shipment had more than one invoice. The empty dataset has no invoices and returns billed NULL for each row. Row counts per dataset: sample=6, nulls=6, boundary=6, empty=6, precision=6. Ran on every listed dataset without error."
+}

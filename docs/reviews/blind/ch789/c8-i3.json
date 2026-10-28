@@ -1,0 +1,32 @@
+{
+  "id": "c8-i3",
+  "solutionSql": "SELECT s.customer_id,\n       i.id,\n       SUM(i.amount) OVER (\n         PARTITION BY s.customer_id\n         ORDER BY i.issued_at, i.id\n         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_total\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nORDER BY s.customer_id, i.issued_at, i.id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "id": 6,
+      "running_total": "150.00"
+    },
+    {
+      "customer_id": 1,
+      "id": 11,
+      "running_total": "250.00"
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "issue-order",
+      "howSolved": "The window ORDER BY is issued_at then invoices.id, both ascending, and the outer ORDER BY repeats that order within each customer."
+    },
+    {
+      "id": "total-includes-current",
+      "howSolved": "The frame ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW makes the running sum include the current invoice."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Sample returns 205 rows, boundary 154, precision 154. A correlated SUM formulation gives 0 differences on all three datasets."
+}

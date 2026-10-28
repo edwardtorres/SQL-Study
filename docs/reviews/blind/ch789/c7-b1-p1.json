@@ -1,0 +1,30 @@
+{
+  "id": "c7-b1-p1",
+  "solutionSql": "SELECT e.shipment_id\nFROM shipment_events e\nWHERE NOT EXISTS (\n  SELECT 1 FROM invoices i WHERE i.shipment_id = e.shipment_id\n)\nUNION\nSELECT i.shipment_id\nFROM invoices i\nWHERE NOT EXISTS (\n  SELECT 1 FROM shipment_events e WHERE e.shipment_id = i.shipment_id\n)\nORDER BY shipment_id;",
+  "sampleRowCount": 49,
+  "sampleFirstRows": [
+    {
+      "shipment_id": 8
+    },
+    {
+      "shipment_id": 12
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "both-directions",
+      "howSolved": "The UNION of the scan-without-invoice set and the invoice-without-scan set returns both kinds of mismatch."
+    },
+    {
+      "id": "mismatch-only",
+      "howSolved": "Each side uses NOT EXISTS against the other table, so a shipment with both a scan and an invoice never appears."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "'Shipment' is taken from the id column of whichever table holds the row. A FULL JOIN of the two distinct id sets gives the same result on sample, nulls and boundary, and those datasets have no orphan rows."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 49 rows, nulls 85, boundary 37. A FULL JOIN cross-check gives 0 differences on all three datasets."
+}

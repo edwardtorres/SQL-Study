@@ -1,0 +1,41 @@
+{
+  "id": "c3-b1-p1",
+  "solutionSql": "SELECT (booked_at AT TIME ZONE 'UTC')::date AS booking_day,\n       COUNT(*)::integer AS bookings\nFROM shipments\nWHERE booked_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND booked_at < TIMESTAMPTZ '2026-02-01 00:00:00+00'\nGROUP BY (booked_at AT TIME ZONE 'UTC')::date\nHAVING COUNT(*) >= 2\nORDER BY booking_day;",
+  "sampleRowCount": 17,
+  "sampleFirstRows": [
+    {
+      "booking_day": "2026-01-01T00:00:00.000Z",
+      "bookings": 12
+    },
+    {
+      "booking_day": "2026-01-02T00:00:00.000Z",
+      "bookings": 12
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "calendar-day",
+      "howSolved": "Grouped by (booked_at AT TIME ZONE 'UTC')::date."
+    },
+    {
+      "id": "at-least-two",
+      "howSolved": "Used HAVING COUNT(*) >= 2."
+    },
+    {
+      "id": "range-half-open",
+      "howSolved": "Used the same half-open TIMESTAMPTZ bounds as the range in the c3-i3 ticket."
+    },
+    {
+      "id": "counts-cancelled",
+      "howSolved": "Applied no status filter, so cancelled shipments count."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "\"Calendar date ... in UTC\" is read as booked_at AT TIME ZONE UTC cast to date, so grouping does not depend on the session time zone."
+  ],
+  "confidence": "high",
+  "notes": "Bookings at exactly 2026-02-01 00:00 UTC are excluded by the exclusive upper bound. Row counts per dataset: sample=17, nulls=7, boundary=12, precision=12. Ran on every listed dataset without error."
+}

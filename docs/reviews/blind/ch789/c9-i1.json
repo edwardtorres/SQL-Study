@@ -1,0 +1,22 @@
+{
+  "id": "c9-i1",
+  "solutionSql": "CREATE TABLE carriers (\n  id integer PRIMARY KEY,\n  code text NOT NULL UNIQUE,\n  name text NOT NULL\n);\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": "carriers(id integer, code text, name text) created as an empty table. Catalog: PRIMARY KEY (id), UNIQUE (code), NOT NULL on id, code and name.",
+  "sampleChecks": "A table named carriers whose id is a unique, never-missing integer, whose code is a present and unique text value, and whose name is a present text value. The definition only, with no rows.",
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "id-unique", "howSolved": "id is the PRIMARY KEY, so a repeated id is refused with a unique violation (23505)." },
+    { "id": "id-present", "howSolved": "The PRIMARY KEY on id also makes it NOT NULL, so a null id is refused (23502)." },
+    { "id": "code-present", "howSolved": "code is declared NOT NULL, so a null code is refused (23502)." },
+    { "id": "code-unique", "howSolved": "code is declared UNIQUE, so a repeated code is refused (23505)." },
+    { "id": "name-present", "howSolved": "name is declared NOT NULL, so a null name is refused (23502)." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "The instructions do not say whether code uniqueness is case-sensitive ('AB' versus 'ab'). I used the default, case-sensitive UNIQUE.",
+    "The instructions do not say whether an empty string counts as a present code. I did not add a CHECK for empty text."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary with PGlite 0.5.12 (PostgreSQL 18.6). After the statement, pg_constraint shows the PRIMARY KEY, the UNIQUE on code and the NOT NULL constraints as described. My own rolled-back probes behaved as the rules require: duplicate id 23505, null id 23502, null code 23502, duplicate code 23505, null name 23502, and valid rows accepted. Those probes were my own, not the trusted checks. Solve time is an estimate."
+}

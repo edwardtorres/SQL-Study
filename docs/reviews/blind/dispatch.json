@@ -1,0 +1,45 @@
+{
+  "id": "dispatch",
+  "solutionSql": "SELECT id, tracking_code, weight_kg\nFROM shipments\nWHERE status = 'queued'\n  AND weight_kg >= 500\nORDER BY weight_kg DESC, id ASC\nLIMIT 5;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    {
+      "id": 13,
+      "tracking_code": "JF-104729-0013",
+      "weight_kg": 1986
+    },
+    {
+      "id": 165,
+      "tracking_code": "JF-104729-0165",
+      "weight_kg": 1943
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "at-least-500",
+      "howSolved": "Added weight_kg >= 500 to the WHERE clause, so NULL weights are excluded."
+    },
+    {
+      "id": "queued-only",
+      "howSolved": "Added status = 'queued' as an exact literal match in the WHERE clause."
+    },
+    {
+      "id": "at-most-five",
+      "howSolved": "Added LIMIT 5 after the ORDER BY."
+    },
+    {
+      "id": "heaviest-first",
+      "howSolved": "Used ORDER BY weight_kg DESC as the primary sort key."
+    },
+    {
+      "id": "tie-id-ascending",
+      "howSolved": "Used ORDER BY id ASC as the secondary sort key."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The nulls dataset has no queued shipments at all (every row there is delivered), so it returns 0 rows, which the ticket allows. Status literals are exact lowercase in every dataset. Row counts per dataset: sample=5, nulls=0, ties=5, boundary=5. Ran on every listed dataset without error."
+}

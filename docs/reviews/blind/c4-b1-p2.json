@@ -1,0 +1,22 @@
+{
+  "id": "c4-b1-p2",
+  "solutionSql": "SELECT c.id, c.name FROM customers AS c WHERE NOT EXISTS (SELECT 1 FROM shipments AS s WHERE s.customer_id = c.id AND s.status = 'delivered') ORDER BY c.id;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    { "id": 7, "name": "Glimmer Clayworks" },
+    { "id": 8, "name": "Hearthline Notions" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "no-delivered-shipment", "howSolved": "NOT EXISTS anti-join: a customer is kept when no shipment of theirs has status 'delivered', so customers with no shipments at all are kept." },
+    { "id": "delivered-shipments-only", "howSolved": "The status test reads shipments.status only; shipment_events is not referenced." },
+    { "id": "link-by-customer", "howSolved": "The correlation is s.customer_id = c.id." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "The ticket writes the status with curly quotes (‘delivered’). I read it as the literal text delivered, with no other casing or spacing."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls and empty. Solve time is an estimate."
+}

@@ -1,0 +1,34 @@
+{
+  "id": "c8-i4",
+  "solutionSql": "SELECT s.customer_id,\n       i.id,\n       ROUND(AVG(i.amount) OVER (\n         PARTITION BY s.customer_id\n         ORDER BY i.issued_at, i.id\n         ROWS BETWEEN 2 PRECEDING AND CURRENT ROW\n       ), 2) AS moving_avg\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nORDER BY s.customer_id, i.issued_at, i.id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "id": 6,
+      "moving_avg": "150.00"
+    },
+    {
+      "customer_id": 1,
+      "id": 11,
+      "moving_avg": "125.00"
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "three-invoices-window",
+      "howSolved": "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW gives each invoice and up to two earlier ones for the same customer. The first invoice averages only itself, and the second averages two."
+    },
+    {
+      "id": "two-decimals",
+      "howSolved": "ROUND(AVG(...), 2) rounds the average after it is computed."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "Rounding is read as PostgreSQL ROUND on numeric, which rounds exact halves away from zero. A half-cent average would round up under that reading. A probe found no half-cent averages in sample, ties or precision."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 205 rows, ties 154, precision 154. A correlated formulation that averages the last three rows explicitly gives 0 differences on all three datasets."
+}

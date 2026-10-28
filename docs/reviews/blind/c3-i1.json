@@ -1,0 +1,35 @@
+{
+  "id": "c3-i1",
+  "solutionSql": "SELECT s.customer_id,\n       SUM(i.amount) AS billed_amount\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nGROUP BY s.customer_id\nORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    {
+      "customer_id": 1,
+      "billed_amount": "6125.00"
+    },
+    {
+      "customer_id": 2,
+      "billed_amount": "6700.00"
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "each-invoice-once",
+      "howSolved": "Drove the query from invoices and joined each invoice to its one shipment, so no invoice is summed twice."
+    },
+    {
+      "id": "total-not-average",
+      "howSolved": "Used SUM(i.amount) per customer."
+    },
+    {
+      "id": "no-invoice-absent",
+      "howSolved": "Used an inner join from invoices and grouped by customer, so customers with no invoices do not appear."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Customer comes from shipments.customer_id via the invoice shipment. Row counts per dataset: sample=6, nulls=3, boundary=6, precision=6. Ran on every listed dataset without error."
+}

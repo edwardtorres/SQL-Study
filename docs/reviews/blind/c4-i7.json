@@ -1,0 +1,23 @@
+{
+  "id": "c4-i7",
+  "solutionSql": "SELECT d.id, d.name FROM drivers AS d WHERE EXISTS (SELECT 1 FROM shipments AS s WHERE s.driver_id = d.id AND s.status = 'delivered' AND s.route_id IN (1, 2)) ORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    { "id": 1, "name": "Nera Vale" },
+    { "id": 2, "name": "Olin Moss" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "delivered-only", "howSolved": "The EXISTS subquery filters s.status = 'delivered'." },
+    { "id": "route-1-or-2", "howSolved": "The same EXISTS condition filters s.route_id IN (1, 2)." },
+    { "id": "each-driver-once", "howSolved": "EXISTS is a semi-join, so each driver row appears at most once however many shipments match." },
+    { "id": "driver-of-shipment", "howSolved": "The correlation is s.driver_id = d.id, the shipment's own driver column." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "'carries' is read as the shipment's driver_id column in shipments, not as any event row or other link."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls, ties and boundary. Solve time is an estimate."
+}

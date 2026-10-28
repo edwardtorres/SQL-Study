@@ -1,0 +1,38 @@
+{
+  "id": "c8-i2",
+  "solutionSql": "SELECT route_id, id, delivery_due\nFROM (\n  SELECT s.route_id,\n         s.id,\n         s.delivery_due,\n         ROW_NUMBER() OVER (PARTITION BY s.route_id ORDER BY s.delivery_due, s.id) AS rn\n  FROM shipments s\n) ranked\nWHERE rn <= 2\nORDER BY route_id, delivery_due, id;",
+  "sampleRowCount": 12,
+  "sampleFirstRows": [
+    {
+      "route_id": 1,
+      "id": 1,
+      "delivery_due": "2025-12-31"
+    },
+    {
+      "route_id": 1,
+      "id": 13,
+      "delivery_due": "2025-12-31"
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "two-due-soonest",
+      "howSolved": "ROW_NUMBER ordered by delivery_due ascending within each route keeps numbers 1 and 2."
+    },
+    {
+      "id": "exactly-two-rows",
+      "howSolved": "ROW_NUMBER numbers rows distinctly, so a route with at least two shipments returns exactly two rows."
+    },
+    {
+      "id": "lower-id-first",
+      "howSolved": "The window ORDER BY adds id ascending after delivery_due, so equal due dates put the lower id first."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [
+    "A route with exactly one shipment returns that one row. The instruction implies this but does not say it directly."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 12 rows, nulls 12, ties 12. A correlated COUNT formulation gives 0 differences on all three datasets."
+}

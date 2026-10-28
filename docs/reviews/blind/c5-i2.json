@@ -1,0 +1,23 @@
+{
+  "id": "c5-i2",
+  "solutionSql": "SELECT s.id, s.customer_id, s.weight_kg FROM shipments AS s WHERE s.id BETWEEN 1 AND 40 AND s.weight_kg > (SELECT AVG(o.weight_kg) FROM shipments AS o WHERE o.customer_id = s.customer_id) ORDER BY s.id;",
+  "sampleRowCount": 21,
+  "sampleFirstRows": [
+    { "id": 6, "customer_id": 6, "weight_kg": 1931 },
+    { "id": 7, "customer_id": 1, "weight_kg": 1412 }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "same-customer", "howSolved": "A correlated subquery averages over o.customer_id = s.customer_id." },
+    { "id": "customer-average", "howSolved": "The comparison is weight_kg > AVG(...), the mean, not a MAX." },
+    { "id": "missing-not-counted", "howSolved": "AVG skips NULL weights; a shipment with a NULL weight_kg gives a NULL comparison and is not returned." }
+  ],
+  "solveMinutes": 5,
+  "ambiguities": [
+    "'the average weight_kg of all shipments with the same customer_id' is read as every shipment for that customer in the whole table. The phrase 'For shipments with ids 1 through 40' is read as limiting only the returned rows, not the population of the average.",
+    "'including the shipment itself' is read as the shipment counting in its own customer's average. The query does this, but the rules list does not declare it."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls and boundary. The scope reading of the average is the main interpretive choice; the alternative (average restricted to ids 1 to 40) would change the result. Solve time is an estimate."
+}

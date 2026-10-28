@@ -1,0 +1,39 @@
+{
+  "id": "latest-event",
+  "solutionSql": "SELECT shipment_id, event_id, status, occurred_at\nFROM (\n  SELECT shipment_id,\n         id AS event_id,\n         status,\n         occurred_at,\n         ROW_NUMBER() OVER (\n           PARTITION BY shipment_id\n           ORDER BY occurred_at DESC, id DESC\n         ) AS rn\n  FROM shipment_events\n) ranked\nWHERE rn = 1\nORDER BY shipment_id;",
+  "sampleRowCount": 218,
+  "sampleFirstRows": [
+    {
+      "shipment_id": 2,
+      "event_id": 2,
+      "status": "arrived",
+      "occurred_at": "2025-12-28T10:00:00.000Z"
+    },
+    {
+      "shipment_id": 3,
+      "event_id": 5,
+      "status": "arrived",
+      "occurred_at": "2025-12-28T12:00:00.000Z"
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "one-row-per-shipment",
+      "howSolved": "Used ROW_NUMBER() partitioned by shipment_id over shipment_events and kept rn = 1, so each shipment with events gets one row and shipments without events never appear."
+    },
+    {
+      "id": "latest-by-time",
+      "howSolved": "Ordered the window by occurred_at DESC as the first key."
+    },
+    {
+      "id": "tie-greatest-id",
+      "howSolved": "Ordered the window by id DESC as the second key, so the greatest event id wins a timestamp tie."
+    }
+  ],
+  "solveMinutes": 2,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Timestamps are timestamptz, so comparison is by absolute instant. Ties on (shipment_id, occurred_at) occur in several datasets and are resolved by id. Row counts per dataset: sample=218, nulls=109, ties=163, boundary=163. Ran on every listed dataset without error."
+}

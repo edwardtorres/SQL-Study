@@ -1,0 +1,21 @@
+{
+  "id": "c9-b1-p3",
+  "solutionSql": "BEGIN;\nUPDATE shipments SET status = 'delivered' WHERE id = 3;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note)\nVALUES (1000, 3, 'delivered', '2026-02-01 10:00 UTC', NULL);\nCOMMIT;\n",
+  "sampleRowCount": 679,
+  "sampleFirstRows": "shipments row 3 changes from status 'queued' to 'delivered'. The shipments table still has 240 rows. shipment_events gains (1000, 3, 'delivered', 2026-02-01 10:00:00+00, NULL), so it goes from 678 to 679 rows.",
+  "sampleChecks": "Shipment 3 has status delivered. A scan with id 1000 for shipment 3 exists with status delivered, occurred_at 2026-02-01 10:00 UTC and no note. Both changes are committed together.",
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "both-changes-kept", "howSolved": "BEGIN, the UPDATE, the INSERT, then COMMIT, so both changes are committed. A ROLLBACK after the script left both changes in place, which shows COMMIT ran." },
+    { "id": "shipment-delivered", "howSolved": "UPDATE shipments SET status = 'delivered' WHERE id = 3. 'delivered' is an allowed value under shipments_status_check." },
+    { "id": "note-null", "howSolved": "The INSERT passes NULL for note." }
+  ],
+  "solveMinutes": 5,
+  "ambiguities": [
+    "The instructions do not name the table for the scan. I used shipment_events, because its columns are exactly id, shipment_id, status, occurred_at and note. The other scan-like table, shipment_scans_large, has only four columns and does not match. The instructions should name shipment_events.",
+    "policy.allow for this item lists UpdateStmt and InsertStmt only, but the instructions require BEGIN and COMMIT. As with c9-i4, either policy.transactions is true (not shown in my input) or the required transaction statements are refused. Please confirm.",
+    "The occurred_at literal '2026-02-01 10:00 UTC' is read as a timestamp with time zone at 10:00 UTC. The column is timestamptz, so this is exact."
+  ],
+  "confidence": "medium",
+  "notes": "Ran on sample, ties and boundary with PGlite 0.5.12 (PostgreSQL 18.6). Shipment 3 is queued in all three datasets, and event id 1000 is absent before the script. After the script, shipment 3 is delivered in all three, the shipments count is unchanged, and the event row reads back with status delivered, occurred_at 2026-02-01 10:00:00+00 and NULL note. The sample event count goes from 678 to 679. A ROLLBACK after the script left the changes in place, which shows COMMIT ran. Confidence is medium only because the target table is inferred from the column list. The solve time is an estimate."
+}

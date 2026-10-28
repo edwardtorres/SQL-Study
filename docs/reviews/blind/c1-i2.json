@@ -1,0 +1,37 @@
+{
+  "id": "c1-i2",
+  "solutionSql": "SELECT id, delivery_due\nFROM shipments\nORDER BY delivery_due DESC, id DESC\nLIMIT 10;",
+  "sampleRowCount": 10,
+  "sampleFirstRows": [
+    {
+      "id": 240,
+      "delivery_due": "2026-01-11T00:00:00.000Z"
+    },
+    {
+      "id": 228,
+      "delivery_due": "2026-01-11T00:00:00.000Z"
+    }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "latest-deadline",
+      "howSolved": "Used ORDER BY delivery_due DESC with LIMIT 10."
+    },
+    {
+      "id": "tie-greater-id",
+      "howSolved": "Used ORDER BY id DESC as the secondary key."
+    },
+    {
+      "id": "ten-rows",
+      "howSolved": "Added LIMIT 10."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [
+    "On the sample, 20 shipments share the latest delivery_due (2026-01-11), so the ten-row cut falls inside a tie. I applied the tie rule (greater id first) to which ten are selected, as the ordering implies. The ticket does not spell this out, but any other choice would be non-deterministic."
+  ],
+  "confidence": "high",
+  "notes": "Output columns and types match the ticket. Row counts per dataset: sample=10, nulls=10, boundary=10. Ran on every listed dataset without error."
+}

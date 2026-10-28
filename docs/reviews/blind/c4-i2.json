@@ -1,0 +1,22 @@
+{
+  "id": "c4-i2",
+  "solutionSql": "SELECT d.id, d.name, s.name AS supervisor_name FROM drivers AS d LEFT JOIN drivers AS s ON s.id = d.supervisor_id ORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    { "id": 1, "name": "Nera Vale", "supervisor_name": null },
+    { "id": 2, "name": "Olin Moss", "supervisor_name": "Nera Vale" }
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "every-driver-listed", "howSolved": "LEFT JOIN from drivers so a driver with no supervisor (NULL supervisor_id) is kept." },
+    { "id": "supervisor-by-id", "howSolved": "drivers is joined a second time as s, matching s.id to d.supervisor_id, so supervisor_name is the supervisor's name." },
+    { "id": "null-not-empty", "howSolved": "The missing supervisor comes from the outer join and is NULL; no empty string is produced." }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "The instructions do not say what happens if a supervisor_id matches no driver; the LEFT JOIN returns NULL there, which fits 'missing'. The schema declares supervisor_id as a foreign key, so this should not arise."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Ran without error on sample, nulls and nulltext. Solved from the instructions and the public schema only. Solve time is an estimate."
+}

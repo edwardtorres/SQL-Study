@@ -1,0 +1,23 @@
+{
+  "id": "c9-i2",
+  "solutionSql": "CREATE TABLE carriers (\n  id integer PRIMARY KEY,\n  name text NOT NULL\n);\n\nCREATE TABLE shipment_carriers (\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  carrier_id integer NOT NULL REFERENCES carriers (id),\n  PRIMARY KEY (shipment_id, carrier_id)\n);\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": "carriers(id integer PRIMARY KEY, name text NOT NULL), empty. shipment_carriers(shipment_id integer NOT NULL REFERENCES shipments(id), carrier_id integer NOT NULL REFERENCES carriers(id), PRIMARY KEY (shipment_id, carrier_id)), empty.",
+  "sampleChecks": "carriers has an integer primary key id and a required name. shipment_carriers has required integer shipment_id and carrier_id, each a foreign key to its parent table, and each (shipment_id, carrier_id) pair can appear only once. Definitions only, with no rows.",
+  "columnsMatchTicket": true,
+  "rules": [
+    { "id": "carrier-key", "howSolved": "carriers.id is an integer PRIMARY KEY." },
+    { "id": "carrier-name", "howSolved": "carriers.name is text NOT NULL." },
+    { "id": "carrier-fk", "howSolved": "shipment_carriers.carrier_id is NOT NULL and REFERENCES carriers (id), so a missing carrier is refused with 23503." },
+    { "id": "shipment-fk", "howSolved": "shipment_carriers.shipment_id is NOT NULL and REFERENCES shipments (id), so a missing shipment is refused with 23503." },
+    { "id": "pair-once", "howSolved": "The composite PRIMARY KEY (shipment_id, carrier_id) allows each pair once, so a repeated pair is refused with 23505." }
+  ],
+  "solveMinutes": 5,
+  "ambiguities": [
+    "'Appear only once' can be met by a composite PRIMARY KEY or by UNIQUE (shipment_id, carrier_id). Both pass the behavior tests. I chose the PRIMARY KEY, so a catalog-level check that expects UNIQUE would see a different constraint type.",
+    "The instructions state that shipment_id and carrier_id are required integers, but no rule id declares NOT NULL on those two columns. The coverage rule may need one.",
+    "The instructions say 'a shipment' without naming the table. I took it to be the existing shipments table, whose primary key is id."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary with PGlite 0.5.12 (PostgreSQL 18.6). The starter line was replaced by the full carriers definition, as the instructions require. pg_constraint shows one NOT NULL entry per column, with no duplicate from the composite PRIMARY KEY. My own rolled-back probes: valid pairs accepted, duplicate pair 23505, missing shipment 23503, missing carrier 23503, null shipment_id and carrier_id 23502, and carriers duplicate or null id and null name refused. Those probes were my own, not the trusted checks. Solve time is an estimate."
+}

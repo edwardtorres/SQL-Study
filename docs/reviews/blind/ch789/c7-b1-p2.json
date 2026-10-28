@@ -1,0 +1,30 @@
+{
+  "id": "c7-b1-p2",
+  "solutionSql": "(\n  SELECT s.status FROM shipments s\n  EXCEPT\n  SELECT e.status FROM shipment_events e\n)\nUNION\n(\n  SELECT e.status FROM shipment_events e\n  EXCEPT\n  SELECT s.status FROM shipments s\n)\nORDER BY status;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    {
+      "status": "arrived"
+    },
+    {
+      "status": "booked"
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "not-in-both",
+      "howSolved": "Two EXCEPT clauses, one in each direction, combined with UNION, so a value found in both feeds is excluded."
+    },
+    {
+      "id": "sorted-a-to-z",
+      "howSolved": "ORDER BY status ascending on the combined set."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [
+    "'Sort from A to Z' uses the default text collation. The values are lowercase words, one with an underscore (in_transit). I did not test other collations."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 6 values, nulls 3, ties 5."
+}

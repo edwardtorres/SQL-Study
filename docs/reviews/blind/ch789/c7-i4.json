@@ -1,0 +1,30 @@
+{
+  "id": "c7-i4",
+  "solutionSql": "SELECT DISTINCT e.status\nFROM shipment_events e\nWHERE NOT EXISTS (\n  SELECT 1 FROM shipments s WHERE s.status = e.status\n)\nORDER BY e.status;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    {
+      "status": "arrived"
+    },
+    {
+      "status": "booked"
+    }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "missing-from-shipments",
+      "howSolved": "NOT EXISTS over shipments with an equal status removes any scan status that also appears in shipments.status."
+    },
+    {
+      "id": "each-value-once",
+      "howSolved": "SELECT DISTINCT on the scan status."
+    }
+  ],
+  "solveMinutes": 1,
+  "ambiguities": [
+    "'Order by status' is read as ascending text order under the database default collation. The sample values are lowercase words, so no collation question arises in these datasets."
+  ],
+  "confidence": "high",
+  "notes": "Sample returns 3 values. nulls and ties also return 3 rows each."
+}
