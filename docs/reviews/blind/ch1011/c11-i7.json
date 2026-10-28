@@ -1,0 +1,15 @@
+{
+  "id": "c11-i7",
+  "solutionSql": "CREATE VIEW open_shipments AS\nSELECT id, tracking_code, status\nFROM shipments\nWHERE status IN ('queued', 'in_transit');\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "open_shipments is a VIEW with columns id, tracking_code, status. It returns 110 rows on sample (61 queued plus 49 in_transit), matching a direct count.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "None that changed the answer. \"Queued or in transit\" maps directly to status IN ('queued', 'in_transit').",
+    "The starter already names the columns and the table, which is more than the bare skeleton the Step 2 rule describes. I kept the starter's column list in my view."
+  ],
+  "confidence": "high",
+  "notes": "Results: sample 110 rows, nulls 0 rows (every nulls shipment is delivered, so 0 is correct), boundary 95 rows. Catalog check shows table_type VIEW. This ticket does not run twice."
+}

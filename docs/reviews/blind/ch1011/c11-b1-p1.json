@@ -1,0 +1,16 @@
+{
+  "id": "c11-b1-p1",
+  "solutionSql": "CREATE TABLE scan_archive (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  status text NOT NULL,\n  occurred_at timestamptz NOT NULL\n);\nINSERT INTO scan_archive (id, shipment_id, status, occurred_at)\nSELECT DISTINCT ON (s.id) s.id, s.shipment_id, s.status, s.occurred_at\nFROM staging_scans AS s\nJOIN shipments AS sh ON sh.id = s.shipment_id\nWHERE s.status IS NOT NULL\nORDER BY s.id, s.occurred_at, s.shipment_id, s.status\nON CONFLICT (id) DO NOTHING;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "scan_archive holds 31 rows, one per usable scan (status present and shipment exists), with scan 1007 once. Scans older than the watermark are included, as the text does not filter by it. A second run leaves the same 31 rows.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "Duplicate scan rows: the copies are identical on every dataset. DISTINCT ON picks one. No change here.",
+    "NULL id or NULL occurred_at are not discussed. Neither occurs in any dataset, and NOT NULL on occurred_at would reject a NULL time anyway.",
+    "The text says a second run must leave the same rows; it does not say whether to refresh them. I used DO NOTHING. Refreshing would give the same state on these datasets."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample (31 rows), nulls (18) and boundary (23); second run identical on all three. Own probes from the text: duplicate id gives 23505, missing shipment gives 23503, NULL status gives 23502. No constraintTests, so constraintProbes is null."
+}

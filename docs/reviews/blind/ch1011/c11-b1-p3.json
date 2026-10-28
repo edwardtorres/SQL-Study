@@ -1,0 +1,29 @@
+{
+  "id": "c11-b1-p3",
+  "solutionSql": "SELECT 'duplicate scan ids' AS check_name, COUNT(*)::integer AS offending\nFROM (SELECT id FROM staging_scans GROUP BY id HAVING COUNT(*) > 1) AS dup\nUNION ALL\nSELECT 'orphaned scans', COUNT(*)::integer\nFROM staging_scans AS s\nLEFT JOIN shipments AS sh ON sh.id = s.shipment_id\nWHERE sh.id IS NULL\nUNION ALL\nSELECT 'scans without status', COUNT(*)::integer\nFROM staging_scans\nWHERE status IS NULL\nORDER BY check_name;\n",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      "duplicate scan ids",
+      1
+    ],
+    [
+      "orphaned scans",
+      5
+    ],
+    [
+      "scans without status",
+      4
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "The only blank is the join type. LEFT is the join that keeps unmatched scans. I filled it with LEFT (LEFT OUTER JOIN); no other text changed.",
+    "\"Duplicate scan ids\" counts ids, not rows. A NULL id group would be counted if one existed; no dataset has NULL ids, so this did not change the answer.",
+    "\"Orphaned scans\" counts rows, so a duplicated orphan would count twice. No orphan id repeats in any dataset."
+  ],
+  "confidence": "high",
+  "notes": "Results: sample (1, 5, 4), nulls (1, 19, 4), boundary (1, 13, 4). Rows are in check_name order. The starter's other lines were kept unchanged."
+}

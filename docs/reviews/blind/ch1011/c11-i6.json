@@ -1,0 +1,19 @@
+{
+  "id": "c11-i6",
+  "solutionSql": "SELECT id, COUNT(*) AS copies\nFROM staging_scans\nWHERE id IS NOT NULL\nGROUP BY id\nHAVING COUNT(*) > 1\nORDER BY id;\n",
+  "sampleRowCount": 1,
+  "sampleFirstRows": [
+    [
+      1007,
+      2
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "A NULL id is not a scan id, so I excluded it with WHERE id IS NOT NULL. No dataset has a NULL id, so the result did not change."
+  ],
+  "confidence": "high",
+  "notes": "Only scan 1007 repeats in every dataset (2 copies), so each dataset returns one row. Result columns are id and copies."
+}

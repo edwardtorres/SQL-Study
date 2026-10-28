@@ -1,0 +1,16 @@
+{
+  "id": "c11-i1",
+  "solutionSql": "CREATE TABLE customer_bookings (\n  customer_id integer PRIMARY KEY REFERENCES customers (id),\n  bookings integer NOT NULL\n);\nINSERT INTO customer_bookings (customer_id, bookings)\nSELECT customer_id, COUNT(*)::integer\nFROM shipments\nGROUP BY customer_id\nON CONFLICT (customer_id) DO UPDATE SET bookings = EXCLUDED.bookings;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "customer_bookings holds 6 rows, customers 1 to 6 with 40 bookings each, matching their shipment counts; customers 7 and 8 have no row.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "The text says \"that customer's number of shipments\" without saying whether cancelled shipments count. I counted every shipment regardless of status. Excluding cancelled rows would change the counts (64 cancelled on sample), so the text should say which.",
+    "\"A customer that exists\" was read as a foreign key to customers(id). The load is unchanged either way because the source only has known customers.",
+    "The text does not say whether a second run should refresh counts or leave existing rows alone. I used DO UPDATE; DO NOTHING gives the same state on these datasets."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary (6 rows each; 40, 20 and 30 bookings per customer). Second run identical on all three. Own probes from the text: unknown customer gives 23503, NULL bookings gives 23502, repeated key gives 23505. This ticket has no constraintTests, so constraintProbes is null."
+}
