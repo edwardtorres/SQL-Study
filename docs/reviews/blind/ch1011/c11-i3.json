@@ -13,5 +13,5 @@
     "The text does not say what to do if a scan id already exists in shipment_events. No dataset has a collision, so it did not matter here."
   ],
   "confidence": "high",
-  "notes": "Ran on sample, nulls and boundary. Totals: sample 26 loaded, nulls 13, boundary 18 (watermark moved to 2026-01-19 18:00 UTC each time). Second run identical on all three (same event rows, count and watermark). Insert comes before the watermark update, which the text asks for. No constraintTests, so constraintProbes is null."
+  "notes": "Ran on sample, nulls and boundary. Totals: sample 26 loaded, nulls 13, boundary 18 (watermark moved to 2026-01-19 18:00 UTC each time). Second run identical on all three (same event rows, count and watermark). Insert comes before the watermark update, which the text asks for. No constraintTests, so constraintProbes is null. Re-checked against the revised text (watermark = newest occurred_at of any row in staging_scans): solution unchanged. Re-run on sample, nulls and boundary gives the same results as before. Probe: a newer orphan row with no status moves the watermark to its time and is not loaded; a second run adds nothing. The any-row ambiguity above is resolved by the revised text."
 }

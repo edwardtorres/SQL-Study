@@ -12,5 +12,5 @@
     "The text does not say whether a second run should refresh counts or leave existing rows alone. I used DO UPDATE; DO NOTHING gives the same state on these datasets."
   ],
   "confidence": "high",
-  "notes": "Ran on sample, nulls and boundary (6 rows each; 40, 20 and 30 bookings per customer). Second run identical on all three. Own probes from the text: unknown customer gives 23503, NULL bookings gives 23502, repeated key gives 23505. This ticket has no constraintTests, so constraintProbes is null."
+  "notes": "Ran on sample, nulls and boundary (6 rows each; 40, 20 and 30 bookings per customer). Second run identical on all three. Own probes from the text: unknown customer gives 23503, NULL bookings gives 23502, repeated key gives 23505. This ticket has no constraintTests, so constraintProbes is null. Re-checked against the revised text (count every shipment whatever its status): solution unchanged. Re-run on sample, nulls and boundary gives the same state as before, and the second run is identical. The cancelled-shipment ambiguity above is resolved by the revised text."
 }

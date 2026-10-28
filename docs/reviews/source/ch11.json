@@ -1,0 +1,266 @@
+{
+  "chapterId": 11,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c11-s1",
+      "claim": "paragraph 1: 'An upsert inserts a row, and when a row with the same key already exists, it updates that row instead of failing.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'The optional ON CONFLICT clause specifies an alternative action to raising a unique violation or exclusion constraint violation error.' and 'ON CONFLICT DO UPDATE updates the existing row that conflicts with the row proposed for insertion as its alternative action.' (pg-insert-upsert)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s1",
+      "claim": "paragraph 1: 'In PostgreSQL the form is INSERT with ON CONFLICT naming the key, then DO UPDATE.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'For ON CONFLICT DO UPDATE, a conflict_target must be provided.' The named key must be a unique index or constraint: 'only NOT DEFERRABLE constraints and unique indexes are supported as arbiters'. A column that is not unique cannot be the target, and the sentence does not say so.",
+      "suggestedFix": "In PostgreSQL the form is INSERT with ON CONFLICT naming a key that has a UNIQUE or PRIMARY KEY constraint, then DO UPDATE (https://www.postgresql.org/docs/18/sql-insert.html)."
+    },
+    {
+      "where": "c11-s1",
+      "claim": "paragraph 2: 'An upsert sets the values it is given, so running it again gives the same result.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'ON CONFLICT DO UPDATE updates the existing row that conflicts with the row proposed for insertion as its alternative action.' The same result on a re-run is an inference the page does not state. It holds only when the input has one row for each key: 'Rows proposed for insertion should not duplicate each other in terms of attributes constrained by an arbiter index or constraint.' The sample feed has two rows for customer 2.",
+      "suggestedFix": "An upsert updates the existing row, so running the same feed again, with one row for each key, leaves the same rows in the table (https://www.postgresql.org/docs/18/sql-insert.html)."
+    },
+    {
+      "where": "c11-s1",
+      "claim": "paragraph 2: 'A plain insert adds the rows again and fails on the key, so a load that must be safe to run twice uses an upsert.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: the ON CONFLICT clause is 'an alternative action to raising a unique violation'. https://www.postgresql.org/docs/18/ddl-constraints.html: 'Unique constraints ensure that the data contained in a column, or a group of columns, is unique among all the rows in the table.' The ddl-constraints page is not cited for c11-s1.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s1",
+      "claim": "predict explanation (counts): 'The feed sends two region changes for customer 2, and one each for customers 4 and 6. Customer 99 is not in the filter.'",
+      "verdict": "demonstration",
+      "evidence": "Sample feed (src/data/seed.ts, staging_customer_regions): customer 2 twice, customers 4 and 6 once each, and customer 99 outside the filter. The count 4 is the engine's (answerRows 4).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s1",
+      "claim": "predict explanation (upsert): 'An upsert that sees two rows for the same key must pick one of them.'",
+      "verdict": "contradicted",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'This means that the command will not be allowed to affect any single existing row more than once; a cardinality violation error will be raised when this situation arises.' An upsert does not pick one row. It raises an error.",
+      "suggestedFix": "An upsert that sees two rows for the same key fails with a cardinality violation error, so the feed must be reduced to one row for each key before the upsert (https://www.postgresql.org/docs/18/sql-insert.html)."
+    },
+    {
+      "where": "c11-s1",
+      "claim": "predict options: a 'Four rows: two changes for customer 2, one for customer 4 and one for customer 6' (answer, id a); b 'Three rows, one for each customer'; c 'Five rows, including the change for customer 99'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a matches the explanation's breakdown. Option c's customer 99 is the row the explanation excludes. Option b is a plausible wrong grain. The count is the engine's.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s1",
+      "claim": "commonMistakes UPSERT_DUPLICATE_ON_RERUN: 'A plain insert has no conflict clause. The first run works, but a second run inserts the same keys again, and the primary key rejects them. An upsert updates the row that already exists.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'The optional ON CONFLICT clause specifies an alternative action to raising a unique violation or exclusion constraint violation error.' and 'ON CONFLICT DO UPDATE updates the existing row that conflicts with the row proposed for insertion as its alternative action.' https://www.postgresql.org/docs/18/ddl-constraints.html: 'This requires that the values be both unique and not null' (primary key). The ddl-constraints page is not cited for c11-s1.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s1",
+      "claim": "commonMistakes LATEST_VS_EARLIEST: 'When several changes share a key, the order decides which one the upsert keeps.'",
+      "verdict": "contradicted",
+      "evidence": "https://www.postgresql.org/docs/18/sql-insert.html: 'This means that the command will not be allowed to affect any single existing row more than once; a cardinality violation error will be raised when this situation arises.' Row order does not decide which change is kept. The statement fails.",
+      "suggestedFix": "When several changes share a key, one upsert cannot take them all: PostgreSQL raises a cardinality violation error. Keep one change for each key before the upsert (https://www.postgresql.org/docs/18/sql-insert.html)."
+    },
+    {
+      "where": "c11-s1",
+      "claim": "commonMistakes LATEST_VS_EARLIEST: 'Sort by time descending inside each key to keep the newest change.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html: 'Note that the “first row” of a set is unpredictable unless the query is sorted on enough columns to guarantee a unique ordering of the rows arriving at the DISTINCT filter.' Sorting on changed_at alone does not guarantee one row when two changes for a key share a time. The page is not cited for c11-s1.",
+      "suggestedFix": "Keep the newest change for each key with DISTINCT ON (key) and ORDER BY key, changed_at DESC, adding a column that breaks ties, because the first row of each set is otherwise unpredictable (https://www.postgresql.org/docs/18/queries-select-lists.html)."
+    },
+    {
+      "where": "c11-s1",
+      "claim": "demonstration: 'The feed sends customer 2 two changes, so one statement can see two rows for the same key.'",
+      "verdict": "demonstration",
+      "evidence": "Sample: customer 2 appears twice in staging_customer_regions (src/data/seed.ts). A plain SELECT over the feed sees both rows. An upsert over the same rows is refused by PostgreSQL with a cardinality violation (https://www.postgresql.org/docs/18/sql-insert.html), which the demonstration does not show.",
+      "suggestedFix": "The feed sends customer 2 two changes, so an upsert fed straight from it would see two rows for one key, which PostgreSQL rejects (https://www.postgresql.org/docs/18/sql-insert.html)."
+    },
+    {
+      "where": "c11-s2",
+      "claim": "paragraph 1: 'MERGE compares a source with a target.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-merge.html: 'First, the MERGE command performs a join from data_source to the target table producing zero or more candidate change rows.' (pg-merge-join)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "paragraph 1: 'Each source row either matches a target row or does not, and the WHEN clauses say what to do in each case: update the matched rows, insert the source rows that have no match, or delete target rows that no source row matches.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-merge.html: the syntax 'WHEN NOT MATCHED BY SOURCE [ AND condition ] THEN { merge_update | merge_delete | DO NOTHING }' covers target rows with no source match. The page also says 'WHEN NOT MATCHED BY SOURCE is an extension to the SQL standard'. The lesson does not say so, and a reader who knows the standard would want it stated.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "paragraph 2: 'The source should be one row for each key.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-merge.html: 'You should ensure that the join produces at most one candidate change row for each target row.' The page adds: 'If it does, then only one of the candidate change rows will be used to modify the target row; later attempts to modify the row will cause an error.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "paragraph 2: 'A DISTINCT ON subquery that keeps the newest change for each customer is a source of that shape, so the merge applies one change to each target row.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html: 'only the first row of the set is kept in the output', and the first row 'is unpredictable unless the query is sorted on enough columns to guarantee a unique ordering'. One row for each customer holds. 'The newest' holds only if the ORDER BY picks a single row. The 'one change' point follows the MERGE page's multi-match rule.",
+      "suggestedFix": "A DISTINCT ON subquery that keeps one change for each customer is a source of that shape. For the newest change, its ORDER BY must pick a single row, because the first row of each set is otherwise unpredictable (https://www.postgresql.org/docs/18/queries-select-lists.html)."
+    },
+    {
+      "where": "c11-s2",
+      "claim": "predict explanation: 'The query starts from customers, so it has one row for each of the eight customers. Customers the feed does not name get an empty feed region. The customer 99 row in the feed has no customer and is not in the output.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html: 'Thus, the joined table always has at least one row for each row in T1.' The LEFT JOIN keeps each customer, and the customer 99 feed row has no left row to join to. The count 8 is the engine's (answerRows 8).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "predict options: a 'Eight, one for each customer' (answer, id a); b 'Six, one for each customer the feed names'; c 'Nine, one for each feed row'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a matches the explanation. Options b and c are wrong: the feed has five rows and names four distinct customer ids, including 99. They are distractors, and the explanation does not rely on them.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "commonMistakes MERGE_NOT_MATCHED: 'Without a WHEN NOT MATCHED branch, feed rows that have no target row are dropped, so new customers never reach the target.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-merge.html: 'If no final reachable clause is specified of either kind, it is possible that no action will be taken for a candidate change row.' 'Dropped' is that 'no action'. Citation gap: c11-s2 cites only the join sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "commonMistakes MERGE_NO_DELETE: 'A target row that the source no longer names stays in the table unless a WHEN NOT MATCHED BY SOURCE branch deletes it.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-merge.html: 'If the WHEN clause specifies WHEN NOT MATCHED BY SOURCE and the candidate change row represents a row in the target table that does not match a row in the data_source, the WHEN clause is executed if the condition is absent or it evaluates to true.' The branch can DELETE (merge_delete). Citation gap: not cited for c11-s2.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "demonstration: 'The feed names customer 99, which is not in customers, so a merge into customers must leave it out.'",
+      "verdict": "partly",
+      "evidence": "Sample: customer 99 is in staging_customer_regions and not in customers, so the count is one (src/data/seed.ts). The data shows the unknown id. 'Must leave it out' is a loading rule that neither the sample nor the MERGE page requires. Without a condition, a WHEN NOT MATCHED insert would try to add customer 99, and customers.name is NOT NULL while the feed has no name (src/data/seed.ts schema).",
+      "suggestedFix": "The feed names customer 99, which is not in customers, so a merge into customers finds no target row for it and needs a WHEN NOT MATCHED rule that decides what happens to it."
+    },
+    {
+      "where": "c11-s2",
+      "claim": "dialect: 'SQL Server also has MERGE.'",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql: 'The MERGE statement runs insert, update, or delete operations on a target table' (ms-merge-statement).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s2",
+      "claim": "dialect: 'In that dialect, the actions apply to the joined rows in an unordered way'",
+      "verdict": "partly",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql: 'These actions (insert, update, or delete) apply to the remaining joined rows in an unordered way.' The sentence sits in the TOP clause description, so the page states the unordered application for rows left after TOP. It does not state it for MERGE in general. The cited quote drops that context.",
+      "suggestedFix": "In SQL Server, the TOP clause applies the MERGE actions to the remaining joined rows in an unordered way (https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql)."
+    },
+    {
+      "where": "c11-s2",
+      "claim": "dialect: 'so a source with several rows for one key needs the same care as it does here.'",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql: 'When UPDATE is specified in the <merge_matched> clause, and more than one row of <table_source> matches a row in target_table based on <merge_search_condition>, SQL Server returns an error.' The claim holds, but this sentence, not the cited one, supports it.",
+      "suggestedFix": "SQL Server also has MERGE. When UPDATE is specified and more than one source row matches a target row, SQL Server returns an error, so a source with several rows for one key needs the same care as it does here (https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql)."
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 1: 'A watermark is the newest time that an earlier load took. The next load takes only rows strictly newer than the watermark, so a row at exactly the watermark time is not loaded again.'",
+      "verdict": "unverified",
+      "evidence": "Finding: a loading convention. No citation covers it (c11-s3 cites only the view pages), and no PostgreSQL page defines watermarks. The strict 'newer than' test is the > operator on https://www.postgresql.org/docs/18/functions-comparison.html, which is not cited. The sample matches the convention: scan 6 sits on the watermark and counts as loaded (src/data/seed.ts). Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 1: 'The load then moves the watermark to the newest row it has seen.'",
+      "verdict": "unverified",
+      "evidence": "Finding: loading convention; no citation and no demonstration. Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 2: 'SCD type 2 keeps history. A change closes the current version of a row and adds a new current version, so the table shows what each customer’s region was at each time.'",
+      "verdict": "unverified",
+      "evidence": "Finding: SCD type 2 is a dimensional-modelling term. It is not on any PostgreSQL 18 page checked, and no citation or demonstration covers it. The sample's customer_versions table follows the pattern (an old version closed on 1 July 2025, then a current version), so the convention is one the sample keeps.",
+      "suggestedFix": "In this course, SCD type 2 keeps history: a change closes the current version of a row and adds a new current version, so the table shows what each customer’s region was at each time."
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 2: 'Each customer has exactly one current version, which has no end time.'",
+      "verdict": "unverified",
+      "evidence": "Finding: the sample has one current version per customer (valid_to is NULL on the second version, src/data/seed.ts customer_versions), but no demonstration checks every customer. No PostgreSQL page enforces the rule unless a unique partial index does (see the SCD2_MULTIPLE_CURRENT finding).",
+      "suggestedFix": "In this table a customer’s current version is the one with no end time, valid_to IS NULL."
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 3: 'A view stores a query, not a copy of the data.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-createview.html: 'CREATE VIEW defines a view of a query.' and 'The view is not physically materialized.' (pg-view-query)",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "paragraph 3: 'Reading the view runs its query against the current tables, so it always shows current rows.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-createview.html: 'Instead, the query is run every time the view is referenced in a query.' 'Current rows' means the rows the query sees when it runs. The page does not say 'always', but the sentence follows from the quoted rule.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "predict explanation (date): 'Each of these customers has an old version that ended on 1 July 2025 and a current version that has no end time.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/datatype-datetime.html: 'When a timestamp with time zone value is output, it is always converted from UTC to the current timezone zone, and displayed as local time in that zone.' The stored instant is 1 July 2025 00:00 UTC (src/data/seed.ts customer_versions). It reads as 1 July in UTC, but in a session zone west of UTC it reads 30 June. The explanation names no zone.",
+      "suggestedFix": "Each of these customers has an old version that ended at 1 July 2025 00:00 UTC and a current version that has no end time."
+    },
+    {
+      "where": "c11-s3",
+      "claim": "predict explanation (count): 'The history has two versions for each customer, so the query returns four rows.'",
+      "verdict": "demonstration",
+      "evidence": "Sample: each of the eight customers has two customer_versions rows (src/data/seed.ts), so customers 4 and 6 have two each. The count 4 is the engine's (answerRows 4).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "predict options: a 'Four rows, two versions for each customer' (answer, id a); b 'Two rows, one current version each'; c 'Sixteen rows, one for every version in the table'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a matches the explanation. Option b is a current-only reading the query does not make. Option c is the whole table, which the customer filter excludes. Distractors only.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "commonMistakes WATERMARK_BOUNDARY: 'A comparison with >= loads the scan at the watermark time again.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-comparison.html: '>= Greater than or equal to'. The comparison includes equality, so a scan at the watermark time matches. Citation gap: the page is not cited for c11-s3.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "commonMistakes WATERMARK_BOUNDARY: 'The watermark is the last time already loaded, so only rows strictly later are new.'",
+      "verdict": "unverified",
+      "evidence": "Finding: loading convention with no citation. It is consistent with paragraph 1 and with the sample's seed comment (scan 6 sits on the watermark and is treated as loaded).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "commonMistakes SCD2_MULTIPLE_CURRENT: 'Adding a new version without closing the old one leaves two current rows for the customer, and the history cannot say which region applies now.'",
+      "verdict": "unverified",
+      "evidence": "Finding: a consequence of the convention that a current row has no end time, not a PostgreSQL claim. PostgreSQL does not stop two current rows unless a unique partial index does: 'A uniqueness restriction covering only some rows cannot be written as a unique constraint, but it is possible to enforce such a restriction by creating a unique partial index.' (https://www.postgresql.org/docs/18/ddl-constraints.html). The sample's UNIQUE (customer_id, valid_from) does not prevent a second current row.",
+      "suggestedFix": "Adding a new version without closing the old one leaves two current rows for the customer, and the history cannot say which region applies now. A unique partial index on customer_id WHERE valid_to IS NULL stops this in PostgreSQL (https://www.postgresql.org/docs/18/ddl-constraints.html)."
+    },
+    {
+      "where": "c11-s3",
+      "claim": "demonstration: 'One scan sits at exactly the watermark time, the boundary row that a >= comparison would load again.'",
+      "verdict": "demonstration",
+      "evidence": "Sample: scan 1006 has occurred_at equal to load_watermark.last_loaded_at (src/data/seed.ts, staging_scans and load_watermark). The duplicate scan 1008 has the time of 1007, not the watermark, so no other scan sits on it. The >= reading is on https://www.postgresql.org/docs/18/functions-comparison.html.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c11-s3",
+      "claim": "demonstration: 'Customer 4 has no region now, and a comparison with = never matches a NULL.'",
+      "verdict": "partly",
+      "evidence": "Sample: customers 1, 4 and 7 have a NULL region (src/data/seed.ts generator). The demonstration counts region = NULL, which is zero whatever the data, so it neither shows customer 4 nor shows that any NULL exists. The equality rule is on https://www.postgresql.org/docs/18/functions-comparison.html: 'Ordinary comparison operators yield null (signifying “unknown”), not true or false, when either input is null.' That page is not cited for c11-s3.",
+      "suggestedFix": "Customers 1, 4 and 7 have no region now, and a comparison with = never matches a NULL, so a filter written as region = NULL returns no rows (https://www.postgresql.org/docs/18/functions-comparison.html)."
+    }
+  ],
+  "summary": { "supported": 14, "partly": 8, "unsupported": 0, "contradicted": 2, "unverified": 6, "demonstration": 7 }
+}

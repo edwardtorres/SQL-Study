@@ -258,7 +258,7 @@ export const chapter11Items: readonly Challenge[] = [
     id: 'c11-i6', chapterId: 11, role: 'independent', starterStyle: 'skeleton', title: 'Scan ids the feed sent more than once',
     ...DISPATCH,
     summary: 'List each scan id that appears more than once in staging_scans, with how many copies there are.',
-    instructions: 'Find every scan id in staging_scans that appears on more than one row. Show the id and the number of rows with that id, ordered by id. An id that appears once is not listed.',
+    instructions: 'Find every scan id in staging_scans that appears on more than one row. Show two columns: id (integer, the scan id) and copies (integer, the number of rows with that id), ordered by id. An id that appears once is not listed.',
     starterSql: 'SELECT id, status\nFROM staging_scans;\n',
     referenceSql: 'SELECT id, COUNT(*)::integer AS copies\nFROM staging_scans\nGROUP BY id\nHAVING COUNT(*) > 1\nORDER BY id;',
     columns: [{ name: 'id', type: 23 }, { name: 'copies', type: 23 }],

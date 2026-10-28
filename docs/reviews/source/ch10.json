@@ -1,0 +1,252 @@
+{
+  "chapterId": 10,
+  "reviewer": "source-pass agent",
+  "findings": [
+    {
+      "where": "c10-s1",
+      "claim": "paragraph 1: 'A normalized design stores each fact once.'",
+      "verdict": "unverified",
+      "evidence": "Finding: no citation (citations is empty for c10-s1) and no demonstration. None of the PostgreSQL 18 pages checked for this review (ddl-constraints, ddl-identity-columns, queries-table-expressions, sql-insert, sql-merge, sql-createview, functions-comparison, queries-select-lists) defines normalization. It is a design principle. Keep it only as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "paragraph 1: 'A shipment names its customer and its route by key, so a customer’s name lives in one row, and a rename changes that row, not every shipment.'",
+      "verdict": "unverified",
+      "evidence": "Finding: no citation and no demonstration of a rename. The sample schema matches the first half: shipments holds customer_id and route_id as keys, and names are only in customers (src/data/seed.ts schema). The rename consequence depends on the foreign-key rule, which is on https://www.postgresql.org/docs/18/ddl-constraints.html and is not cited for c10-s1.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "paragraph 2: 'A star schema is built for reporting.'",
+      "verdict": "unverified",
+      "evidence": "Finding: star schema is a dimensional-modelling term. It is not on the PostgreSQL 18 pages checked, and no citation or demonstration covers it. Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "paragraph 2: 'A fact table holds one row per measured event, such as a shipment or an arrival, and it points at the dimensions by key.'",
+      "verdict": "unverified",
+      "evidence": "Finding: no citation and no demonstration. The sample agrees structurally: shipments points at customers and routes by key (src/data/seed.ts schema). 'One row per measured event' is a modelling convention. Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "paragraph 2: 'A dimension table holds the descriptive columns, such as a route’s origin and destination, with one row for each thing it describes.'",
+      "verdict": "partly",
+      "evidence": "Checked against the sample schema, not a PostgreSQL page. The example's dimension, routes, holds origin_id and destination_id, which are keys to warehouses, not descriptive columns (src/data/seed.ts schema). The descriptive names are in warehouses (name, city) and in staging_shipments_flat (origin, destination). The sentence does not match the example's own table.",
+      "suggestedFix": "A dimension table holds descriptive columns, such as a warehouse’s name and city, with one row for each thing it describes."
+    },
+    {
+      "where": "c10-s1",
+      "claim": "predict explanation: 'The query groups shipments by route, so the output has one row for each route. The routes table has six routes. The grain of the output is the route, not the shipment or the warehouse.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html (section 7.2.3, GROUP BY): 'The effect is to combine each set of rows having common values into one group row that represents all rows in the group.' This matches a GROUP BY on r.id. The page is not in c10-s1's citations. The row count is the engine's and was not recomputed here.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "predict options: a 'Six, one for each route' (answer, id a); b 'Four, one for each warehouse'; c 'Two hundred and forty, one for each shipment'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a and its wording match the explanation. Options b and c describe groupings the query does not make, as the explanation says. Count 6 is the engine's (answerRows 6).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s1",
+      "claim": "commonMistakes FACT_GRAIN: 'The grain is what one row means: one shipment, one route or one arrival.'",
+      "verdict": "unverified",
+      "evidence": "Finding: no citation and no demonstration; grain is a modelling term. 'One route' conflicts with paragraph 2, which makes routes a dimension and facts measured events. The second sentence ('A query that counts at a different grain than the question asks gives totals that answer another question.') is also an uncited design claim.",
+      "suggestedFix": "The grain is what one row means: one shipment or one arrival, the measured event that a fact row records. A query that counts at a different grain than the question asks gives totals that answer another question."
+    },
+    {
+      "where": "c10-s1",
+      "claim": "commonMistakes NATURAL_KEY_AS_SURROGATE: 'A natural key, such as a name, is useful to people, but a fact that points at it breaks when the name changes.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html, ON UPDATE: 'The former will allow the update to proceed and the foreign-key constraint will be checked against the state after the update.' (NO ACTION, the default) and 'CASCADE means that the updated values of the referenced column(s) should be copied into the referencing row(s).' With the default, a rename is refused while facts still point at the old name. With ON UPDATE CASCADE the facts follow it. 'Breaks' overstates both cases. The page is not cited for c10-s1.",
+      "suggestedFix": "A natural key, such as a name, is useful to people, but a fact that points at it must be updated when the name changes, unless its foreign key declares ON UPDATE CASCADE, which copies the new value into the fact."
+    },
+    {
+      "where": "c10-s1",
+      "claim": "demonstration: 'Each route appears once in the routes table, so grouping by route id returns one row per route.'",
+      "verdict": "demonstration",
+      "evidence": "The sample routes table has six rows with ids 1 to 6 (src/data/seed.ts routes generator), so the distinct-id count equals the row count, which is what the demonstration shows. The GROUP BY rule is on https://www.postgresql.org/docs/18/queries-table-expressions.html ('combine each set of rows having common values into one group row'), which is not cited for c10-s1.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "paragraph 1: 'An identity column is a special column that is generated automatically from an implicit sequence.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'An identity column is a special column that is generated automatically from an implicit sequence.' Verbatim, and the same claim.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "paragraph 1: 'A dimension uses one as its surrogate key, so each row gets a number that nobody types in.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'If BY DEFAULT is selected, then the user-specified value takes precedence.' and 'In an INSERT command, if ALWAYS is selected, a user-specified value is only accepted if the INSERT statement specifies OVERRIDING SYSTEM VALUE.' Nobody types in only under GENERATED ALWAYS, and even then OVERRIDING SYSTEM VALUE lets an INSERT do it. The sentence does not name ALWAYS.",
+      "suggestedFix": "A dimension can use a GENERATED ALWAYS identity column as its surrogate key, so each row gets a number that nobody types in unless the INSERT says OVERRIDING SYSTEM VALUE (https://www.postgresql.org/docs/18/ddl-identity-columns.html)."
+    },
+    {
+      "where": "c10-s2",
+      "claim": "paragraph 2: 'An identity column does not guarantee uniqueness by itself.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'An identity column, however, does not guarantee uniqueness.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "paragraph 2: 'The natural key still needs a UNIQUE constraint, and the generated key is the one facts point at.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'Uniqueness would need to be enforced using a PRIMARY KEY or UNIQUE constraint.' The page says this about the identity column itself. The natural-key UNIQUE rule and the choice of facts pointing at the generated key are design choices and are not documented.",
+      "suggestedFix": "An identity column does not guarantee uniqueness by itself, so the generated key needs a PRIMARY KEY or UNIQUE constraint (https://www.postgresql.org/docs/18/ddl-identity-columns.html). The natural key should also have its own UNIQUE constraint, and facts point at the generated key."
+    },
+    {
+      "where": "c10-s2",
+      "claim": "dialect: 'SQL Server calls the feature the IDENTITY property'",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql: 'The IDENTITY property can be assigned to tinyint, smallint, int, bigint, decimal(p, 0), or numeric(p, 0) columns.' The syntax line is IDENTITY [ ( seed , increment ) ].",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "dialect: '... it marks the primary key on the table as the unique row identifier.'",
+      "verdict": "partly",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql: 'Identity columns are typically used with PRIMARY KEY constraints to serve as the unique row identifier for the table.' The page gives that role to the identity column used with a primary key. It does not say the IDENTITY property marks the primary key.",
+      "suggestedFix": "SQL Server calls the feature the IDENTITY property. Identity columns are typically used with PRIMARY KEY constraints to serve as the unique row identifier for the table (https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql)."
+    },
+    {
+      "where": "c10-s2",
+      "claim": "dialect: 'Inserting an explicit value into that column takes a separate SET IDENTITY_INSERT statement.'",
+      "verdict": "supported",
+      "evidence": "https://learn.microsoft.com/en-us/sql/t-sql/statements/set-identity-insert-transact-sql: 'By using this statement, you can insert explicit values into the IDENTITY column of a table.' The examples show that an explicit value 'can only be specified when a column list is used and IDENTITY_INSERT is ON'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "predict explanation: 'The warehouses table has one row for each of its four locations. Each row is a dimension row that facts can point at by its key.'",
+      "verdict": "unverified",
+      "evidence": "The count sentence is the engine's (answerRows 4) and matches the sample (four warehouses, src/data/seed.ts). The second sentence is a modelling claim with no cited page. Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "predict options: a 'Four, one for each warehouse' (answer, id a); b 'Six, one for each route'; c 'Two hundred and forty, one for each shipment'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a matches the explanation and the sample's four warehouses. Options b and c count other tables. The count is the engine's (answerRows 4).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "commonMistakes IDENTITY_BY_DEFAULT: 'GENERATED BY DEFAULT accepts a key that a loader types in, and the typed key can later collide with the sequence.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'If BY DEFAULT is selected, then the user-specified value takes precedence.' and 'a sequence could be reset, or values could be inserted manually into the identity column'. The page does not use the word 'collide'. It says uniqueness must be enforced separately, which is the risk the sentence describes.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "commonMistakes IDENTITY_BY_DEFAULT: 'GENERATED ALWAYS protects the key, so a typed value is refused.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-identity-columns.html: 'In an INSERT command, if ALWAYS is selected, a user-specified value is only accepted if the INSERT statement specifies OVERRIDING SYSTEM VALUE.' The same rule is on https://www.postgresql.org/docs/18/sql-merge.html: 'Without this clause, it is an error to specify an explicit value (other than DEFAULT) for an identity column defined as GENERATED ALWAYS.' The typed value is refused unless the statement overrides, and the sentence leaves that out.",
+      "suggestedFix": "GENERATED ALWAYS refuses a typed value unless the INSERT says OVERRIDING SYSTEM VALUE, so a loader cannot type in a key by accident."
+    },
+    {
+      "where": "c10-s2",
+      "claim": "commonMistakes NATURAL_KEY_AS_SURROGATE: 'Making the name the primary key makes the name the identity of the row.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'A primary key constraint indicates that a column, or group of columns, can be used as a unique identifier for rows in the table'. The constraints page is not cited for this mistake.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s2",
+      "claim": "commonMistakes NATURAL_KEY_AS_SURROGATE: 'When the name changes, every fact that points at it must change too.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'CASCADE means that the updated values of the referenced column(s) should be copied into the referencing row(s).' With ON UPDATE CASCADE the facts change by themselves, so 'must change too' is incomplete. With the default NO ACTION the facts must change, or the rename is refused, which is what the sentence says.",
+      "suggestedFix": "When the name changes, every fact that points at it must change too, unless its foreign key declares ON UPDATE CASCADE, which copies the new name into those facts."
+    },
+    {
+      "where": "c10-s2",
+      "claim": "demonstration: 'Warehouse names are unique in the sample, so each name can be a natural key under a UNIQUE rule.'",
+      "verdict": "demonstration",
+      "evidence": "Sample: four warehouse names, all different (src/data/seed.ts warehouses), so the distinct count equals the row count, as the demonstration shows. The UNIQUE rule is on https://www.postgresql.org/docs/18/ddl-constraints.html ('Unique constraints ensure that the data contained in a column, or a group of columns, is unique among all the rows in the table'), which is cited for c10-s2.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "paragraph 1: 'Load each dimension once per natural key. A route pair or a customer name appears once, however many shipments use it.'",
+      "verdict": "unverified",
+      "evidence": "Finding: no citation (citations is empty for c10-s3) and no demonstration of a loaded dimension. This is a loading rule. The UNIQUE constraint that enforces it is on https://www.postgresql.org/docs/18/ddl-constraints.html, which is not cited here. Keep it as a labelled convention, or cite the constraint.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "paragraph 1: 'Then load the fact, which finds each dimension key by joining on the natural key.'",
+      "verdict": "unverified",
+      "evidence": "Finding: the example joins warehouses on name (w.name = f.origin), which shows the pattern, but the pattern itself is uncited. The join semantics are on https://www.postgresql.org/docs/18/queries-table-expressions.html, which is not cited for c10-s3.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "paragraph 2: 'A lookup that matches nothing either fails the load or leaves a missing key.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html: 'First, an inner join is performed. Then, for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.' Under an inner join, a row with no match is not in the output: it fails nothing and leaves no NULL key. The next sentence ('a silent drop') is that third case, which this sentence omits. The advice in the next sentence is not scored.",
+      "suggestedFix": "A lookup that matches nothing either fails the load, leaves a missing key, or, in an inner join, drops the row without an error. Count the flat rows and the loaded rows, so a silent drop shows before the warehouse is used."
+    },
+    {
+      "where": "c10-s3",
+      "claim": "predict explanation: 'Every origin in the flat extract is one of the four warehouse names, so the left join finds a match for every row and the filter keeps none. A lookup that found no match would leave a missing key.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html: 'for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.' A row with a match keeps its warehouse id, so w.id IS NULL keeps none. The sample builds origin from the warehouse name (src/data/seed.ts, staging_shipments_flat). The second sentence is design advice and is not scored. The count is the engine's (answerRows 0).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "predict options: a 'Zero, because every origin in the extract is a warehouse name' (answer, id a); b 'Sixty, one for each flat row'; c 'Four, one for each warehouse'.",
+      "verdict": "demonstration",
+      "evidence": "Answer id a and its wording match the explanation. Options b and c describe rows the anti-join does not return. Count 0 is the engine's (answerRows 0).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "commonMistakes DIMENSION_DUPLICATE: 'A dimension loaded without DISTINCT takes one row per shipment.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html: 'After the select list has been processed, the result table can optionally be subject to the elimination of duplicate rows.' Without DISTINCT, the one-row-per-shipment rows pass through. The page is not cited for c10-s3.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "commonMistakes DIMENSION_DUPLICATE: 'A repeated natural key breaks the unique rule, and the whole load fails.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'Unique constraints ensure that the data contained in a column, or a group of columns, is unique among all the rows in the table.' and https://www.postgresql.org/docs/18/sql-insert.html: 'an alternative action to raising a unique violation'. The pages support a unique violation on the statement that repeats the key. They do not say that the whole load fails. That depends on whether the load is one statement or one transaction, and no checked page covers it.",
+      "suggestedFix": "A repeated natural key breaks the unique rule, and PostgreSQL raises a unique violation on the INSERT that loads the repeated key (https://www.postgresql.org/docs/18/ddl-constraints.html)."
+    },
+    {
+      "where": "c10-s3",
+      "claim": "commonMistakes FACT_MISSING_KEY: 'A fact row with no dimension key cannot say which customer or route it belongs to.'",
+      "verdict": "unverified",
+      "evidence": "Finding: a consequence of the modelling convention, with no citation and no demonstration. It is not a PostgreSQL claim. Keep it as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "commonMistakes FACT_MISSING_KEY: 'A NOT NULL key rejects the row'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'A not-null constraint simply specifies that a column must not assume the null value.' and 'If a user attempts to store data in a column that would violate a constraint, an error is raised.' The page is not cited for c10-s3.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c10-s3",
+      "claim": "commonMistakes FACT_MISSING_KEY: 'a join that matches nothing drops it.'",
+      "verdict": "partly",
+      "evidence": "https://www.postgresql.org/docs/18/queries-table-expressions.html: 'First, an inner join is performed. Then, for each row in T1 that does not satisfy the join condition with any row in T2, a joined row is added with null values in columns of T2.' Only an inner join drops the row. A LEFT JOIN keeps it with NULL columns from the other table, which the section's own example relies on.",
+      "suggestedFix": "An inner join that matches nothing drops the row, while a LEFT JOIN keeps it with NULL columns from the other table."
+    },
+    {
+      "where": "c10-s3",
+      "claim": "demonstration: 'The flat extract has one row per shipment, so a route pair repeats on many rows.'",
+      "verdict": "demonstration",
+      "evidence": "The sample's staging_shipments_flat is built from shipments 1 to 60, one row each (src/data/seed.ts), and six routes share some origin and destination pairs, so pairs repeat. The counts are the engine's. This is a structural check of the seed code.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 10, "partly": 10, "unsupported": 0, "contradicted": 0, "unverified": 9, "demonstration": 6 }
+}

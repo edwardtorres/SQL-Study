@@ -12,5 +12,5 @@
     "The text does not say how to find the previous current row. I used the current row with an older valid_from as the one to close. This gives the same result here."
   ],
   "confidence": "medium",
-  "notes": "Ran on sample, nulls and nulltext; identical state on all three. Both statements run once, INSERT first and then UPDATE, as the text asks. The medium rating is only for the id-order ambiguity. Each run leaves one current row per customer."
+  "notes": "Ran on sample, nulls and nulltext; identical state on all three. Both statements run once, INSERT first and then UPDATE, as the text asks. The medium rating is only for the id-order ambiguity. Each run leaves one current row per customer. Re-checked against the revised text (new ids continue after the largest id, in customer_id order): solution unchanged, and ids 17 and 18 are assigned in customer_id order as before. Re-run on sample, nulls and nulltext gives the same state. The id-order ambiguity above is resolved by the revised text; confidence stays medium as recorded."
 }

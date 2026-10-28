@@ -32,5 +32,5 @@
     "Duplicate orphan rows are listed once per row. No orphan id repeats in any dataset, so this did not change the answer."
   ],
   "confidence": "high",
-  "notes": "Row counts: sample 5, nulls 19, boundary 13. Only the sample rows are in the record. Output columns are id and shipment_id, as the ticket asks."
+  "notes": "Row counts: sample 5, nulls 19, boundary 13. Only the sample rows are in the record. Output columns are id and shipment_id, as the ticket asks. Re-checked against the revised text (a scan with no shipment id counts as having no shipment and is listed): solution unchanged. Re-run on sample, nulls and boundary gives the same rows as before. Probe: a scan with NULL shipment_id added inside a transaction is listed with shipment_id null. The NULL-shipment ambiguity above is resolved by the revised text."
 }
