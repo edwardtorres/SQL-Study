@@ -1,0 +1,43 @@
+{
+  "id": "c11-i4",
+  "solutionSql": "INSERT INTO customer_versions (id, customer_id, region, valid_from, valid_to)\nSELECT COALESCE((SELECT MAX(id) FROM customer_versions), 0) + ROW_NUMBER() OVER (ORDER BY f.customer_id),\n       f.customer_id,\n       f.region,\n       f.changed_at,\n       NULL::timestamptz\nFROM (\n  SELECT DISTINCT ON (r.customer_id) r.customer_id, r.region, r.changed_at\n  FROM staging_customer_regions AS r\n  JOIN customers AS c ON c.id = r.customer_id\n  ORDER BY r.customer_id, r.changed_at DESC\n) AS f\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM customer_versions AS cv\n  WHERE cv.customer_id = f.customer_id\n    AND cv.valid_to IS NULL\n    AND cv.region IS NOT DISTINCT FROM f.region\n);\n\nUPDATE customer_versions AS prev\nSET valid_to = nxt.valid_from\nFROM customer_versions AS nxt\nWHERE nxt.customer_id = prev.customer_id\n  AND prev.valid_to IS NULL\n  AND nxt.valid_to IS NULL\n  AND nxt.id > prev.id;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    {"id": 17, "customer_id": 4, "region": "West", "valid_from": "2026-01-17T10:00:00Z", "valid_to": null},
+    {"id": 18, "customer_id": 6, "region": "North", "valid_from": "2026-01-17T20:00:00Z", "valid_to": null}
+  ],
+  "sampleChecks": "customer_versions goes from 16 to 18 rows, all 16 original rows kept. Customer 2 is skipped (its newest feed change, South, repeats its current region). Feed row 99 is skipped (not a known customer). Customer 4 (current region NULL) gets a West row, id 17, and its old row 8 closes at 2026-01-17 10:00 UTC. Customer 6 gets a North row, id 18, and its old row 12 closes at 2026-01-17 20:00 UTC. Customers with exactly one current row: all 8 on sample; 0 customers off on sample, nulls and nulltext.",
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "skip-repeat",
+      "howSolved": "WHERE NOT EXISTS a current row with the same region, using IS NOT DISTINCT FROM so a NULL current region matches a NULL feed region."
+    },
+    {
+      "id": "one-current-row",
+      "howSolved": "The UPDATE closes the older current row of each customer that received a new row, so each customer ends with exactly one current row; checked on sample, nulls and nulltext (0 customers off)."
+    },
+    {
+      "id": "keep-old-rows",
+      "howSolved": "Only an INSERT and a valid_to UPDATE; no DELETE, so all original rows remain."
+    },
+    {
+      "id": "add-changes",
+      "howSolved": "Each change that is not a repeat inserts a current row (valid_to NULL) with valid_from = changed_at and the new region."
+    },
+    {
+      "id": "newest-change",
+      "howSolved": "DISTINCT ON (customer_id) ordered by changed_at DESC, restricted to customers that exist, takes the newest feed change per known customer."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 8,
+  "ambiguities": [
+    "The instruction does not name the feed. I used staging_customer_regions, as in c11-i2.",
+    "A NULL region on both sides is read as a repeat and is skipped.",
+    "The UPDATE finds the previous current row as the current row with a smaller id than a newer current row for the same customer. This depends on one current row per customer before the load, which the text states only as an end condition.",
+    "If a change time is not later than the old row's valid_from, the CHECK (valid_to > valid_from) or UNIQUE (customer_id, valid_from) constraint would fail. The text does not say what should happen; I did not handle it."
+  ],
+  "confidence": "medium",
+  "notes": "New ids are COALESCE(MAX(id), 0) + ROW_NUMBER() ordered by customer_id, so they continue after the largest id. The NULL::timestamptz cast is needed because a bare NULL in the select list is typed text and would not insert into valid_to."
+}

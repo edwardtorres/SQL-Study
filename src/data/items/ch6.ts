@@ -218,12 +218,14 @@ export const chapter6Items: readonly Challenge[] = [
     wrongVariants: [
       { id: 'b6p1-no-null-branch', rule: 'unweighed-band', mistake: 'NULL_AS_DEFAULT', sql: "SELECT status, CASE WHEN weight_kg < 1000 THEN 'light' ELSE 'heavy' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments GROUP BY status, weight_band ORDER BY status, weight_band;", explanation: 'It looks like the unweighed branch is missing. Missing weights fall to ELSE and are counted as heavy.' },
       { id: 'b6p1-order', rule: 'light-under-1000', mistake: 'CASE_ORDER', sql: "SELECT status, CASE WHEN weight_kg IS NULL THEN 'unweighed' WHEN weight_kg >= 0 THEN 'heavy' WHEN weight_kg < 1000 THEN 'light' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments GROUP BY status, weight_band ORDER BY status, weight_band;", explanation: 'It looks like the heavy test comes before the light test. The first true WHEN wins, so light is never used.' },
+      { id: "b6p1-else-light", rule: "heavy-otherwise", mistake: "CASE_ORDER", sql: "SELECT status, CASE WHEN weight_kg IS NULL THEN 'unweighed' WHEN weight_kg < 1000 THEN 'light' ELSE 'light' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments GROUP BY status, weight_band ORDER BY status, weight_band;", explanation: "It looks like the final ELSE gives light. A shipment of 1000 kg or more then falls into the light band, so the heavy band is missing those shipments." },
     ],
     ordered: true,
     columns: [{ name: 'status', type: 25 }, { name: 'weight_band', type: 25 }, { name: 'shipments', type: 23 }],
     rules: [
       { id: "unweighed-band", text: "A missing weight gives the unweighed band." },
       { id: "light-under-1000", text: "A weight under 1000 kg gives the light band." },
+      { id: "heavy-otherwise", text: "A weight that is not missing and is 1000 kg or more is heavy." },
     ],
     hints: [
       'Group by the status and by the band. The band is itself a CASE expression.',

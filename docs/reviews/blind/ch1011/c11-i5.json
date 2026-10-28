@@ -1,0 +1,29 @@
+{
+  "id": "c11-i5",
+  "solutionSql": "SELECT s.id, s.shipment_id\nFROM staging_scans AS s\nWHERE s.shipment_id IS NOT NULL\n  AND NOT EXISTS (SELECT 1 FROM shipments AS sh WHERE sh.id = s.shipment_id)\nORDER BY s.id;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    {"id": 1000, "shipment_id": 9000},
+    {"id": 1009, "shipment_id": 9009}
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "missing-shipment-listed",
+      "howSolved": "NOT EXISTS against shipments lists each scan whose shipment_id has no matching shipment."
+    },
+    {
+      "id": "known-not-listed",
+      "howSolved": "Scans with a matching shipment are excluded by the NOT EXISTS; a NULL shipment_id is excluded explicitly because it names no shipment."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 2,
+  "ambiguities": [
+    "A NULL shipment_id is read as naming no shipment, so it is not listed. The instruction does not say.",
+    "Duplicate scan ids would each be listed, one row per copy. The text does not address duplicates."
+  ],
+  "confidence": "high",
+  "notes": "On sample the five listed scans are the orphan shipments 9000, 9009, 9018, 9027 and 9036. Ordering is by id only, as the instruction asks."
+}

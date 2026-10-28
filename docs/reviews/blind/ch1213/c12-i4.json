@@ -1,0 +1,28 @@
+{
+  "id": "c12-i4",
+  "solutionSql": "SELECT id, status\nFROM shipment_scans_large\nWHERE id BETWEEN 1 AND 50\n  AND status LIKE 'del%'\nORDER BY id;",
+  "sampleRowCount": 12,
+  "sampleFirstRows": [
+    {"id": 3, "status": "delivered"},
+    {"id": 7, "status": "delivered"}
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "ids-one-to-fifty",
+      "howSolved": "BETWEEN 1 AND 50 includes both ends, so ids 1 and 50 are considered."
+    },
+    {
+      "id": "begins-with-del",
+      "howSolved": "status LIKE 'del%' keeps statuses that start with the lowercase prefix del."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 2,
+  "ambiguities": [
+    "'begins with del' is read case-sensitively. An ILIKE reading would also match a capitalised 'Del' prefix, if any status had one."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary with no errors. The ticket's hint about index use was not checked with EXPLAIN."
+}

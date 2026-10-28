@@ -1,0 +1,47 @@
+{
+  "id": "c11-i3",
+  "solutionSql": "INSERT INTO shipment_events (id, shipment_id, status, occurred_at)\nSELECT DISTINCT ON (s.id) s.id, s.shipment_id, s.status, s.occurred_at\nFROM staging_scans AS s\nWHERE s.occurred_at > (SELECT last_loaded_at FROM load_watermark)\n  AND s.status IS NOT NULL\n  AND EXISTS (SELECT 1 FROM shipments AS sh WHERE sh.id = s.shipment_id)\nORDER BY s.id, s.occurred_at;\n\nUPDATE load_watermark\nSET last_loaded_at = GREATEST(last_loaded_at, (SELECT MAX(occurred_at) FROM staging_scans));",
+  "sampleRowCount": 27,
+  "sampleFirstRows": [
+    {"id": 1007, "shipment_id": 120, "status": "delivered", "occurred_at": "2026-01-17T02:00:00Z"},
+    {"id": 1008, "shipment_id": 137, "status": "booked", "occurred_at": "2026-01-17T04:00:00Z"}
+  ],
+  "sampleChecks": "shipment_events goes from 678 to 705 rows, so 27 scans are loaded. Scan 1006, which sits exactly on the old watermark (2026-01-17 00:00 UTC), is not loaded. The duplicated scan 1007 appears once. Scans with NULL status (1016, 1027, 1038) and scans whose shipment is missing (9009, 9018, 9027, 9036) are not loaded. load_watermark moves from 2026-01-17 00:00 to 2026-01-19 18:00 UTC. After run 2, shipment_events and load_watermark are unchanged on sample, nulls and boundary.",
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "strictly-newer",
+      "howSolved": "WHERE occurred_at > (SELECT last_loaded_at FROM load_watermark), so an equal timestamp is excluded."
+    },
+    {
+      "id": "one-copy",
+      "howSolved": "DISTINCT ON (s.id) with ORDER BY s.id, s.occurred_at keeps one row per scan id."
+    },
+    {
+      "id": "skip-no-status",
+      "howSolved": "WHERE s.status IS NOT NULL."
+    },
+    {
+      "id": "skip-orphans",
+      "howSolved": "EXISTS (SELECT 1 FROM shipments WHERE sh.id = s.shipment_id) keeps only scans whose shipment exists."
+    },
+    {
+      "id": "watermark-newest",
+      "howSolved": "Read as MAX(occurred_at) over every staging_scans row, whatever its status or shipment."
+    },
+    {
+      "id": "watermark-advanced",
+      "howSolved": "GREATEST(current watermark, MAX(occurred_at)), so the watermark never moves backward; afterwards no staging scan is strictly newer, so run 2 adds nothing."
+    }
+  ],
+  "runsTwiceCheck": "The whole load (INSERT, then the watermark UPDATE) ran twice in a row on sample, nulls and boundary. No error on either run. shipment_events and load_watermark after run 2 equal the state after run 1 on all three datasets.",
+  "solveMinutes": 6,
+  "ambiguities": [
+    "'set the watermark to the newest occurred_at' is read literally as a MAX, but the rule 'the watermark moves forward' implies no backward move. I used GREATEST. The two differ only when the staging maximum is older than the current watermark.",
+    "A scan with NULL occurred_at is not strictly newer, so it is never loaded. MAX skips NULL values, so it does not move the watermark.",
+    "The text says 'keep one copy' but not which copy wins if the two copies differ; DISTINCT ON keeps the one with the smaller occurred_at. On sample the copies are identical.",
+    "There is no guard for a NULL staging scan id, which would violate shipment_events.id NOT NULL. No error occurred on nulls or boundary, but the instruction does not address it."
+  ],
+  "confidence": "medium",
+  "notes": "The starter is a bare UPDATE on load_watermark; my solution keeps an UPDATE with no WHERE, since load_watermark holds one row. The loaded rows are all after the old watermark and the 1000-series ids do not collide with the existing 1 to 678 events."
+}

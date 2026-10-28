@@ -1,0 +1,30 @@
+{
+  "id": "c12-i3",
+  "solutionSql": "SELECT id, status\nFROM shipment_scans_large\nORDER BY id DESC\nLIMIT 5;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    {"id": 20000, "status": "booked"},
+    {"id": 19999, "status": "delivered"}
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "largest-first",
+      "howSolved": "ORDER BY id DESC puts the largest id first."
+    },
+    {
+      "id": "five-rows",
+      "howSolved": "LIMIT 5 returns five rows."
+    },
+    {
+      "id": "primary-key-order",
+      "howSolved": "ORDER BY id DESC on the primary key; EXPLAIN on sample shows Limit over an Index Scan Backward using shipment_scans_large_pkey, so the primary key index supplies the order."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 2,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The EXPLAIN check was run on the sample dataset only. The result columns are id (integer) and status (text), as the ticket specifies."
+}

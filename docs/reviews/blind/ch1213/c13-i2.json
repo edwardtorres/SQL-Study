@@ -1,0 +1,36 @@
+{
+  "id": "c13-i2",
+  "solutionSql": "WITH monthly AS (\n  SELECT to_char(date_trunc('month', booked_at AT TIME ZONE 'UTC'), 'YYYY-MM') AS month,\n         COUNT(*)::integer AS shipments\n  FROM shipments\n  GROUP BY 1\n)\nSELECT month,\n       shipments,\n       (shipments - LAG(shipments) OVER (ORDER BY month))::integer AS change\nFROM monthly\nORDER BY month;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    {"month": "2025-12", "shipments": 46, "change": null},
+    {"month": "2026-01", "shipments": 194, "change": 148}
+  ],
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "every-shipment-counts",
+      "howSolved": "There is no WHERE clause, so every shipment counts whatever its status."
+    },
+    {
+      "id": "utc-months",
+      "howSolved": "booked_at AT TIME ZONE 'UTC' is applied before date_trunc('month') and to_char 'YYYY-MM', so month boundaries are UTC."
+    },
+    {
+      "id": "change-current-minus-previous",
+      "howSolved": "shipments minus LAG(shipments) OVER (ORDER BY month), over the months that have shipments."
+    },
+    {
+      "id": "first-change-missing",
+      "howSolved": "LAG returns NULL for the first month, so its change is NULL."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 4,
+  "ambiguities": [
+    "A calendar month with no shipments produces no row here, so 'the previous month' means the previous month that has shipments. If a zero-count month should appear, the change values would differ; the text does not say."
+  ],
+  "confidence": "medium",
+  "notes": "COUNT returns bigint, so the count and change are cast to integer to match the ticket's integer column types. Ran on sample, nulls and boundary with no errors."
+}

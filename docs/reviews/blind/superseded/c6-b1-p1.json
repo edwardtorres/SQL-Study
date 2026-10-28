@@ -1,33 +1,37 @@
 {
   "id": "c6-b1-p1",
-  "solutionSql": "WITH banded AS (\n  SELECT status,\n         CASE\n           WHEN weight_kg IS NULL THEN 'unweighed'\n           WHEN weight_kg < 1000 THEN 'light'\n           ELSE 'heavy'\n         END AS weight_band\n  FROM shipments\n)\nSELECT status,\n       weight_band,\n       COUNT(*)::integer AS shipments\nFROM banded\nGROUP BY status, weight_band\nORDER BY status, weight_band;",
+  "solutionSql": "SELECT s.status, CASE WHEN s.weight_kg IS NULL THEN 'unweighed' WHEN s.weight_kg < 1000 THEN 'light' ELSE 'heavy' END AS weight_band, COUNT(*)::integer AS shipments FROM shipments AS s GROUP BY s.status, CASE WHEN s.weight_kg IS NULL THEN 'unweighed' WHEN s.weight_kg < 1000 THEN 'light' ELSE 'heavy' END ORDER BY s.status, weight_band;",
   "sampleRowCount": 11,
   "sampleFirstRows": [
-    [
-      "cancelled",
-      "heavy",
-      36
-    ],
-    [
-      "cancelled",
-      "light",
-      26
-    ],
-    [
-      "cancelled",
-      "unweighed",
-      2
-    ]
-  ],
-  "columnsMatchTicket": true,
-  "ambiguities": [
     {
-      "phrase": "For each status, count the shipments in each weight band",
-      "readingChosen": "Only status and band combinations that have shipments get a row, so in_transit has no unweighed row.",
-      "alternativeReading": "Every status gets all three bands, with a zero row for in_transit unweighed."
+      "status": "cancelled",
+      "weight_band": "heavy",
+      "shipments": 36
+    },
+    {
+      "status": "cancelled",
+      "weight_band": "light",
+      "shipments": 26
     }
   ],
-  "confidence": "medium",
-  "notes": "The summary says missing weights are shown as unweighed, which hints that the band should appear for every status. The sample has no in_transit shipment without a weight, so the choice changes the row count, 11 versus 12.",
-  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+  "sampleChecks": null,
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "unweighed-band",
+      "howSolved": "The CASE tests weight_kg IS NULL first and returns 'unweighed'."
+    },
+    {
+      "id": "light-under-1000",
+      "howSolved": "The next branch returns 'light' for weight_kg < 1000; the ELSE branch returns 'heavy' for 1000 and above."
+    }
+  ],
+  "solveMinutes": 4,
+  "ambiguities": [
+    "'heavy otherwise' is read as 1000 kg and above, so exactly 1000 is heavy. Only 'heavy otherwise' states this boundary, and no declared rule covers it.",
+    "ORDER BY weight_band uses the database's default text collation. The labels are plain lowercase words, so the order is the same under any common collation."
+  ],
+  "confidence": "high",
+  "notes": "Read-only item. Each status and band that occurs is returned, so an empty band is not listed. Ran without error on sample, nulls and boundary. Solve time is an estimate.",
+  "superseded": "Step 3b rule sweep, tie rules restored (ties exist in the edge data): instruction text and wrong variants changed; re-solved blind"
 }

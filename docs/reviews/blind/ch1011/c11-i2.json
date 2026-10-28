@@ -1,0 +1,39 @@
+{
+  "id": "c11-i2",
+  "solutionSql": "CREATE TABLE region_board (\n  customer_id integer PRIMARY KEY,\n  region text,\n  changed_at timestamptz NOT NULL\n);\n\nINSERT INTO region_board (customer_id, region, changed_at) VALUES\n  (1, 'North', '2025-12-28 00:00:00+00'),\n  (4, 'Central', '2025-12-28 00:00:00+00');\n\nMERGE INTO region_board AS b\nUSING (\n  SELECT DISTINCT ON (r.customer_id) r.customer_id, r.region, r.changed_at\n  FROM staging_customer_regions AS r\n  JOIN customers AS c ON c.id = r.customer_id\n  ORDER BY r.customer_id, r.changed_at DESC\n) AS s\nON b.customer_id = s.customer_id\nWHEN MATCHED THEN\n  UPDATE SET region = s.region, changed_at = s.changed_at\nWHEN NOT MATCHED BY TARGET THEN\n  INSERT (customer_id, region, changed_at) VALUES (s.customer_id, s.region, s.changed_at)\nWHEN NOT MATCHED BY SOURCE AND NOT EXISTS (\n  SELECT 1 FROM staging_customer_regions AS f WHERE f.customer_id = b.customer_id\n) THEN\n  DELETE;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    {"customer_id": 2, "region": "South", "changed_at": "2026-01-18T16:00:00Z"},
+    {"customer_id": 4, "region": "West", "changed_at": "2026-01-17T10:00:00Z"}
+  ],
+  "sampleChecks": "region_board ends with 3 rows: customer 2 South (2026-01-18 16:00 UTC), customer 4 West (2026-01-17 10:00 UTC), customer 6 North (2026-01-17 20:00 UTC). Customer 1 is deleted because the feed has no row for it. Feed row 99 (Central) is not merged because customer 99 is not in customers. Customer 2's newer South change wins over its older East change. Same on nulls and nulltext: 3 rows.",
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "newest-merged",
+      "howSolved": "DISTINCT ON (customer_id) ordered by changed_at DESC picks the newest feed row per known customer."
+    },
+    {
+      "id": "update-known",
+      "howSolved": "WHEN MATCHED UPDATE sets region and changed_at from the newest feed row (customer 4 on sample)."
+    },
+    {
+      "id": "insert-new",
+      "howSolved": "WHEN NOT MATCHED BY TARGET inserts known customers that are not on the board (customers 2 and 6 on sample)."
+    },
+    {
+      "id": "delete-unreported",
+      "howSolved": "WHEN NOT MATCHED BY SOURCE deletes a board row only when no feed row at all exists for that customer_id, read as 'the feed does not report'."
+    }
+  ],
+  "runsTwiceCheck": null,
+  "solveMinutes": 6,
+  "ambiguities": [
+    "The instruction does not name the feed. I used staging_customer_regions (customer_id, region, changed_at), the only feed-shaped table in the schema.",
+    "'known customer' is read as a row in customers. A feed row for an unknown customer is never merged, though it still counts as reported for the delete rule.",
+    "The text does not say whether a board row for a customer that has only unknown-customer feed rows is kept; I keep it because the feed reports it.",
+    "Ties in changed_at are not broken, so DISTINCT ON picks one row arbitrarily. Feed rows with NULL changed_at are not handled."
+  ],
+  "confidence": "medium",
+  "notes": "The DELETE test uses NOT EXISTS rather than NOT IN, so a NULL customer_id in the feed cannot suppress deletes. Starting rows and merge are in one script. The MERGE ... NOT MATCHED BY SOURCE form needs PostgreSQL 17 syntax, which PGlite accepted."
+}

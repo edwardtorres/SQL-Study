@@ -1,50 +1,39 @@
 {
   "id": "c8-i5",
-  "solutionSql": "SELECT shipment_id,\n       id AS event_id,\n       FLOOR(EXTRACT(EPOCH FROM (\n         LEAD(occurred_at) OVER (PARTITION BY shipment_id ORDER BY occurred_at, id) - occurred_at\n       )))::integer AS seconds_to_next\nFROM shipment_events\nORDER BY shipment_id, occurred_at, id;",
+  "solutionSql": "SELECT shipment_id,\n       event_id,\n       seconds_to_next\nFROM (\n  SELECT e.shipment_id,\n         e.id AS event_id,\n         e.occurred_at,\n         ROUND(\n           EXTRACT(EPOCH FROM (\n             LEAD(e.occurred_at) OVER (PARTITION BY e.shipment_id ORDER BY e.occurred_at, e.id)\n             - e.occurred_at\n           ))\n         )::integer AS seconds_to_next\n  FROM shipment_events e\n) timed\nORDER BY shipment_id, occurred_at, event_id;",
   "sampleRowCount": 678,
   "sampleFirstRows": [
-    [
-      2,
-      1,
-      14400
-    ],
-    [
-      2,
-      3,
-      14400
-    ],
-    [
-      2,
-      2,
-      null
-    ],
-    [
-      3,
-      4,
-      14400
-    ],
-    [
-      3,
-      6,
-      14400
-    ]
-  ],
-  "sampleChecks": null,
-  "constraintProbes": null,
-  "columnsMatchTicket": true,
-  "ambiguities": [
     {
-      "phrase": "return the whole seconds from its occurred_at to the next scan",
-      "readingChosen": "Truncate the fraction (FLOOR) of the elapsed time.",
-      "alternativeReading": "Round to the nearest whole second. Identical on the sample, where every event time is a whole hour."
+      "shipment_id": 2,
+      "event_id": 1,
+      "seconds_to_next": 14400
     },
     {
-      "phrase": "Order scans by occurred_at, then by id.",
-      "readingChosen": "The next scan is the next row in that order, so a scan tied with the following one gets 0 seconds (24 sample rows).",
-      "alternativeReading": "The next scan must be strictly later in time, so a tied scan with no later scan gets NULL. Those 24 rows would change from 0 to NULL."
+      "shipment_id": 2,
+      "event_id": 3,
+      "seconds_to_next": 14400
     }
   ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "whole-seconds",
+      "howSolved": "ROUND on the numeric EXTRACT(EPOCH) difference, then a cast to integer. Exact .5 gaps are rounded away from zero, but a probe found none in sample, ties or boundary."
+    },
+    {
+      "id": "last-scan-null",
+      "howSolved": "LEAD returns NULL for the last scan of each shipment, so the difference and the rounded value are NULL."
+    },
+    {
+      "id": "next-is-later",
+      "howSolved": "The next scan is the LEAD in (occurred_at, id) order. A scan with the same timestamp as the next one therefore gets 0 seconds."
+    }
+  ],
+  "solveMinutes": 3,
+  "ambiguities": [
+    "'The next scan ... occurs after this one' can mean the next scan in the stated (occurred_at, id) order, which I used, or the next scan with a strictly later timestamp. The two readings differ on the same-timestamp pairs only: 24 rows in sample, 98 in ties and 18 in boundary."
+  ],
   "confidence": "medium",
-  "notes": "The sample has 218 NULLs (last scan per shipment) and 24 zero-second ties from arrived and delivered sharing a timestamp. Only the tie reading is submitted.",
-  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+  "notes": "Sample returns 678 rows, ties 652, boundary 480. Fractional gaps exist in ties and boundary, so the rounding rule matters there. A correlated next-timestamp formulation gives 0 differences on all three datasets under the (occurred_at, id) reading.",
+  "superseded": "Step 3b rule sweep, tie rules restored (ties exist in the edge data): instruction text and wrong variants changed; re-solved blind"
 }

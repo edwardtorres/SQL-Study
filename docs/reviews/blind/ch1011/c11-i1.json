@@ -1,0 +1,33 @@
+{
+  "id": "c11-i1",
+  "solutionSql": "CREATE TABLE customer_bookings (\n  customer_id integer PRIMARY KEY REFERENCES customers (id),\n  bookings integer NOT NULL\n);\n\nINSERT INTO customer_bookings (customer_id, bookings)\nSELECT customer_id, COUNT(*)\nFROM shipments\nGROUP BY customer_id\nON CONFLICT (customer_id) DO UPDATE SET bookings = EXCLUDED.bookings;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    {"customer_id": 1, "bookings": 40},
+    {"customer_id": 2, "bookings": 40}
+  ],
+  "sampleChecks": "customer_bookings has 6 rows on sample (customers 1 to 6, 40 shipments each). Customers 7 and 8 have no shipments and no row. A recount of shipments per customer finds 0 rows that disagree, and every customer with shipments has a row. Same rows after the second INSERT run. The same holds on nulls and boundary.",
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "counts-every-shipment",
+      "howSolved": "Read as COUNT(*) over every shipment with no status filter."
+    },
+    {
+      "id": "second-run-succeeds",
+      "howSolved": "Read as the second run of the same load not raising a primary-key error; ON CONFLICT (customer_id) DO UPDATE absorbs the existing rows."
+    },
+    {
+      "id": "second-run-same-counts",
+      "howSolved": "Read as the conflict branch setting bookings to the freshly counted value, so a second run leaves identical rows."
+    }
+  ],
+  "runsTwiceCheck": "The CREATE TABLE ran once and the INSERT ran twice in a row on sample, nulls and boundary. No error on either run; customer_bookings after run 2 equals the state after run 1 on all three.",
+  "solveMinutes": 4,
+  "ambiguities": [
+    "'a customer that exists' is read as REFERENCES customers (id), a foreign key.",
+    "The text does not say whether a count should refresh on a later run; I read it as refreshing, which is what the ON CONFLICT update does."
+  ],
+  "confidence": "high",
+  "notes": "The load is the INSERT only, so the harness can rerun it. Customers with no shipments get no row, as the instruction says ('one row for each customer with shipments')."
+}
