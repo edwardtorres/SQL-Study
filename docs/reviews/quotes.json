@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-27T22:44:53.399Z",
-  "total": 87,
-  "verified": 87,
+  "checkedAt": "2026-10-28T04:21:29.124Z",
+  "total": 98,
+  "verified": 98,
   "results": [
     {
       "id": "pg-select-where",
@@ -522,6 +522,72 @@
     {
       "id": "pg-frame-fewer",
       "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-identity-meaning",
+      "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-identity-always",
+      "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-identity-unique",
+      "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-insert-upsert",
+      "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-merge-join",
+      "url": "https://www.postgresql.org/docs/18/sql-merge.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-view-query",
+      "url": "https://www.postgresql.org/docs/18/sql-createview.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-view-runs-each-time",
+      "url": "https://www.postgresql.org/docs/18/sql-createview.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "ms-merge-statement",
+      "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "ms-merge-unordered",
+      "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "ms-identity-primary-key",
+      "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "ms-identity-insert",
+      "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/set-identity-insert-transact-sql",
       "status": "verified",
       "httpStatus": 200
     }

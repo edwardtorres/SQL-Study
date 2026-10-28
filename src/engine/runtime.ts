@@ -26,6 +26,8 @@ export interface SchemaProbeResult {
 
 type ValidatedStatements = Awaited<ReturnType<typeof parsedStatements>>;
 const DATATYPE_ERROR_CODES = new Set(['22P02', '22001', '22003', '22007', '22008', '42804']);
+// Definitions a ticket runs once. A second run of a load repeats its data statements only.
+const SCHEMA_KINDS: readonly string[] = ['CreateStmt', 'AlterTableStmt', 'DropStmt', 'ViewStmt', 'IndexStmt'];
 
 interface PreparedDataset {
   schema: string;
@@ -255,8 +257,10 @@ export class WarmEngine {
         for (const check of options.checks) checks.push(await this.checkOutcome(check, rowLimit));
         let rerunChecks: CheckOutcome[] | undefined;
         if (options.runs === 2) {
-          // An idempotent load leaves the same state when its statements run again on top of their own result.
-          try { await this.executeLearner(statements, rowLimit, new LearnerTransaction()); }
+          // An idempotent load leaves the same state when its data statements run again on top of their own result.
+          // Table and view definitions are created once, so a second CREATE would fail for a reason the load does not have.
+          const loadStatements = statements.filter((statement) => !SCHEMA_KINDS.includes(statement.kind));
+          try { await this.executeLearner(loadStatements, rowLimit, new LearnerTransaction()); }
           catch (error) {
             if (isFatal(error)) throw error;
             return { learnerError: `Running the statements a second time failed: ${learnerMessage(error)}`, checks: [], tests: [] };

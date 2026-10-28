@@ -433,5 +433,60 @@
     "id": "pg-frame-fewer",
     "url": "https://www.postgresql.org/docs/18/sql-expressions.html",
     "quote": "for rows near the partition ends the frame might contain fewer rows than elsewhere"
+  },
+  {
+    "id": "pg-identity-meaning",
+    "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+    "quote": "An identity column is a special column that is generated automatically from an implicit sequence."
+  },
+  {
+    "id": "pg-identity-always",
+    "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+    "quote": "Thus, using BY DEFAULT results in a behavior more similar to default values, where the default value can be overridden by an explicit value, whereas ALWAYS provides some more protection against accidentally inserting an explicit value."
+  },
+  {
+    "id": "pg-identity-unique",
+    "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+    "quote": "An identity column, however, does not guarantee uniqueness."
+  },
+  {
+    "id": "pg-insert-upsert",
+    "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+    "quote": "ON CONFLICT DO UPDATE updates the existing row that conflicts with the row proposed for insertion as its alternative action."
+  },
+  {
+    "id": "pg-merge-join",
+    "url": "https://www.postgresql.org/docs/18/sql-merge.html",
+    "quote": "First, the MERGE command performs a join from data_source to the target table producing zero or more candidate change rows."
+  },
+  {
+    "id": "pg-view-query",
+    "url": "https://www.postgresql.org/docs/18/sql-createview.html",
+    "quote": "CREATE VIEW defines a view of a query."
+  },
+  {
+    "id": "pg-view-runs-each-time",
+    "url": "https://www.postgresql.org/docs/18/sql-createview.html",
+    "quote": "Instead, the query is run every time the view is referenced in a query."
+  },
+  {
+    "id": "ms-merge-statement",
+    "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql",
+    "quote": "The MERGE statement runs insert, update, or delete operations on a target table"
+  },
+  {
+    "id": "ms-merge-unordered",
+    "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql",
+    "quote": "These actions (insert, update, or delete) apply to the remaining joined rows in an unordered way."
+  },
+  {
+    "id": "ms-identity-primary-key",
+    "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql",
+    "quote": "Identity columns are typically used with PRIMARY KEY constraints to serve as the unique row identifier for the table."
+  },
+  {
+    "id": "ms-identity-insert",
+    "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/set-identity-insert-transact-sql",
+    "quote": "By using this statement, you can insert explicit values into the IDENTITY column of a table."
   }
 ]

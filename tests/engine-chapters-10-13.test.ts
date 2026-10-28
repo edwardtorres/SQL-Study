@@ -32,6 +32,12 @@ describe('engine features for chapters 10 to 13', () => {
     expect(result.learnerError).toMatch(/Running the statements a second time failed/);
   });
 
+  test('a second run repeats the load, not the table definition it creates', async () => {
+    const options: StateOptions = { allow: ['CreateStmt', 'InsertStmt'], transactions: false, checks: [], tests: [], runs: 2 };
+    const result = await engine.runState(sampleDataset.id, 'CREATE TABLE rerun_probe (id integer PRIMARY KEY);\nINSERT INTO rerun_probe (id) VALUES (1) ON CONFLICT (id) DO NOTHING;', options);
+    expect(result.learnerError).toBeNull();
+  });
+
   test('a ticket that runs twice may not also set transactions', async () => {
     const options: StateOptions = { allow: ['InsertStmt'], transactions: true, checks: customersCheck, tests: [], runs: 2 };
     await expect(engine.runState(sampleDataset.id, 'SELECT 1;', options)).rejects.toThrow(/cannot also set transactions/);

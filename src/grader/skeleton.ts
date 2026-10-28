@@ -41,8 +41,17 @@ function isBareWriteSkeleton(statement: Node): boolean {
 
 export async function isBareSkeleton(sql: string): Promise<boolean> {
   const tree = await parse(sql) as unknown as { stmts?: { stmt: Node }[] };
-  if (!tree.stmts || tree.stmts.length !== 1) return false;
-  const statement = tree.stmts[0]!.stmt;
+  // A DDL starter often creates two bare tables, so every statement is checked, not only the first.
+  if (!tree.stmts || tree.stmts.length === 0) return false;
+  return tree.stmts.every(({ stmt }) => isBareStatement(stmt));
+}
+
+function isBareStatement(statement: Node): boolean {
+  // A view's bare skeleton is its query: plain columns from one table, with no filter.
+  if (statement.ViewStmt) {
+    const query = (statement.ViewStmt as Node).query as Node | undefined;
+    return query !== undefined && isBareStatement(query);
+  }
   if (!statement.SelectStmt) return isBareWriteSkeleton(statement);
   const select = statement.SelectStmt as Node;
   if (FORBIDDEN_CLAUSES.some((clause) => present(select[clause]))) return false;

@@ -1,0 +1,33 @@
+{
+  "id": "c10-b1-p3",
+  "solutionSql": "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.destination_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id AND e.status = 'arrived'\nGROUP BY w.name\nORDER BY w.name;\n",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "Alder Hub",
+      36
+    ],
+    [
+      "Birch Yard",
+      72
+    ],
+    [
+      "Cedar Dock",
+      73
+    ],
+    [
+      "Dahlia Terminal",
+      37
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "The blank is read as the status text arrived. The event statuses in the data are arrived, booked, loaded and delivered, so arrived is the only fit.",
+    "Shipments whose route ends there is read as routes.destination_id.",
+    "Every warehouse has arrivals in all three datasets, so the zero-count case the ticket asks for is not exercised by any dataset."
+  ],
+  "confidence": "high",
+  "notes": "Blank filled with arrived; the rest of the starter is unchanged. The per-warehouse counts sum to the arrived-event count on all three datasets (218, 109, 163). The sample has four warehouses, so the first-five-rows field holds four rows."
+}

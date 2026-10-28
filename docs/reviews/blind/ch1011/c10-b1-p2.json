@@ -1,0 +1,16 @@
+{
+  "id": "c10-b1-p2",
+  "solutionSql": "CREATE TABLE dim_warehouse (\n    warehouse_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    warehouse_name text NOT NULL UNIQUE,\n    city text NOT NULL\n);\n\nCREATE TABLE fact_arrival (\n    arrival_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    warehouse_key integer NOT NULL REFERENCES dim_warehouse (warehouse_key),\n    shipment_id integer NOT NULL,\n    arrived_at timestamptz NOT NULL\n);\n\nINSERT INTO dim_warehouse (warehouse_name, city)\nSELECT name, city\nFROM warehouses\nORDER BY id;\n\nINSERT INTO fact_arrival (warehouse_key, shipment_id, arrived_at)\nSELECT dw.warehouse_key, e.shipment_id, e.occurred_at\nFROM shipment_events AS e\nJOIN shipments AS s ON s.id = e.shipment_id\nJOIN routes AS r ON r.id = s.route_id\nJOIN warehouses AS w ON w.id = r.destination_id\nJOIN dim_warehouse AS dw ON dw.warehouse_name = w.name\nWHERE e.status = 'arrived'\nORDER BY e.id;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "dim_warehouse 4 rows with keys 1 to 4 in warehouse id order (Alder Hub/Valehaven, Birch Yard/Mossreach, Cedar Dock/Cloudmere, Dahlia Terminal/Reedford). fact_arrival 218 rows, one per arrived event, each with the warehouse key of its route destination. Counts are 4/109 on nulls and 4/163 on boundary.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "\"Keeping the warehouse id order\" is read as insert order by warehouse id. Keys come out as 1 to 4, which match the ids here. The ticket does not say keys must equal the ids.",
+    "Arrivals join dim_warehouse by warehouse name. The ticket does not say whether names can repeat; they are unique in all three datasets.",
+    "Arrival key order is not stated. I loaded arrivals in shipment_events id order."
+  ],
+  "confidence": "high",
+  "notes": "Each arrival joins shipment, route and the route destination warehouse. Event status is matched exactly as arrived. Re-checked on the revised ticket text: insert order is now stated as warehouses.id order, which closes the order part of original ambiguity 1. Whether keys must equal ids, name uniqueness and arrival key order remain open. Solution and results unchanged."
+}

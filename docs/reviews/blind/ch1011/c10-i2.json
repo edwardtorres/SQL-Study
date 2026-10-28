@@ -1,0 +1,34 @@
+{
+  "id": "c10-i2",
+  "solutionSql": "CREATE TABLE dim_customer (\n    customer_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    customer_name text NOT NULL UNIQUE\n);\n\nCREATE TABLE fact_shipment (\n    tracking_code text PRIMARY KEY,\n    customer_key integer NOT NULL REFERENCES dim_customer (customer_key),\n    weight_kg integer,\n    status text NOT NULL,\n    booked_at timestamptz NOT NULL\n);\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "dim_customer and fact_shipment created, both with 0 rows; fact_shipment tracking_code is the PRIMARY KEY, customer_key is NOT NULL with a foreign key to dim_customer, weight_kg is nullable, status and booked_at are NOT NULL.",
+  "constraintProbes": [
+    {
+      "name": "unknown customer key rejected",
+      "expect": "error",
+      "observed": "23503",
+      "passed": true
+    },
+    {
+      "name": "missing status rejected",
+      "expect": "error",
+      "observed": "23502",
+      "passed": true
+    },
+    {
+      "name": "missing weight accepted",
+      "expect": "ok",
+      "observed": "ok",
+      "passed": true
+    }
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "customer_key nullability is not stated. I read \"must name a dim_customer row\" as NOT NULL plus a foreign key. No probe covers a NULL customer_key, so this choice is untested.",
+    "dim_customer primary key on customer_key is not stated here either; I used the same definition as in the customer ticket."
+  ],
+  "confidence": "medium",
+  "notes": "runsTwice is false. Probes passed on all three datasets. The 23502 probe omits the status column, so NOT NULL on status is what fires. Re-checked on the revised ticket text: customer_key present and the primary key are now stated, which closes original ambiguities 1 and 2. Solution and results unchanged."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "c10-b1-p1",
+  "solutionSql": "CREATE TABLE dim_warehouse (\n    warehouse_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    warehouse_name text NOT NULL UNIQUE,\n    city text NOT NULL\n);\n\nCREATE TABLE fact_arrival (\n    arrival_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    warehouse_key integer NOT NULL REFERENCES dim_warehouse (warehouse_key),\n    shipment_id integer NOT NULL,\n    arrived_at timestamptz NOT NULL\n);\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "dim_warehouse and fact_arrival created, both with 0 rows; warehouse_key and arrival_key are GENERATED ALWAYS identity primary keys; warehouse_name NOT NULL UNIQUE; city NOT NULL; fact_arrival warehouse_key NOT NULL with a foreign key; shipment_id and arrived_at NOT NULL.",
+  "constraintProbes": [
+    {
+      "name": "unknown warehouse rejected",
+      "expect": "error",
+      "observed": "23503",
+      "passed": true
+    },
+    {
+      "name": "missing arrival time rejected",
+      "expect": "error",
+      "observed": "23502",
+      "passed": true
+    },
+    {
+      "name": "arrival with a known warehouse accepted",
+      "expect": "ok",
+      "observed": "ok",
+      "passed": true
+    }
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "warehouse_key nullability is not stated. I made it NOT NULL, since it must name a dim_warehouse row (the same choice as customer_key in the i2 ticket).",
+    "Primary key on arrival_key is not stated. I made it the primary key.",
+    "shipment_id has no foreign key, because the ticket names none."
+  ],
+  "confidence": "medium",
+  "notes": "runsTwice is false. Probes passed on all three datasets. The 23502 probe inserts a valid warehouse_key and omits arrived_at. Re-checked on the revised ticket text: warehouse_key and shipment_id present and the arrival_key primary key are now stated, which closes original ambiguities 1 and 2. Solution and results unchanged."
+}

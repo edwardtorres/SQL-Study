@@ -183,9 +183,11 @@ function addStaging(data: FreightData): void {
     id: 1000 + index,
     shipment_id: index % 9 === 0 ? 9000 + index : ((index * 17) % 240) + 1,
     status: index % 11 === 5 ? null : ['booked', 'loaded', 'arrived', 'delivered'][index % 4]!,
-    occurred_at: timestamp(500 + index * 3),
+    // Scans 0 to 5 are already loaded; scan 6 sits exactly on the watermark, so it is not newer; the rest are new.
+    occurred_at: timestamp(468 + index * 2),
   }));
-  data.staging_scans[7] = { ...data.staging_scans[6]! };
+  // The feed sent scan 1007 twice: index 8 repeats index 7, so a load must keep one copy.
+  data.staging_scans[8] = { ...data.staging_scans[7]! };
   data.staging_customer_regions = [
     { customer_id: 2, region: 'East', changed_at: timestamp(480) },
     { customer_id: 4, region: 'West', changed_at: timestamp(490) },
