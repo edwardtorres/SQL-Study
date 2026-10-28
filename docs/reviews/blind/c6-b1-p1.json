@@ -1,0 +1,30 @@
+{
+  "id": "c6-b1-p1",
+  "solutionSql": "SELECT status, CASE WHEN weight_kg IS NULL THEN 'unweighed' WHEN weight_kg < 1000 THEN 'light' ELSE 'heavy' END AS weight_band, count(*)::integer AS shipments FROM shipments GROUP BY 1, 2 ORDER BY 1, 2;",
+  "sampleRowCount": 11,
+  "sampleFirstRows": [
+    { "status": "cancelled", "weight_band": "heavy", "shipments": 36 },
+    { "status": "cancelled", "weight_band": "light", "shipments": 26 }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "unweighed-band",
+      "howSolved": "The first CASE branch tests weight_kg IS NULL and returns 'unweighed' for a missing weight."
+    },
+    {
+      "id": "light-under-1000",
+      "howSolved": "The second CASE branch returns 'light' when weight_kg < 1000, after the NULL branch has been checked."
+    },
+    {
+      "id": "heavy-otherwise",
+      "howSolved": "The ELSE branch returns 'heavy' for any non-null weight of 1000 or more."
+    }
+  ],
+  "solveMinutes": 5,
+  "ambiguities": [
+    "None material. The ordering of weight_band is read as plain text order, which gives heavy, light, unweighed. The instructions do not say otherwise. Only bands that occur are returned, so no zero-count rows are added."
+  ],
+  "confidence": "high",
+  "notes": "Ran with no errors on sample (11 rows), nulls (3 rows) and boundary (12 rows). Only row counts were observed for the hidden datasets. status is NOT NULL in the schema. solveMinutes is a self-estimate. Result objects are keyed by column name in sampleFirstRows."
+}

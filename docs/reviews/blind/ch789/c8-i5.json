@@ -1,0 +1,34 @@
+{
+  "id": "c8-i5",
+  "solutionSql": "SELECT shipment_id, event_id, round(extract(epoch FROM (next_at - occurred_at)))::integer AS seconds_to_next FROM (SELECT shipment_id, id AS event_id, occurred_at, LEAD(occurred_at) OVER (PARTITION BY shipment_id ORDER BY occurred_at, id) AS next_at FROM shipment_events) s ORDER BY shipment_id, occurred_at, event_id;",
+  "sampleRowCount": 678,
+  "sampleFirstRows": [
+    { "shipment_id": 2, "event_id": 1, "seconds_to_next": 14400 },
+    { "shipment_id": 2, "event_id": 3, "seconds_to_next": 14400 }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "whole-seconds",
+      "howSolved": "round() applied to the epoch difference gives the nearest whole second, cast to integer; exact .5 values round up because the differences are non-negative."
+    },
+    {
+      "id": "last-scan-null",
+      "howSolved": "LEAD returns NULL for the last scan of each shipment, so the difference and its rounded value are NULL."
+    },
+    {
+      "id": "next-is-later",
+      "howSolved": "LEAD over PARTITION BY shipment_id ORDER BY occurred_at, id returns the scan that follows in that order."
+    },
+    {
+      "id": "same-moment-greater-id",
+      "howSolved": "The secondary sort on id places an equal-timestamp scan with a greater id after the current one, so LEAD returns it with a 0-second difference."
+    }
+  ],
+  "solveMinutes": 10,
+  "ambiguities": [
+    "The instructions say 'rounded to the nearest whole second' but do not say how an exact .5 second is rounded. I used PostgreSQL round() on the numeric epoch, which rounds half away from zero, so .5 rounds up. Timestamps have microsecond precision, so exact .5 values are possible."
+  ],
+  "confidence": "medium",
+  "notes": "Ran with no errors on sample (678 rows), ties (652 rows) and boundary (480 rows). Only row counts were observed for the hidden datasets. The medium rating reflects the unstated .5 rounding rule, not the SQL. The schema description of shipment_events (largest id wins timestamp ties) matches the reading used. solveMinutes is a self-estimate. Result objects are keyed by column name in sampleFirstRows."
+}

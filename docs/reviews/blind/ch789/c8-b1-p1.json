@@ -1,0 +1,34 @@
+{
+  "id": "c8-b1-p1",
+  "solutionSql": "SELECT customer_id, id FROM (SELECT customer_id, id, row_number() OVER (PARTITION BY customer_id ORDER BY booked_at DESC, id DESC) AS rn FROM shipments) ranked WHERE rn = 1 ORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    { "customer_id": 1, "id": 1 },
+    { "customer_id": 2, "id": 2 }
+  ],
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "most-recent",
+      "howSolved": "row_number() ordered by booked_at DESC keeps the latest booked shipment as row 1 within each customer."
+    },
+    {
+      "id": "per-customer",
+      "howSolved": "PARTITION BY customer_id makes the ranking, and so the choice, separate for each customer."
+    },
+    {
+      "id": "no-shipments-absent",
+      "howSolved": "The window is computed over shipments only, so a customer with no shipment rows never appears in the output."
+    },
+    {
+      "id": "tie-greater-id",
+      "howSolved": "The secondary sort key id DESC puts the greater id first when booked_at is equal."
+    }
+  ],
+  "solveMinutes": 6,
+  "ambiguities": [
+    "None material. I read 'most recent by booked_at' as the latest timestamptz value; booked_at is NOT NULL in the schema, so no NULL ordering question arises."
+  ],
+  "confidence": "high",
+  "notes": "Ran with no errors on sample (6 rows), ties (6 rows) and boundary (6 rows). Only row counts were observed for the hidden datasets. solveMinutes is a self-estimate, not a timed measurement. Result objects are keyed by column name in sampleFirstRows."
+}
