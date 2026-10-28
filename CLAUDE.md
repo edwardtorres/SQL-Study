@@ -40,6 +40,11 @@ Blind-solve rule: no graded item ships until a blind solver agrees with its refe
 on every dataset that item uses. `tests/blind-compare.test.ts` runs that comparison over
 every `docs/reviews/blind/<set>/` folder as part of `npm test`.
 
+Branch rules: work-in-progress commits may go to the designated branch when the stop hook
+asks for them. `main` is fast-forwarded to the designated branch head only after the full
+checks pass: lint, unit tests, build, production scan, the full Chromium e2e suite, and
+CI on that head in both browsers.
+
 ## Audit after every prompt
 
 End the final response to every user prompt with an audit, including small changes,
@@ -133,6 +138,15 @@ Step 2 rules (enforced by the content check and its Vitest suite):
   expected outcomes, not the probe statements. Reviewers write their own probes.
 
 ## Execution findings and cross-browser checks
+
+Engine start (flake closed as machine contention, 2026-10-28). One full Chromium run at 390 px
+saw the first "Run sample" stay disabled for 35 s, in two tests. The failure appeared only while
+the blind-solve agents ran PGlite on the same machine. It did not reproduce afterwards: three
+full Chromium runs on 44fe219 passed 31 of 31 each; 40 cold starts at 390 px (20 under six
+CPU-bound processes) started in 4 to 6 s; five cold starts at 1280 px on the split build had a
+median of 3.50 s. The cause is attributed to machine contention and is not confirmed. CI keeps
+watching the e2e suite on every push. If a first start fails again, record its error context
+and timing before changing anything.
 
 - PGlite is the PostgreSQL engine. No optional extension archives are shipped.
 - Retain CSP `wasm-unsafe-eval`; never add general `unsafe-eval` to silence build
