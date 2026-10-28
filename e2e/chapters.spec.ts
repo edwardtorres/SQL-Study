@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './helpers';
 import { expectNoSidewaysScroll, openChapter, openTicket, tabUntil } from './helpers';
 
 const REFERENCE = 'SELECT s.id, s.weight_kg FROM shipments s WHERE s.id <= 12 AND s.weight_kg > (SELECT AVG(weight_kg) FROM shipments) ORDER BY s.id;';
@@ -25,7 +25,7 @@ for (const width of [390, 1280]) {
       const errors: string[] = [];
       page.on('pageerror', (error) => { errors.push(error.message); });
       await page.goto('/');
-      await expect(page.getByRole('heading', { name: /Your first week/ })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Your desks/ })).toBeVisible();
       await openChapter(page, 5);
       await expect(page.getByRole('heading', { name: 'Queries within queries' })).toBeVisible();
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -66,12 +66,12 @@ for (const width of [390, 1280]) {
       }
       await expect(page.getByText('Three tries in')).toBeVisible();
       for (let tier = 1; tier <= 3; tier += 1) {
-        await page.getByRole('button', { name: `Reveal hint ${tier} · −10 XP`, exact: true }).tap();
+        await page.getByRole('button', { name: `Reveal hint ${tier} · −5 XP`, exact: true }).tap();
         await expect(page.locator('.hint')).toHaveCount(tier);
       }
       await expect(page.locator('.hint')).toHaveCount(3);
       await expect(page.getByRole('button', { name: 'All three hints revealed' })).toBeVisible();
-      await page.getByRole('button', { name: 'Show solution · reduced XP', exact: true }).tap();
+      await page.getByRole('button', { name: 'Show solution · 5 XP after a pass', exact: true }).tap();
       await expect(page.locator('.solution pre')).toContainText('NOT EXISTS');
       await expectNoSidewaysScroll(page);
     });
@@ -145,8 +145,8 @@ for (const width of [390, 1280]) {
   });
 }
 
-// Upgrade: a real version 1 save in localStorage must load, keep its drafts and passes, and be rewritten as version 2.
-test('a real version 1 save loads with its drafts and passes, then upgrades to version 2', async ({ page }) => {
+// Upgrade: a real version 1 save in localStorage must load, keep its drafts and passes, and be rewritten as version 3.
+test('a real version 1 save loads with its drafts and passes, then upgrades to version 3', async ({ page }) => {
   test.setTimeout(90_000);
   const v1 = {
     version: 1,
@@ -163,7 +163,7 @@ test('a real version 1 save loads with its drafts and passes, then upgrades to v
   await page.getByRole('button', { name: /The heavy-load shortlist/ }).first().tap();
   await expect(page.getByRole('textbox', { name: 'SQL query', exact: true })).toContainText('LIMIT 1');
   await page.getByRole('textbox', { name: 'SQL query', exact: true }).fill('SELECT id FROM shipments LIMIT 2;');
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null')?.version)).toBe(2);
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null')?.version)).toBe(3);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null'));
   expect(saved.lessons).toEqual({});
   expect(saved.tickets.dispatch.passed).toBe(true);

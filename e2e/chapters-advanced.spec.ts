@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './helpers';
 import { expectNoSidewaysScroll, openChapter, openTicket } from './helpers';
 
 // Chapters 7 to 9: set operations, window functions, DDL graded by constraint tests, and transactions.

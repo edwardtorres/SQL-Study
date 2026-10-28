@@ -1,12 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers';
 import { expectNoSidewaysScroll, openChapter, openTicket, tabUntil } from './helpers';
 
-// The three sample tickets sit in chapters 1 and 3, and in the chapter 8 preview on the home page.
+// The three sample tickets sit in chapters 1, 3 and 8. Each one is opened from its desk.
 const samples = [
-  { chapter: 1, title: 'The heavy-load shortlist', open: undefined },
-  { chapter: 3, title: 'The phantom unbilled shipment', open: undefined },
-  { chapter: 0, title: 'One reliable latest scan', open: 'Open preview ticket' },
+  { chapter: 1, title: 'The heavy-load shortlist' },
+  { chapter: 3, title: 'The phantom unbilled shipment' },
+  { chapter: 8, title: 'One reliable latest scan' },
 ] as const;
 
 for (const width of [390, 1280]) {
@@ -18,27 +18,22 @@ for (const width of [390, 1280]) {
     page.on('pageerror', (error) => { errors.push(error.message); });
     page.on('request', (request) => { if (request.url().endsWith('.wasm')) wasmRequests.push(request.url()); });
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Your first week/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Your desks/ })).toBeVisible();
     expect(wasmRequests).toHaveLength(0);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`home-${width}.png`), fullPage: true });
     for (const sample of samples) {
-      if (sample.open) {
-        await page.goto('/');
-        await page.getByRole('button', { name: sample.open }).tap();
-      } else {
-        await openTicket(page, sample.chapter, sample.title);
-      }
+      await openTicket(page, sample.chapter, sample.title);
       await expect(page.getByRole('button', { name: 'Run sample', exact: true })).toBeEnabled({ timeout: 35_000 });
       await page.getByRole('button', { name: 'Before you start: a quick field guide' }).tap();
       await page.getByRole('button', { name: 'Run example', exact: true }).tap();
       await expect(page.locator('.results-card table')).toBeVisible();
       await page.getByRole('button', { name: 'Before you start: a quick field guide' }).tap();
       if (width === 390) {
-        await page.getByRole('button', { name: 'Reveal hint 1 · −10 XP', exact: true }).tap();
+        await page.getByRole('button', { name: 'Reveal hint 1 · −5 XP', exact: true }).tap();
         await expect(page.locator('.hint')).toHaveCount(1);
       }
-      await page.getByRole('button', { name: 'Show solution · reduced XP', exact: true }).tap();
+      await page.getByRole('button', { name: 'Show solution · 5 XP after a pass', exact: true }).tap();
       await page.getByRole('button', { name: 'Load solution into editor', exact: true }).tap();
       await page.getByRole('button', { name: 'Submit query', exact: true }).tap();
       await expect(page.getByRole('heading', { name: 'Ticket passed. Nice work.' })).toBeVisible({ timeout: 15_000 });
@@ -116,7 +111,7 @@ for (const width of [390, 1280]) {
     const errors: string[] = [];
     page.on('pageerror', (error) => { errors.push(error.message); });
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Your first week/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Your desks/ })).toBeVisible();
     await tabUntil(page, 'Open chapter 1');
     await page.keyboard.press('Enter');
     await tabUntil(page, 'The heavy-load shortlist');
@@ -141,10 +136,10 @@ for (const width of [390, 1280]) {
 }
 
 test('future save is not overwritten by this version', async ({ page }) => {
-  await page.addInitScript(() => { localStorage.setItem('larkspur-sql-desk.progress', '{"version":3,"futureData":"preserve"}'); });
+  await page.addInitScript(() => { localStorage.setItem('larkspur-sql-desk.progress', '{"version":4,"futureData":"preserve"}'); });
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('newer app version');
   await openTicket(page, 1, 'The heavy-load shortlist');
   await page.getByRole('textbox', { name: 'SQL query', exact: true }).fill('SELECT 1;');
-  expect(await page.evaluate(() => localStorage.getItem('larkspur-sql-desk.progress'))).toBe('{"version":3,"futureData":"preserve"}');
+  expect(await page.evaluate(() => localStorage.getItem('larkspur-sql-desk.progress'))).toBe('{"version":4,"futureData":"preserve"}');
 });

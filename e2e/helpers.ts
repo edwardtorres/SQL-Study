@@ -1,6 +1,36 @@
-import type { Page } from '@playwright/test';
+import { test as base, type Page } from '@playwright/test';
 
-// Tap-only navigation from the chapter list. Every helper starts from the home page or a chapter page.
+export { expect } from '@playwright/test';
+export type { Page } from '@playwright/test';
+
+const SAVE_KEY = 'larkspur-sql-desk.progress';
+
+// Marks chapters 1 to `chapter` mastered. The save is written on the first load of a test only, so a reload keeps
+// whatever the learner did. Gating tests import from @playwright/test instead and start from a fresh browser.
+export async function masterChaptersThrough(page: Page, chapter: number): Promise<void> {
+  const chapters = Object.fromEntries(Array.from({ length: chapter }, (_, index) => [String(index + 1), { method: 'boss', masteredAt: 0 }]));
+  const save = {
+    version: 3, activeTicket: null, tickets: {}, lessons: {}, chapters,
+    streak: { current: 0, longest: 0, countedDay: null, itemsDay: null, items: [] }, independentRun: 0, longestRun: 0, badges: {},
+  };
+  await page.addInitScript(({ key, value }) => {
+    try {
+      if (localStorage.getItem(key) === null) localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Storage can be blocked. The test then sees the locked desks and fails on its own terms.
+    }
+  }, { key: SAVE_KEY, value: save });
+}
+
+// Content tests open any desk. The default fixture marks all 13 chapters mastered on the first load.
+export const test = base.extend({
+  page: async ({ page }, use) => {
+    await masterChaptersThrough(page, 13);
+    await use(page);
+  },
+});
+
+// Tap-only navigation from the desk list. Every helper starts from the home page or a chapter page.
 export async function openChapter(page: Page, chapter: number): Promise<void> {
   await page.getByRole('button', { name: new RegExp(`Open chapter ${chapter}$`) }).tap();
 }

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './helpers';
 import { items } from '../src/data/catalog';
 import { expectNoSidewaysScroll, openTicket } from './helpers';
 

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers';
 
 for (const width of [390, 1280]) {
   test(`engine lab works using taps with axe checks at ${width}px`, async ({ page }) => {
