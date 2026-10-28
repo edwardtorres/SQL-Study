@@ -1,0 +1,18 @@
+{
+  "id": "c11-i3",
+  "solutionSql": "INSERT INTO shipment_events (id, shipment_id, status, occurred_at)\nSELECT DISTINCT ON (s.id) s.id, s.shipment_id, s.status, s.occurred_at\nFROM staging_scans AS s\nJOIN shipments AS sh ON sh.id = s.shipment_id\nJOIN load_watermark AS w ON s.occurred_at > w.last_loaded_at\nWHERE s.status IS NOT NULL\nORDER BY s.id, s.occurred_at, s.shipment_id, s.status;\nUPDATE load_watermark\nSET last_loaded_at = (SELECT MAX(occurred_at) FROM staging_scans);\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "26 scans are added to shipment_events (704 events in total). Scan 1007 is loaded once. Orphans 1009, 1018, 1027, 1036 and status-less 1016, 1038 are skipped. Scan 1006 at the watermark instant is not loaded. The watermark becomes 2026-01-19 18:00 UTC. A second run adds nothing.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "\"Keep one copy of a scan the feed sent twice\": the two copies are identical on every dataset. DISTINCT ON picks one arbitrarily if they ever differed. No change to the answer here.",
+    "\"Newest scan time in staging_scans\" can be read as newest loaded scan or newest row of any kind. I used every row. The newest row on every dataset is a valid scan (1039), so the result is the same.",
+    "shipment_events.note is not mentioned. I left it NULL.",
+    "The text does not say what to do if a scan id already exists in shipment_events. No dataset has a collision, so it did not matter here."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample, nulls and boundary. Totals: sample 26 loaded, nulls 13, boundary 18 (watermark moved to 2026-01-19 18:00 UTC each time). Second run identical on all three (same event rows, count and watermark). Insert comes before the watermark update, which the text asks for. No constraintTests, so constraintProbes is null. Re-checked against the revised text (watermark = newest occurred_at of any row in staging_scans): solution unchanged. Re-run on sample, nulls and boundary gives the same results as before. Probe: a newer orphan row with no status moves the watermark to its time and is not loaded; a second run adds nothing. The any-row ambiguity above is resolved by the revised text.",
+  "superseded": "Step 3b review: idempotency wording added (the load runs twice)"
+}

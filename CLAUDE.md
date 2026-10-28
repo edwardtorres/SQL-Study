@@ -98,9 +98,9 @@ Step 2 rules (enforced by the content check and its Vitest suite):
   from the taxonomy in `src/core/types.ts` (`mistakeTags`). Each tag has a targeted
   explanation that appears when a submission returns exactly that variant's rows.
 - Write-query tickets (independent, boss, and the Step 1 write and window samples)
-  get a bare skeleton starter at most. Only fix-the-bug tickets get a broken
-  starter. The check parses the starter and rejects WHERE, JOIN, GROUP, ORDER,
-  LIMIT, WITH, OVER, CASE, and aggregates.
+  get a bare skeleton starter at most, or an empty starter (`starterStyle: 'empty'`) for
+  index tickets. Only fix-the-bug tickets get a broken starter. The check parses the
+  starter and rejects WHERE, JOIN, GROUP, ORDER, LIMIT, WITH, OVER, CASE, and aggregates.
 - Every item has three hint tiers (nudge, approach, partial query).
 - Lesson claims are checked against the cited pages. Quotes in `src/data/citations.json`
   must appear verbatim on the live page; `scripts/verify-quotes.mjs` checks this.
@@ -129,13 +129,36 @@ Step 2 rules (enforced by the content check and its Vitest suite):
   transaction, so a learner's COMMIT never reaches the real transaction. Isolation levels,
   READ ONLY, DEFERRABLE, AND CHAIN and two-phase commit are refused.
 - Bare skeletons apply to write tickets too: CREATE TABLE with no column list, or a DML
-  statement with no WHERE, subquery, join or ordering.
+  statement with no WHERE, subquery, join or ordering. A starter may hold several
+  statements, and each one must be bare. A CREATE VIEW starter is judged by its query.
+  A bare index skeleton does not parse, so index tickets use `starterStyle: 'empty'`
+  (a blank editor) and are graded by catalog state.
 - Every write-ticket wrong variant must change the state on at least two datasets, and at
   least one of them must change it on the visible sample.
 - Every lesson example and predict count is checked by the content test; examples are
   read-only and cannot name another schema.
 - Chapter 9 DDL and transaction tickets are blind-reviewed with the constraint names and
   expected outcomes, not the probe statements. Reviewers write their own probes.
+
+## Step 3b rules (coverage, idempotency, starters)
+
+- **Coverage rule.** Every rule a ticket states is declared in the item's `rules` list, with
+  an id and the sentence the learner reads. Each declared rule needs at least one wrong
+  variant whose `rule` names it, and that variant must be caught by at least two datasets.
+  Instruction words that state a rule (NULL, missing, no, left out, zero, tie, equal, once,
+  twice, repeat, at least, at most, exactly, first, next, latest, boundary, distinct, second
+  run) are listed in `tests/rules-lint.ts`, and an item that uses one must declare a rule.
+  The grader cannot prove that a variant breaks only its own rule. Each blind solver records
+  how it read every declared rule, and the variant is reviewed against that reading.
+- **Idempotency wording.** A ticket whose load runs twice says so in its instructions: the
+  table is created once, and the load runs twice in a row. The second run must succeed and
+  leave the same rows, or add nothing, as the ticket says.
+- **Edge cases stay in hidden data.** An edge case is added only inside the hidden variants
+  named for it in `src/data/seed.ts` (`applyEdgeCases`, `addStaging`). The visible sample is
+  never changed by an edge case, so lesson predicts and the sample stay fixed.
+- **Re-solving.** A ticket whose instruction text, dataset list or wrong variants change is
+  re-solved blind by a fresh agent, and its earlier record moves to `superseded/` with the
+  reason. A change only to hidden data is verified by re-running `tests/blind-compare.test.ts`.
 
 ## Execution findings and cross-browser checks
 

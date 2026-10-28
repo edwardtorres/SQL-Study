@@ -1,15 +1,37 @@
 {
   "id": "c11-b1-p2",
-  "solutionSql": "CREATE TABLE shipment_latest (\n  shipment_id integer PRIMARY KEY REFERENCES shipments (id),\n  status text NOT NULL,\n  occurred_at timestamptz NOT NULL,\n  event_id integer NOT NULL\n);\nINSERT INTO shipment_latest (shipment_id, status, occurred_at, event_id)\nSELECT DISTINCT ON (e.shipment_id) e.shipment_id, e.status, e.occurred_at, e.id\nFROM shipment_events AS e\nORDER BY e.shipment_id, e.occurred_at DESC, e.id DESC\nON CONFLICT (shipment_id) DO UPDATE\nSET status = EXCLUDED.status, occurred_at = EXCLUDED.occurred_at, event_id = EXCLUDED.event_id;\n",
-  "sampleRowCount": null,
-  "sampleFirstRows": null,
-  "sampleChecks": "shipment_latest holds 218 rows, one per shipment with events. Each row matches the newest event by time, then larger id, from an independent query I wrote. A second run leaves the same rows.",
-  "constraintProbes": null,
+  "solutionSql": "CREATE TABLE shipment_latest (shipment_id integer PRIMARY KEY REFERENCES shipments (id), status text NOT NULL, occurred_at timestamptz NOT NULL, event_id integer NOT NULL);\n\nINSERT INTO shipment_latest (shipment_id, status, occurred_at, event_id)\nSELECT DISTINCT ON (e.shipment_id) e.shipment_id, e.status, e.occurred_at, e.id\nFROM shipment_events e\nORDER BY e.shipment_id, e.occurred_at DESC, e.id DESC\nON CONFLICT (shipment_id) DO UPDATE SET status = EXCLUDED.status, occurred_at = EXCLUDED.occurred_at, event_id = EXCLUDED.event_id;",
+  "sampleRowCount": 218,
+  "sampleFirstRows": [
+    { "shipment_id": 2, "status": "arrived", "occurred_at": "2025-12-28T10:00:00Z", "event_id": 2 },
+    { "shipment_id": 3, "status": "arrived", "occurred_at": "2025-12-28T12:00:00Z", "event_id": 5 }
+  ],
+  "sampleChecks": "shipment_latest holds 218 rows, one per shipment that has events (218 distinct shipment_ids). Nulls dataset: 109 rows. Ties dataset: 163 rows, where a shipment with two events at the same newest time keeps the event with the larger id (for example shipment 2 keeps event 4). The second run leaves the same rows.",
   "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "newest-per-shipment",
+      "howSolved": "DISTINCT ON (e.shipment_id) with ORDER BY e.occurred_at DESC keeps the newest shipment_events row for each shipment."
+    },
+    {
+      "id": "tie-larger-id",
+      "howSolved": "The secondary sort key e.id DESC picks the larger id when two events share the newest occurred_at."
+    },
+    {
+      "id": "second-run-no-error",
+      "howSolved": "ON CONFLICT (shipment_id) DO UPDATE lets the second INSERT update existing rows instead of failing on the primary key."
+    },
+    {
+      "id": "second-run-same-rows",
+      "howSolved": "On the second run the upsert writes the same newest event for each shipment, so the table is unchanged."
+    }
+  ],
+  "runsTwiceCheck": "The second run upserts each shipment's newest event with the same values, so no row changes and no error is raised. Checked on sample, nulls and ties: the state after run 2 equals the state after run 1 on all three.",
+  "solveMinutes": 5,
   "ambiguities": [
-    "The ticket names shipment_events as the source only by implication (\"the newest shipment_events row\"). I read it as the existing table, which is correct for this ticket.",
-    "The second-run behaviour is open (refresh or keep). I used DO UPDATE. DO NOTHING gives the same rows on these datasets."
+    "'shipment_id (integer, primary key, must name a shipment)' was read as PRIMARY KEY REFERENCES shipments (id).",
+    "The second run could update the existing rows (DO UPDATE) or leave them (DO NOTHING). The instructions do not say which. Both give the same state here; I chose DO UPDATE so the row always reflects the newest event."
   ],
   "confidence": "high",
-  "notes": "Ran on sample (218), nulls (109), ties (163) and boundary (163). Second run identical on sample, nulls and ties. The independent check (time then id, via NOT EXISTS) matched on all four datasets. Own probes: missing shipment gives 23503, NULL event_id gives 23502."
+  "notes": "Run through PGlite on sample, nulls and ties: CREATE once, then the load twice, no errors. DISTINCT ON with ORDER BY occurred_at DESC, id DESC implements both the newest-event rule and the larger-id tie-break."
 }

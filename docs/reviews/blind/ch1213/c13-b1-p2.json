@@ -1,35 +1,38 @@
 {
   "id": "c13-b1-p2",
-  "solutionSql": "WITH distinct_weights AS (\n  SELECT DISTINCT customer_id, weight_kg\n  FROM shipments\n  WHERE weight_kg IS NOT NULL\n),\nranked AS (\n  SELECT customer_id,\n         weight_kg,\n         DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY weight_kg DESC) AS rnk\n  FROM distinct_weights\n)\nSELECT customer_id,\n       weight_kg AS second_weight\nFROM ranked\nWHERE rnk = 2\nORDER BY customer_id;",
+  "solutionSql": "SELECT customer_id, weight_kg AS second_weight\nFROM (\n  SELECT customer_id,\n         weight_kg,\n         DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY weight_kg DESC) AS rnk\n  FROM (\n    SELECT DISTINCT customer_id, weight_kg\n    FROM shipments\n    WHERE weight_kg IS NOT NULL\n  ) AS distinct_weights\n) AS ranked\nWHERE rnk = 2\nORDER BY customer_id;",
   "sampleRowCount": 6,
   "sampleFirstRows": [
-    [
-      1,
-      1986
-    ],
-    [
-      2,
-      1828
-    ],
-    [
-      3,
-      1886
-    ],
-    [
-      4,
-      1952
-    ],
-    [
-      5,
-      1911
-    ]
+    {
+      "customer_id": 1,
+      "second_weight": 1986
+    },
+    {
+      "customer_id": 2,
+      "second_weight": 1828
+    }
   ],
-  "sampleChecks": null,
-  "constraintProbes": null,
   "columnsMatchTicket": true,
-  "planNodes": null,
-  "solveMinutes": 2,
+  "rules": [
+    {
+      "id": "second-distinct",
+      "howSolved": "DENSE_RANK over each customer's distinct weights, descending, and keep rank 2 so the second-highest distinct value is returned."
+    },
+    {
+      "id": "shared-weight-once",
+      "howSolved": "SELECT DISTINCT on (customer_id, weight_kg) collapses shared weights before ranking."
+    },
+    {
+      "id": "one-distinct-left-out",
+      "howSolved": "Filtering to rank 2 drops any customer with only one distinct weight because they have no rank 2 row."
+    },
+    {
+      "id": "weight-present",
+      "howSolved": "WHERE weight_kg IS NOT NULL in the distinct subquery removes shipments without a weight before ranking."
+    }
+  ],
+  "solveMinutes": 5,
   "ambiguities": [],
   "confidence": "high",
-  "notes": "Revised text states integer types. The SQL was unchanged and already returns integer for customer_id and second_weight (OID 23), so no cast was needed. DENSE_RANK() over distinct (customer_id, weight_kg) pairs, NULL weights removed first, keeping rank 2. Sample customer 1 gives 1986 (maximum 1999); customer 2 gives 1828 (maximum 1894)."
+  "notes": "Ran without error on sample, nulls, ties and boundary. No guesses needed beyond the explicit wording."
 }

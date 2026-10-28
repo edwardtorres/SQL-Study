@@ -1,0 +1,36 @@
+{
+  "id": "c13-b1-p2",
+  "solutionSql": "WITH distinct_weights AS (\n  SELECT DISTINCT customer_id, weight_kg\n  FROM shipments\n  WHERE weight_kg IS NOT NULL\n),\nranked AS (\n  SELECT customer_id,\n         weight_kg,\n         DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY weight_kg DESC) AS rnk\n  FROM distinct_weights\n)\nSELECT customer_id,\n       weight_kg AS second_weight\nFROM ranked\nWHERE rnk = 2\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      1986
+    ],
+    [
+      2,
+      1828
+    ],
+    [
+      3,
+      1886
+    ],
+    [
+      4,
+      1952
+    ],
+    [
+      5,
+      1911
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 2,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Revised text states integer types. The SQL was unchanged and already returns integer for customer_id and second_weight (OID 23), so no cast was needed. DENSE_RANK() over distinct (customer_id, weight_kg) pairs, NULL weights removed first, keeping rank 2. Sample customer 1 gives 1986 (maximum 1999); customer 2 gives 1828 (maximum 1894).",
+  "superseded": "Step 3b review: rules declared and covered (shared weight, single-weight customer, missing weight); datasets now include nulls"
+}

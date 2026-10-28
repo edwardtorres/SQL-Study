@@ -1,0 +1,17 @@
+{
+  "id": "c10-i4",
+  "solutionSql": "CREATE TABLE dim_customer (\n    customer_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    customer_name text NOT NULL UNIQUE\n);\n\nCREATE TABLE dim_route (\n    route_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    origin text NOT NULL,\n    destination text NOT NULL,\n    UNIQUE (origin, destination)\n);\n\nCREATE TABLE fact_shipment (\n    tracking_code text PRIMARY KEY,\n    customer_key integer NOT NULL REFERENCES dim_customer (customer_key),\n    route_key integer NOT NULL REFERENCES dim_route (route_key),\n    weight_kg integer,\n    status text NOT NULL,\n    booked_at timestamptz NOT NULL\n);\n\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name\nFROM staging_shipments_flat\nWHERE customer_name IS NOT NULL\nORDER BY customer_name;\n\nINSERT INTO dim_route (origin, destination)\nSELECT DISTINCT origin, destination\nFROM staging_shipments_flat\nWHERE origin IS NOT NULL AND destination IS NOT NULL\nORDER BY origin, destination;\n\nINSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, r.route_key, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name\nJOIN dim_route AS r ON r.origin = f.origin AND r.destination = f.destination\nORDER BY f.tracking_code;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "dim_customer 6 rows, dim_route 4 rows (Alder Hub to Birch Yard, Birch Yard to Cedar Dock, Cedar Dock to Dahlia Terminal, Dahlia Terminal to Alder Hub), fact_shipment 60 rows, one per tracking_code with customer_key and route_key resolved. Counts are 6/4/60 on nulls and boundary too.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "dim_route column names and its surrogate key name are not given. I used origin, destination and route_key (route_key is named by the fact spec). A state check on natural keys depends on these names.",
+    "Nullability of fact_shipment customer_key, route_key, status and booked_at is not stated. I made all four NOT NULL. Only weight_kg is stated as optional.",
+    "A NULL origin, destination or customer name in the flat extract is not addressed. No dataset has one, so the NULL behaviour is not exercised."
+  ],
+  "confidence": "medium",
+  "notes": "Each dimension is loaded before the fact. The fact load is an inner join on the three flat columns and yields 60 rows on all datasets. Re-checked on the revised ticket text: dim_route columns and key are now named and customer_key and route_key are stated present, which closes original ambiguities 1 and 3. Status and booked_at presence is still not stated, and NULL names, origins or destinations are still unaddressed. Solution and results unchanged.",
+  "superseded": "Step 3b review: NULL, pair and fan-out rules declared and covered; loads now filter missing values"
+}

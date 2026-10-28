@@ -43,15 +43,20 @@ export const mistakeTags = [
   'FUNCTION_ON_INDEXED_COLUMN', 'INDEX_WRONG_COLUMN', 'INDEX_MISSING', 'LEADING_WILDCARD', 'SELECT_STAR_COST',
   // Chapter 13: interview patterns.
   'LATEST_TIE_BREAK', 'STREAK_GAP_MISSED', 'MONTH_BOUNDARY_TZ', 'COHORT_DENOMINATOR', 'PIVOT_CASE_ELSE', 'SECOND_HIGHEST_RANK',
+  // Step 3b review: rules that a variant must break on its own.
+  'TIE_BREAK_REVERSED', 'COHORT_SAME_MONTH', 'RERUN_CHANGES_ROWS', 'INDEX_COLUMN_ORDER',
 ] as const;
 export type MistakeTag = typeof mistakeTags[number];
-export interface WrongVariant { id: string; sql: string; mistake: MistakeTag; explanation: string }
+// rule: the declared rule (Challenge.rules) this variant breaks and no other. Every declared rule needs at least one such variant.
+export interface WrongVariant { id: string; sql: string; mistake: MistakeTag; explanation: string; rule?: string }
+// A rule the ticket states. Its id is what a wrong variant names in rule; its text is the sentence the learner reads.
+export interface TicketRule { id: string; text: string }
 
 // sample: the Step 1 showcase tickets. guided: fill-in-the-blank. independent: a colleague's ticket.
 // boss: one part of a multi-part ticket (bossGroup names the group).
 export type Role = 'sample' | 'guided' | 'independent' | 'boss';
-// How the starter is written: skeleton (a bare skeleton, write and window tickets), blanks (fill-in blanks, guided), broken (a real broken starter, fix tickets).
-export type StarterStyle = 'skeleton' | 'broken' | 'blanks';
+// How the starter is written: skeleton (a bare skeleton, write and window tickets), blanks (fill-in blanks, guided), broken (a real broken starter, fix tickets), empty (no starter; index tickets).
+export type StarterStyle = 'skeleton' | 'broken' | 'blanks' | 'empty';
 
 export interface Challenge {
   id: string;
@@ -84,6 +89,8 @@ export interface Challenge {
   plan?: PlanCheck;
   // Chapter 13 items: the solve time the item is written for, in minutes.
   estimatedMinutes?: number;
+  // The rules the instructions state. Each needs a wrong variant whose rule names it (tests/content.test.ts).
+  rules?: readonly TicketRule[];
   hints: readonly [string, string, string];
   docs: readonly { label: string; url: string }[];
   datasets: readonly DatasetSpec[];

@@ -173,12 +173,46 @@ export function generateSeed(seed: number, variant: Variant = 'sample'): Freight
   data.shipments[0]!.booked_at = '2026-01-31T00:00:00.000Z';
   data.shipments[1]!.booked_at = '2026-01-31T23:59:59.999Z';
   if (variant === 'boundary') applyBoundary(data);
-  addStaging(data);
+  applyEdgeCases(data, variant);
+  addStaging(data, variant);
   return data;
 }
 
+// Edge cases for the coverage rule (CLAUDE.md). Each one applies only to the hidden variants named in it, so the visible sample never moves.
+function applyEdgeCases(data: FreightData, variant: Variant): void {
+  // Tied top weights for customer 1: three shipments at 2000 kg and two at 1990 kg, above every random weight (100 to 2000). Rows past index 36 that are not queued,
+  // so the boundary dataset's queued weights stay as they are.
+  if (variant === 'ties' || variant === 'boundary') {
+    const topOne = data.shipments.filter((shipment, index) => index >= 36 && Number(shipment.customer_id) === 1 && shipment.status !== 'queued');
+    topOne.slice(0, 3).forEach((shipment) => { shipment.weight_kg = 2000; });
+    topOne.slice(3, 5).forEach((shipment) => { shipment.weight_kg = 1990; });
+  }
+  // Customer 5 has one distinct weight, so a second-highest question leaves that customer out.
+  if (variant === 'nulls' || variant === 'ties') {
+    data.shipments.filter((shipment) => Number(shipment.customer_id) === 5).forEach((shipment) => { shipment.weight_kg = 500; });
+  }
+  // Customer 3 books only in December and customer 4 only in January, so next-month and same-month retention differ.
+  if (variant === 'nulls' || variant === 'boundary') {
+    const january = Date.UTC(2026, 0, 1);
+    data.shipments.forEach((shipment, index) => {
+      if (Number(shipment.customer_id) === 3 && Date.parse(String(shipment.booked_at)) >= january) {
+        shipment.booked_at = new Date(Date.UTC(2025, 11, 29) + (index % 20) * 3_600_000).toISOString();
+      }
+      if (Number(shipment.customer_id) === 4 && Date.parse(String(shipment.booked_at)) < january) {
+        shipment.booked_at = new Date(Date.UTC(2026, 0, 4) + (index % 20) * 3_600_000).toISOString();
+      }
+    });
+    // Warehouse 4 receives no arrivals: route 3 is the only route that ends there, so its shipments lose their arrived events.
+    const routeIds = new Set(data.routes.filter((route) => Number(route.destination_id) === 4).map((route) => Number(route.id)));
+    const shipmentIds = new Set(data.shipments.filter((shipment) => routeIds.has(Number(shipment.route_id))).map((shipment) => Number(shipment.id)));
+    data.shipment_events = data.shipment_events
+      .filter((event) => !(event.status === 'arrived' && shipmentIds.has(Number(event.shipment_id))))
+      .map((event, index) => ({ ...event, id: index + 1 }));
+  }
+}
+
 // Staging extracts for chapters 10 to 13. Built by index arithmetic only, so the existing seed data is unchanged.
-function addStaging(data: FreightData): void {
+function addStaging(data: FreightData, variant: Variant): void {
   data.staging_scans = Array.from({ length: 40 }, (_, index) => ({
     id: 1000 + index,
     shipment_id: index % 9 === 0 ? 9000 + index : ((index * 17) % 240) + 1,
@@ -186,8 +220,11 @@ function addStaging(data: FreightData): void {
     // Scans 0 to 5 are already loaded; scan 6 sits exactly on the watermark, so it is not newer; the rest are new.
     occurred_at: timestamp(468 + index * 2),
   }));
-  // The feed sent scan 1007 twice: index 8 repeats index 7 in place of scan 1008, so 1008 is absent and a load must keep one copy.
-  data.staging_scans[8] = { ...data.staging_scans[7]! };
+  // The feed sent scan 1007 twice. The repeat is appended after the 40 rows, so scan 1008 keeps its own row and a load must keep one copy of 1007.
+  data.staging_scans.push({ ...data.staging_scans[7]! });
+  // Islands differ by dataset: a missing status splits a run, and a repeat in the feed counts once.
+  if (variant === 'nulls') { data.staging_scans[2]!.status = null; data.staging_scans[3]!.status = null; }
+  if (variant === 'boundary') { data.staging_scans[4]!.status = null; data.staging_scans[9]!.status = null; data.staging_scans.push({ ...data.staging_scans[2]! }); }
   data.staging_customer_regions = [
     { customer_id: 2, region: 'East', changed_at: timestamp(480) },
     { customer_id: 4, region: 'West', changed_at: timestamp(490) },
@@ -203,6 +240,13 @@ function addStaging(data: FreightData): void {
     const destination = data.warehouses[Number(route.destination_id) - 1]!;
     return { tracking_code: shipment.tracking_code ?? null, customer_name: customer.name ?? null, origin: origin.name ?? null, destination: destination.name ?? null, weight_kg: shipment.weight_kg ?? null, status: shipment.status ?? null, booked_at: shipment.booked_at ?? null };
   });
+  // Missing names and places in the feed, for the nulls and nulltext datasets only.
+  if (variant === 'nulls' || variant === 'nulltext') {
+    data.staging_shipments_flat[7]!.customer_name = null;
+    data.staging_shipments_flat[19]!.customer_name = null;
+    data.staging_shipments_flat[11]!.origin = null;
+    data.staging_shipments_flat[23]!.destination = null;
+  }
 }
 
 // Boundary dataset: the first five queued shipments weigh 1200, 900, 700, 501 and exactly 500 kg,

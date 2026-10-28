@@ -1,0 +1,16 @@
+{
+  "id": "c11-b1-p2",
+  "solutionSql": "CREATE TABLE shipment_latest (\n  shipment_id integer PRIMARY KEY REFERENCES shipments (id),\n  status text NOT NULL,\n  occurred_at timestamptz NOT NULL,\n  event_id integer NOT NULL\n);\nINSERT INTO shipment_latest (shipment_id, status, occurred_at, event_id)\nSELECT DISTINCT ON (e.shipment_id) e.shipment_id, e.status, e.occurred_at, e.id\nFROM shipment_events AS e\nORDER BY e.shipment_id, e.occurred_at DESC, e.id DESC\nON CONFLICT (shipment_id) DO UPDATE\nSET status = EXCLUDED.status, occurred_at = EXCLUDED.occurred_at, event_id = EXCLUDED.event_id;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "shipment_latest holds 218 rows, one per shipment with events. Each row matches the newest event by time, then larger id, from an independent query I wrote. A second run leaves the same rows.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "The ticket names shipment_events as the source only by implication (\"the newest shipment_events row\"). I read it as the existing table, which is correct for this ticket.",
+    "The second-run behaviour is open (refresh or keep). I used DO UPDATE. DO NOTHING gives the same rows on these datasets."
+  ],
+  "confidence": "high",
+  "notes": "Ran on sample (218), nulls (109), ties (163) and boundary (163). Second run identical on sample, nulls and ties. The independent check (time then id, via NOT EXISTS) matched on all four datasets. Own probes: missing shipment gives 23503, NULL event_id gives 23502.",
+  "superseded": "Step 3b review: second-run behaviour rule covered (variant b1p2-rerun-overwrites); idempotency wording added"
+}

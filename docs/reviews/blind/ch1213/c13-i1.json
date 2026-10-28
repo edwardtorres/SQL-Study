@@ -1,42 +1,36 @@
 {
   "id": "c13-i1",
-  "solutionSql": "WITH scanned AS (\n  SELECT DISTINCT id\n  FROM staging_scans\n  WHERE id IS NOT NULL AND status IS NOT NULL\n),\nislands AS (\n  SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS island\n  FROM scanned\n)\nSELECT CAST(MIN(id) AS integer) AS start_id,\n       CAST(MAX(id) AS integer) AS end_id,\n       CAST(COUNT(*) AS integer) AS scans\nFROM islands\nGROUP BY island\nORDER BY start_id;",
-  "sampleRowCount": 6,
+  "solutionSql": "WITH scanned AS (\n  SELECT DISTINCT id\n  FROM staging_scans\n  WHERE id IS NOT NULL\n    AND status IS NOT NULL\n),\nruns AS (\n  SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS run_key\n  FROM scanned\n)\nSELECT MIN(id)::integer AS start_id,\n       MAX(id)::integer AS end_id,\n       COUNT(*)::integer AS scans\nFROM runs\nGROUP BY run_key\nORDER BY start_id;",
+  "sampleRowCount": 5,
   "sampleFirstRows": [
-    [
-      1000,
-      1004,
-      5
-    ],
-    [
-      1006,
-      1007,
-      2
-    ],
-    [
-      1009,
-      1015,
-      7
-    ],
-    [
-      1017,
-      1026,
-      10
-    ],
-    [
-      1028,
-      1037,
-      10
-    ]
+    {
+      "start_id": 1000,
+      "end_id": 1004,
+      "scans": 5
+    },
+    {
+      "start_id": 1006,
+      "end_id": 1015,
+      "scans": 10
+    }
   ],
-  "sampleChecks": null,
-  "constraintProbes": null,
   "columnsMatchTicket": true,
-  "planNodes": null,
-  "solveMinutes": 3,
-  "ambiguities": [
-    "An id sent twice with one copy carrying a status and one copy NULL: I counted it as carrying a status (WHERE status IS NOT NULL before DISTINCT). The revised text says an id sent twice counts once and a run needs every id to carry a status, but it does not say whether a NULL copy breaks the id. Another reading requires every copy to carry a status."
+  "rules": [
+    {
+      "id": "gap-breaks-island",
+      "howSolved": "Only ids with a non-NULL status enter the set, so a status-less or absent id splits the run during the gaps-and-islands step."
+    },
+    {
+      "id": "repeat-once",
+      "howSolved": "SELECT DISTINCT id collapses duplicate ids before the run keys are computed, so a repeated id counts once."
+    }
   ],
-  "confidence": "high",
-  "notes": "Revised text: NULL ids are not counted and consecutive means one id after the previous one, both now stated, so the NULL-id ambiguity is gone. Casts: start_id and end_id were already integer; scans cast to integer (was bigint). Sample islands unchanged: 1000-1004 (5), 1006-1007 (2), 1009-1015 (7), 1017-1026 (10), 1028-1037 (10), 1039 (1). Hidden datasets gave identical output, so I did not inspect their rows for NULL ids or conflicting duplicates."
+  "solveMinutes": 8,
+  "ambiguities": [
+    "Not stated whether an id sent twice with a status on one copy and no status on the other is a gap; I treated it as having a status (the sample has no such case, and I did not check the hidden datasets).",
+    "Not stated what to do with a row that has a NULL id but a status; I excluded it because it cannot be placed in a run.",
+    "Not stated whether a blank or whitespace-only status string counts as \"no status\"; I treated only NULL as no status (the sample has no blank statuses)."
+  ],
+  "confidence": "medium",
+  "notes": "Gaps-and-islands with ROW_NUMBER over distinct ids. Ran without error on sample, nulls and boundary. Sample has 5 islands; sample probes found no NULL-id-with-status rows, no duplicate ids with mixed status and no blank statuses. Hidden dataset contents were not inspected."
 }

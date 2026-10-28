@@ -153,6 +153,33 @@ export const chapter12Items: readonly Challenge[] = [
     datasets: datasetsFor(['nulls', 'boundary']),
   },
   {
+    id: 'c12-i5', chapterId: 12, role: 'independent', starterStyle: 'empty', title: 'Index the scans for shipment lookups',
+    ...PIPELINE,
+    summary: 'Add one index that serves lookups of scans by shipment, in time order.',
+    instructions: 'Scans are looked up by shipment_id, and each lookup reads the scans in occurred_at order. shipment_scans_large has an index only on its primary key. Add one index on shipment_scans_large that covers shipment_id and occurred_at, with shipment_id first, so the lookup can use it. The index name does not matter. The index is created once. Write the index only.',
+    starterSql: '',
+    referenceSql: 'CREATE INDEX scans_by_shipment_time ON shipment_scans_large (shipment_id, occurred_at);',
+    policy: INDEX_ONLY,
+    checks: [INDEXES],
+    columns: [],
+    rules: [
+      { id: 'covers-shipment-id', text: 'The index covers shipment_id.' },
+      { id: 'shipment-id-first', text: 'shipment_id comes first, because the lookup starts from it.' },
+    ],
+    wrongVariants: [
+      { id: 'i5-wrong-column', rule: 'covers-shipment-id', mistake: 'INDEX_WRONG_COLUMN', sql: 'CREATE INDEX scans_by_shipment_time ON shipment_scans_large (status, occurred_at);', explanation: 'It looks like the index was built on status. The lookup is by shipment_id, so an index on status does not help it, and the scans still have to be read.' },
+      { id: 'i5-wrong-order', rule: 'shipment-id-first', mistake: 'INDEX_COLUMN_ORDER', sql: 'CREATE INDEX scans_by_shipment_time ON shipment_scans_large (occurred_at, shipment_id);', explanation: 'It looks like the columns were listed in the wrong order. An index is searched from its first column, so with occurred_at first, a lookup by shipment_id cannot start from the index.' },
+    ],
+    ordered: true,
+    hints: [
+      'A lookup by shipment_id can use an index only when that column leads the index. Which column does the ticket want first?',
+      'Build one index with shipment_id first and occurred_at second, so each shipment’s scans are found in time order.',
+      'Reference: CREATE INDEX on shipment_scans_large (shipment_id, occurred_at).',
+    ],
+    docs: DOCS_INDEX,
+    datasets: datasetsFor(['nulls', 'boundary']),
+  },
+  {
     id: 'c12-b1-p1', chapterId: 12, role: 'boss', bossGroup: 'c12-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: an arrived scan in an id window',
     ...REPORTING,
     summary: 'Find the arrived scans among ids 1000 to 1010, using the primary key for the window.',

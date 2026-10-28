@@ -29,6 +29,10 @@ const customerRows: CheckQuery = { id: 'dim-customer-rows', label: 'Customer nam
 const DIM_ROUTE_DDL = 'CREATE TABLE dim_route (\n  route_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  origin text NOT NULL,\n  destination text NOT NULL,\n  UNIQUE (origin, destination)\n);';
 const DIM_CUSTOMER_DDL = 'CREATE TABLE dim_customer (customer_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY, customer_name text NOT NULL UNIQUE);';
 const FACT_SHIPMENT_DDL = 'CREATE TABLE fact_shipment (\n  tracking_code text PRIMARY KEY,\n  customer_key integer NOT NULL REFERENCES dim_customer (customer_key),\n  route_key integer NOT NULL REFERENCES dim_route (route_key),\n  weight_kg integer,\n  status text NOT NULL,\n  booked_at timestamptz NOT NULL\n);';
+// Loads shared by the star-schema tickets. Each one leaves out the flat-extract rows the ticket says to skip.
+const CUST_LOAD = 'INSERT INTO dim_customer (customer_name) SELECT DISTINCT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL;';
+const ROUTE_LOAD = 'INSERT INTO dim_route (origin, destination) SELECT DISTINCT origin, destination FROM staging_shipments_flat WHERE origin IS NOT NULL AND destination IS NOT NULL;';
+const FACT_LOAD = 'INSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, r.route_key, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name\nJOIN dim_route AS r ON r.origin = f.origin AND r.destination = f.destination;';
 
 // Chapter 10: Model the warehouse. Dimensions, facts and surrogate keys are graded by the tables that the learner's statements leave behind.
 export const chapter10Items: readonly Challenge[] = [
@@ -76,7 +80,7 @@ export const chapter10Items: readonly Challenge[] = [
       'The blank is DISTINCT.',
     ],
     docs: DOCS_LOAD,
-    datasets: datasetsFor(['nulls', 'boundary']),
+    datasets: datasetsFor(['ties', 'boundary']),
   },
   {
     id: 'c10-i1', chapterId: 10, role: 'independent', starterStyle: 'skeleton', title: 'A customer dimension with a generated key',
@@ -138,50 +142,72 @@ export const chapter10Items: readonly Challenge[] = [
     id: 'c10-i3', chapterId: 10, role: 'independent', starterStyle: 'skeleton', title: 'Load every customer name once',
     ...CUSTOMERS,
     summary: 'Create dim_customer and load each customer name in the flat extract exactly once.',
-    instructions: 'Create dim_customer, as in the customer ticket, and load every distinct customer_name from staging_shipments_flat into it. The flat extract has many shipments per customer, and the table must hold each name once, with no name left out. Write the table and the load.',
+    instructions: 'Create dim_customer, as in the customer ticket, and load every distinct customer_name from staging_shipments_flat into it. The flat extract has many shipments per customer, and the table must hold each name once, with no name left out. A shipment with no customer name is left out. Write the table and the load.',
     starterSql: 'CREATE TABLE dim_customer ();\n',
-    referenceSql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name FROM staging_shipments_flat ORDER BY customer_name;`,
+    referenceSql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL ORDER BY customer_name;`,
     policy: LOAD,
     checks: [customerRows],
     columns: [],
+    rules: [
+      { id: 'each-name-once', text: 'Each customer name is held once.' },
+      { id: 'no-name-left-out', text: 'No customer name is left out.' },
+      { id: 'null-name-left-out', text: 'A shipment with no customer name is left out.' },
+    ],
     wrongVariants: [
-      { id: 'i3-no-distinct', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT customer_name FROM staging_shipments_flat ORDER BY customer_name;`, explanation: 'It looks like DISTINCT was left out. Each customer has many shipments, so the same name is inserted many times, and the UNIQUE rule on customer_name rejects the load.' },
-      { id: 'i3-limit', mistake: 'LIMIT_TRUNCATES', sql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name FROM staging_shipments_flat ORDER BY customer_name LIMIT 5;`, explanation: 'It looks like a LIMIT was added. The flat extract has six customers, and the limit keeps five, so the last name is missing. A dimension load takes every distinct value, not a fixed number of them.' },
+      { id: 'i3-no-distinct', rule: 'each-name-once', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL ORDER BY customer_name;`, explanation: 'It looks like DISTINCT was left out. Each customer has many shipments, so the same name is inserted many times, and the UNIQUE rule on customer_name rejects the load.' },
+      { id: 'i3-limit', rule: 'no-name-left-out', mistake: 'LIMIT_TRUNCATES', sql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL ORDER BY customer_name LIMIT 5;`, explanation: 'It looks like a LIMIT was added. The flat extract has six customers, and the limit keeps five, so the last name is missing. A dimension load takes every distinct value, not a fixed number of them.' },
+      { id: 'i3-null-kept', rule: 'null-name-left-out', mistake: 'NULL_LOADED', sql: `${DIM_CUSTOMER_DDL}\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name FROM staging_shipments_flat ORDER BY customer_name;`, explanation: 'It looks like shipments with no customer name were not left out. The NOT NULL rule on customer_name rejects the load as soon as one shipment has no name.' },
     ],
     ordered: true,
     hints: [
-      'A dimension holds each name once, and the load must not leave any name out. Which keyword removes repeats?',
-      'Use SELECT DISTINCT customer_name in the insert, with no row limit.',
-      'Reference: CREATE TABLE dim_customer (...) as in the customer ticket, then INSERT ... SELECT DISTINCT customer_name FROM staging_shipments_flat.',
+      'A dimension holds each name once, and the load must not leave any name out. Which keyword removes repeats, and which rows have no name?',
+      'Use SELECT DISTINCT customer_name in the insert, with no row limit, and skip the shipments whose customer name is missing.',
+      'Reference: CREATE TABLE dim_customer (...) as in the customer ticket, then INSERT ... SELECT DISTINCT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL.',
     ],
     docs: DOCS_LOAD,
-    datasets: datasetsFor(['nulls', 'boundary']),
+    datasets: datasetsFor(['nulls', 'nulltext', 'boundary']),
   },
   {
     id: 'c10-i4', chapterId: 10, role: 'independent', starterStyle: 'skeleton', title: 'Load the shipment star from the flat extract',
     ...PIPELINE,
     summary: 'Create two dimensions and the shipment fact, and load all three so each fact row points at its dimension keys.',
-    instructions: 'Build the star from staging_shipments_flat, which names a customer, an origin and a destination on every row. dim_customer has customer_key (generated primary key) and customer_name (unique), and holds each name once. dim_route has route_key (generated primary key), origin and destination, and holds each origin and destination pair once. fact_shipment has one row per tracking_code, with customer_key and route_key (both present, each naming a dimension row), plus weight_kg (may be missing), status and booked_at. Write the three tables and their loads. Each dimension must be loaded before the fact.',
+    instructions: 'Build the star from staging_shipments_flat. A shipment with no customer name, origin or destination is left out. dim_customer has customer_key (generated primary key) and customer_name (unique), and holds each name once. dim_route has route_key (generated primary key), origin and destination, and holds each origin and destination pair once. fact_shipment has one row per tracking_code, with customer_key and route_key (both present, each naming a dimension row), plus weight_kg (may be missing), status and booked_at. Write the three tables and their loads. Each dimension must be loaded before the fact.',
     starterSql: 'CREATE TABLE dim_customer ();\nCREATE TABLE dim_route ();\nCREATE TABLE fact_shipment ();\n',
-    referenceSql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\nINSERT INTO dim_customer (customer_name) SELECT DISTINCT customer_name FROM staging_shipments_flat;\nINSERT INTO dim_route (origin, destination) SELECT DISTINCT origin, destination FROM staging_shipments_flat;\nINSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, r.route_key, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name\nJOIN dim_route AS r ON r.origin = f.origin AND r.destination = f.destination;`,
+    referenceSql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\n${ROUTE_LOAD}\n${FACT_LOAD}`,
     policy: LOAD,
     checks: [
       { id: 'star-facts', label: 'Shipments with their natural keys', sql: 'SELECT f.tracking_code, c.customer_name, r.origin, r.destination, f.weight_kg, f.status, f.booked_at FROM fact_shipment AS f JOIN dim_customer AS c ON c.customer_key = f.customer_key JOIN dim_route AS r ON r.route_key = f.route_key ORDER BY f.tracking_code' },
       { id: 'star-sizes', label: 'Dimension sizes', sql: 'SELECT (SELECT COUNT(*) FROM dim_customer)::integer AS customers, (SELECT COUNT(*) FROM dim_route)::integer AS routes' },
     ],
     columns: [],
+    rules: [
+      { id: 'keys-match', text: 'Each fact row names the dimension rows for its own customer and route.' },
+      { id: 'keys-present', text: 'Each fact row has both keys.' },
+      { id: 'names-once', text: 'Each customer name is held once.' },
+      { id: 'pairs-once', text: 'Each origin and destination pair is held once.' },
+      { id: 'one-row-per-shipment', text: 'Each tracking code gives one fact row.' },
+      { id: 'weight-may-be-missing', text: 'A shipment with no weight keeps its row, with a missing weight.' },
+      { id: 'null-route-left-out', text: 'A shipment with no origin or destination is left out.' },
+      { id: 'null-customer-left-out', text: 'A shipment with no customer name is left out.' },
+    ],
     wrongVariants: [
-      { id: 'i4-swapped-route', mistake: 'DIRECTION_SWAPPED', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\nINSERT INTO dim_customer (customer_name) SELECT DISTINCT customer_name FROM staging_shipments_flat;\nINSERT INTO dim_route (origin, destination) SELECT DISTINCT origin, destination FROM staging_shipments_flat;\nINSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, r.route_key, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name\nJOIN dim_route AS r ON r.origin = f.destination AND r.destination = f.origin;`, explanation: 'It looks like the route join matched origin to destination. The dimension stores each pair in the flat extract’s direction, so most shipments find no route and drop out of the fact.' },
-      { id: 'i4-no-route', mistake: 'FACT_MISSING_KEY', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\nINSERT INTO dim_customer (customer_name) SELECT DISTINCT customer_name FROM staging_shipments_flat;\nINSERT INTO dim_route (origin, destination) SELECT DISTINCT origin, destination FROM staging_shipments_flat;\nINSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, NULL, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name;`, explanation: 'It looks like the route was never looked up, so route_key is left empty. A fact row must point at a route, and the NOT NULL rule rejects the load.' },
+      { id: 'i4-swapped-route', rule: 'keys-match', mistake: 'DIRECTION_SWAPPED', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\n${ROUTE_LOAD}\n${FACT_LOAD.replace('r.origin = f.origin AND r.destination = f.destination', 'r.origin = f.destination AND r.destination = f.origin')}`, explanation: 'It looks like the route join matched origin to destination. The dimension stores each pair in the flat extract’s direction, so most shipments find no route and drop out of the fact.' },
+      { id: 'i4-no-route', rule: 'keys-present', mistake: 'FACT_MISSING_KEY', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\n${ROUTE_LOAD}\nINSERT INTO fact_shipment (tracking_code, customer_key, route_key, weight_kg, status, booked_at)\nSELECT f.tracking_code, c.customer_key, NULL, f.weight_kg, f.status, f.booked_at\nFROM staging_shipments_flat AS f\nJOIN dim_customer AS c ON c.customer_name = f.customer_name;`, explanation: 'It looks like the route was never looked up, so route_key is left empty. A fact row must point at a route, and the NOT NULL rule rejects the load.' },
+      { id: 'i4-dup-names', rule: 'names-once', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\nINSERT INTO dim_customer (customer_name) SELECT customer_name FROM staging_shipments_flat WHERE customer_name IS NOT NULL;\n${ROUTE_LOAD}\n${FACT_LOAD}`, explanation: 'It looks like DISTINCT was left out of the customer load. A name that appears on many shipments is inserted many times, and the UNIQUE rule on customer_name rejects the load.' },
+      { id: 'i4-dup-pairs', rule: 'pairs-once', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\nINSERT INTO dim_route (origin, destination) SELECT origin, destination FROM staging_shipments_flat WHERE origin IS NOT NULL AND destination IS NOT NULL;\n${FACT_LOAD}`, explanation: 'It looks like DISTINCT was left out of the route load. The same origin and destination pair appears on many shipments, and the UNIQUE rule on the pair rejects the second copy.' },
+      { id: 'i4-fanout', rule: 'one-row-per-shipment', mistake: 'JOIN_FANOUT', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\n${ROUTE_LOAD}\n${FACT_LOAD.replace(' AND r.destination = f.destination', '')}`, explanation: 'It looks like the route was joined on origin alone. Every origin has several destinations, so each shipment matches several route rows, and the tracking code is repeated in the fact.' },
+      { id: 'i4-weight-dropped', rule: 'weight-may-be-missing', mistake: 'NULL_LOADED', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\n${ROUTE_LOAD}\n${FACT_LOAD.replace('JOIN dim_route AS r ON r.origin = f.origin AND r.destination = f.destination;', 'JOIN dim_route AS r ON r.origin = f.origin AND r.destination = f.destination WHERE f.weight_kg IS NOT NULL;')}`, explanation: 'It looks like shipments with no weight were left out of the fact. A missing weight is allowed, so the row stays, with an empty weight.' },
+      { id: 'i4-null-route', rule: 'null-route-left-out', mistake: 'NULL_LOADED', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\n${CUST_LOAD}\nINSERT INTO dim_route (origin, destination) SELECT DISTINCT origin, destination FROM staging_shipments_flat;\n${FACT_LOAD}`, explanation: 'It looks like shipments with no origin or destination were not left out. The NOT NULL rule on the route rejects the load as soon as one shipment has no origin or destination.' },
+      { id: 'i4-null-customer', rule: 'null-customer-left-out', mistake: 'NULL_LOADED', sql: `${DIM_CUSTOMER_DDL}\n${DIM_ROUTE_DDL}\n${FACT_SHIPMENT_DDL}\nINSERT INTO dim_customer (customer_name) SELECT DISTINCT customer_name FROM staging_shipments_flat;\n${ROUTE_LOAD}\n${FACT_LOAD}`, explanation: 'It looks like shipments with no customer name were not left out. The NOT NULL rule on customer_name rejects the load as soon as one shipment has no name.' },
     ],
     ordered: true,
     hints: [
-      'Load the dimensions first, then the fact, which looks up each dimension key by its natural key.',
+      'Load the dimensions first, then the fact, which looks up each dimension key by its natural key. Which rows should the loads leave out?',
       'Join the flat extract to dim_customer on customer_name and to dim_route on origin and destination, then insert the keys.',
-      'The reference is three CREATE TABLE statements, two dimension loads with DISTINCT, and one fact insert that joins both dimensions.',
+      'The reference is three CREATE TABLE statements, two dimension loads with DISTINCT and their missing-value filters, and one fact insert that joins both dimensions.',
     ],
     docs: DOCS_LOAD,
-    datasets: datasetsFor(['nulls', 'boundary']),
+    datasets: datasetsFor(['nulls', 'nulltext', 'boundary']),
   },
   {
     id: 'c10-b1-p1', chapterId: 10, role: 'boss', bossGroup: 'c10-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: design the arrival star',
@@ -246,10 +272,16 @@ export const chapter10Items: readonly Challenge[] = [
     referenceSql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.destination_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id AND e.status = 'arrived'\nGROUP BY w.name\nORDER BY w.name;",
     columns: [{ name: 'warehouse', type: 25 }, { name: 'arrivals', type: 23 }],
     wrongVariants: [
-      { id: 'p3-all-events', mistake: 'FACT_GRAIN', sql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.destination_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id\nGROUP BY w.name\nORDER BY w.name;", explanation: 'It looks like the status condition was dropped from the join. Every event counts, including booked and loaded events, so the totals are not arrivals.' },
-      { id: 'p3-origin', mistake: 'DIRECTION_SWAPPED', sql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.origin_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id AND e.status = 'arrived'\nGROUP BY w.name\nORDER BY w.name;", explanation: 'It looks like the route was joined on its origin, not its destination. Arrivals are then counted at the warehouse the shipments left.' },
+      { id: 'p3-all-events', rule: 'arrivals-only', mistake: 'FACT_GRAIN', sql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.destination_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id\nGROUP BY w.name\nORDER BY w.name;", explanation: 'It looks like the status condition was dropped from the join. Every event counts, including booked and loaded events, so the totals are not arrivals.' },
+      { id: 'p3-origin', rule: 'route-ends-there', mistake: 'DIRECTION_SWAPPED', sql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.origin_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nLEFT JOIN shipment_events AS e ON e.shipment_id = s.id AND e.status = 'arrived'\nGROUP BY w.name\nORDER BY w.name;", explanation: 'It looks like the route was joined on its origin, not its destination. Arrivals are then counted at the warehouse the shipments left.' },
+      { id: "p3-inner", rule: "zero-arrival-kept", mistake: "LEFT_TO_INNER", sql: "SELECT w.name AS warehouse, COUNT(e.id)::integer AS arrivals\nFROM warehouses AS w\nLEFT JOIN routes AS r ON r.destination_id = w.id\nLEFT JOIN shipments AS s ON s.route_id = r.id\nJOIN shipment_events AS e ON e.shipment_id = s.id AND e.status = 'arrived'\nGROUP BY w.name\nORDER BY w.name;", explanation: "It looks like the arrivals join was made an inner join. A warehouse with no arrivals then drops out of the list, but the ticket keeps it with 0." },
     ],
     ordered: true,
+    rules: [
+      { id: "arrivals-only", text: "Only arrived events are counted." },
+      { id: "route-ends-there", text: "A shipment counts at the warehouse where its route ends." },
+      { id: "zero-arrival-kept", text: "A warehouse with no arrivals still appears, with 0." },
+    ],
     hints: [
       'Count arrivals where the shipment’s route ends at the warehouse. Which route column names the destination?',
       'Keep the LEFT JOINs so a warehouse with no arrivals still appears, and put the status test in the join condition.',

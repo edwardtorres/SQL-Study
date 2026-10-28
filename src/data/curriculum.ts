@@ -70,7 +70,7 @@ const chapterDefinitions = [
   ['Own the data', 4, 6, ['ddl-constraints.html', 'datatype.html']],
   ['Model the warehouse', 2, 4, ['ddl-constraints.html']],
   ['Repair the pipeline', 3, 7, ['sql-insert.html']],
-  ['Make it efficient', 2, 4, ['using-explain.html']],
+  ['Make it efficient', 2, 5, ['using-explain.html']],
   ['Interview dispatch', 1, 4, ['queries.html']],
 ] as const;
 

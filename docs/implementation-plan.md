@@ -52,7 +52,7 @@ development showcase; the rank/skill-tree game loop belongs to Step 4.
 | 9. Own the data | 8 | 9 | Types, CREATE TABLE, PK/FK, NOT NULL/UNIQUE/CHECK, INSERT/UPDATE/DELETE, transactions | 4 / 6 / 1 |
 | 10. Model the warehouse | 9 | 10 | Normalization, facts/dimensions, star schema, surrogate keys | 2 / 4 / 1 |
 | 11. Repair the pipeline | 10 | 11 | ON CONFLICT/MERGE, incremental loads, SCD2, duplicate/orphan/null/range checks, views | 3 / 7 / 1 |
-| 12. Make it efficient | 11 | 12 | Indexes, beginner EXPLAIN, common performance anti-patterns | 2 / 4 / 1 |
+| 12. Make it efficient | 11 | 12 | Indexes, beginner EXPLAIN, common performance anti-patterns | 2 / 5 / 1 (Step 3b review added one independent index ticket) |
 | 13. Interview dispatch | 12 | 13 | Timed multi-part screens spanning the prior competencies | 1 / 4 / 1 |
 
 Tests must validate prerequisites exist, unique IDs, acyclicity, reachability

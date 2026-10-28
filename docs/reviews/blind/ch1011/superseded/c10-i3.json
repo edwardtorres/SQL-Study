@@ -1,0 +1,16 @@
+{
+  "id": "c10-i3",
+  "solutionSql": "CREATE TABLE dim_customer (\n    customer_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    customer_name text NOT NULL UNIQUE\n);\n\nINSERT INTO dim_customer (customer_name)\nSELECT DISTINCT customer_name\nFROM staging_shipments_flat\nWHERE customer_name IS NOT NULL\nORDER BY customer_name;\n",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": "dim_customer holds 6 rows: Aster Loomworks, Brindle Pantry, Cobalt Paperworks, Dovetail Lanterns, Emberwood Games, Fable Orchard. The same 6 names appear on nulls and boundary.",
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "customer_name in staging_shipments_flat is nullable and the ticket does not say what to do with a NULL. I skipped NULL names, since NULL is not a name and the NOT NULL column would reject it. No dataset has a NULL name, so this choice has no effect here.",
+    "Key assignment order is not specified. I loaded names in alphabetical order."
+  ],
+  "confidence": "high",
+  "notes": "No constraint tests on this ticket. The state is identical across datasets. Re-checked on the revised ticket text: the wording on NULL names is unchanged, so the NULL-name ambiguity stays open. Solution and results unchanged.",
+  "superseded": "Step 3b review: NULL customer name rule stated and covered (variant i3-null-kept); datasets changed"
+}

@@ -1,16 +1,22 @@
 {
   "id": "c11-i1",
-  "solutionSql": "CREATE TABLE customer_bookings (\n  customer_id integer PRIMARY KEY REFERENCES customers (id),\n  bookings integer NOT NULL\n);\nINSERT INTO customer_bookings (customer_id, bookings)\nSELECT customer_id, COUNT(*)::integer\nFROM shipments\nGROUP BY customer_id\nON CONFLICT (customer_id) DO UPDATE SET bookings = EXCLUDED.bookings;\n",
-  "sampleRowCount": null,
-  "sampleFirstRows": null,
-  "sampleChecks": "customer_bookings holds 6 rows, customers 1 to 6 with 40 bookings each, matching their shipment counts; customers 7 and 8 have no row.",
-  "constraintProbes": null,
+  "solutionSql": "CREATE TABLE customer_bookings (customer_id integer PRIMARY KEY REFERENCES customers (id), bookings integer NOT NULL);\n\nINSERT INTO customer_bookings (customer_id, bookings)\nSELECT customer_id, count(*)::integer FROM shipments GROUP BY customer_id\nON CONFLICT (customer_id) DO UPDATE SET bookings = EXCLUDED.bookings;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    { "customer_id": 1, "bookings": 40 },
+    { "customer_id": 2, "bookings": 40 }
+  ],
+  "sampleChecks": "customer_bookings holds one row for each of the 6 customers that have shipments (customers 1 to 6, 40 bookings each, 240 in total). Customers with no shipments get no row. The second run leaves the same 6 rows.",
   "columnsMatchTicket": true,
+  "rules": [],
+  "runsTwiceCheck": "The second run upserts the same counts with ON CONFLICT (customer_id) DO UPDATE. It raises no error and changes nothing. Checked on sample, nulls and boundary: the state after run 2 equals the state after run 1 on all three.",
+  "solveMinutes": 4,
   "ambiguities": [
-    "The text says \"that customer's number of shipments\" without saying whether cancelled shipments count. I counted every shipment regardless of status. Excluding cancelled rows would change the counts (64 cancelled on sample), so the text should say which.",
-    "\"A customer that exists\" was read as a foreign key to customers(id). The load is unchanged either way because the source only has known customers.",
-    "The text does not say whether a second run should refresh counts or leave existing rows alone. I used DO UPDATE; DO NOTHING gives the same state on these datasets."
+    "'a customer that exists' was read as REFERENCES customers (id).",
+    "'bookings (integer, present)' was read as NOT NULL.",
+    "The second run could refresh the counts (DO UPDATE) or keep them (DO NOTHING). The instructions do not say which. Both give the same state here; I chose refresh.",
+    "'counting every shipment whatever its status' was read as COUNT(*) over all shipments with no status filter."
   ],
   "confidence": "high",
-  "notes": "Ran on sample, nulls and boundary (6 rows each; 40, 20 and 30 bookings per customer). Second run identical on all three. Own probes from the text: unknown customer gives 23503, NULL bookings gives 23502, repeated key gives 23505. This ticket has no constraintTests, so constraintProbes is null. Re-checked against the revised text (count every shipment whatever its status): solution unchanged. Re-run on sample, nulls and boundary gives the same state as before, and the second run is identical. The cancelled-shipment ambiguity above is resolved by the revised text."
+  "notes": "Run through PGlite on sample, nulls and boundary: CREATE once, then the load twice, no errors. Counts cast to integer to match the column type."
 }

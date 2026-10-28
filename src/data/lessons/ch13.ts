@@ -44,12 +44,12 @@ export const lesson13: Lesson = {
         question: 'How many rows does this query return? It lists the distinct scan ids in the range that have a status.',
         options: [
           { id: 'a', text: 'Nine, the distinct ids with a status' },
-          { id: 'b', text: 'Ten, every id in the range that has a status' },
+          { id: 'b', text: 'Ten, the distinct ids with a status' },
           { id: 'c', text: 'Eleven, one for each staged row in the range' },
         ],
-        answer: 'a',
-        answerRows: 9,
-        explanation: 'Scan 1008 is not in the staging table, and scan 1005 has no status. Scan 1007 appears twice, so DISTINCT counts it once. That leaves nine ids.',
+        answer: 'b',
+        answerRows: 10,
+        explanation: 'Scan 1005 has no status, so it is left out. Scan 1007 appears twice, so DISTINCT counts it once. Scan 1008 is in the staging table with a status, so it stays. That leaves ten ids.',
       },
       commonMistakes: [
         { mistake: 'STREAK_GAP_MISSED', text: 'A scan with no status is a gap in the feed. Keeping it joins the islands on either side, so two separate runs look like one long streak, and the gap that the ticket asks for is missed.' },

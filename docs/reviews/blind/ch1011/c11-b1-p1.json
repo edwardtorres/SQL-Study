@@ -1,16 +1,43 @@
 {
   "id": "c11-b1-p1",
-  "solutionSql": "CREATE TABLE scan_archive (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  status text NOT NULL,\n  occurred_at timestamptz NOT NULL\n);\nINSERT INTO scan_archive (id, shipment_id, status, occurred_at)\nSELECT DISTINCT ON (s.id) s.id, s.shipment_id, s.status, s.occurred_at\nFROM staging_scans AS s\nJOIN shipments AS sh ON sh.id = s.shipment_id\nWHERE s.status IS NOT NULL\nORDER BY s.id, s.occurred_at, s.shipment_id, s.status\nON CONFLICT (id) DO NOTHING;\n",
-  "sampleRowCount": null,
-  "sampleFirstRows": null,
-  "sampleChecks": "scan_archive holds 31 rows, one per usable scan (status present and shipment exists), with scan 1007 once. Scans older than the watermark are included, as the text does not filter by it. A second run leaves the same 31 rows.",
-  "constraintProbes": null,
-  "columnsMatchTicket": true,
-  "ambiguities": [
-    "Duplicate scan rows: the copies are identical on every dataset. DISTINCT ON picks one. No change here.",
-    "NULL id or NULL occurred_at are not discussed. Neither occurs in any dataset, and NOT NULL on occurred_at would reject a NULL time anyway.",
-    "The text says a second run must leave the same rows; it does not say whether to refresh them. I used DO NOTHING. Refreshing would give the same state on these datasets."
+  "solutionSql": "CREATE TABLE scan_archive (id integer PRIMARY KEY, shipment_id integer REFERENCES shipments (id), status text NOT NULL, occurred_at timestamptz NOT NULL);\n\nINSERT INTO scan_archive (id, shipment_id, status, occurred_at)\nSELECT DISTINCT ON (s.id) s.id, s.shipment_id, s.status, s.occurred_at\nFROM staging_scans s\nWHERE s.status IS NOT NULL\n  AND EXISTS (SELECT 1 FROM shipments sh WHERE sh.id = s.shipment_id)\nORDER BY s.id\nON CONFLICT (id) DO NOTHING;",
+  "sampleRowCount": 32,
+  "sampleFirstRows": [
+    { "id": 1001, "shipment_id": 18, "status": "loaded", "occurred_at": "2026-01-16T14:00:00Z" },
+    { "id": 1002, "shipment_id": 35, "status": "arrived", "occurred_at": "2026-01-16T16:00:00Z" }
   ],
-  "confidence": "high",
-  "notes": "Ran on sample (31 rows), nulls (18) and boundary (23); second run identical on all three. Own probes from the text: duplicate id gives 23505, missing shipment gives 23503, NULL status gives 23502. No constraintTests, so constraintProbes is null."
+  "sampleChecks": "scan_archive holds 32 rows with 32 distinct ids. The 40 distinct scan ids minus the 8 skipped ones (1000, 1005, 1009, 1016, 1018, 1027, 1036, 1038) give 32. The duplicated scan 1007 appears once. The second run leaves the same 32 rows. Nulls dataset: 16 rows. Boundary dataset: 23 rows.",
+  "columnsMatchTicket": true,
+  "rules": [
+    {
+      "id": "copy-once",
+      "howSolved": "DISTINCT ON (s.id) with ORDER BY s.id keeps one row per scan id, so the scan the feed sent twice (1007, and 1002 in boundary) is copied once."
+    },
+    {
+      "id": "skip-no-status",
+      "howSolved": "WHERE s.status IS NOT NULL drops scans with no status."
+    },
+    {
+      "id": "skip-missing-shipment",
+      "howSolved": "The EXISTS check against shipments drops scans whose shipment_id names no shipment."
+    },
+    {
+      "id": "second-run-no-error",
+      "howSolved": "ON CONFLICT (id) DO NOTHING lets the second INSERT run past the primary key without an error."
+    },
+    {
+      "id": "second-run-same-rows",
+      "howSolved": "On the second run every remaining scan id already exists, so DO NOTHING inserts no rows and the table is unchanged."
+    }
+  ],
+  "runsTwiceCheck": "The second run inserts nothing: every eligible scan id is already in scan_archive, and ON CONFLICT DO NOTHING skips them with no error. Checked on sample, nulls and boundary: the state after run 2 equals the state after run 1 on all three.",
+  "solveMinutes": 6,
+  "ambiguities": [
+    "'shipment_id (integer, must name a shipment)' was read as REFERENCES shipments (id) with no NOT NULL, since 'present' is not stated for this column. The EXISTS filter already drops any NULL shipment_id, so the data is unaffected either way.",
+    "'Copy each scan once' does not say which copy to keep if duplicate ids differ. DISTINCT ON picks one arbitrarily. In all three datasets the duplicate copies are identical, so the result does not depend on the choice.",
+    "'no status' was read as IS NULL only, not an empty string.",
+    "A scan with a NULL occurred_at would violate the NOT NULL column. The ticket does not say to skip such scans. None exist in these datasets."
+  ],
+  "confidence": "medium",
+  "notes": "Run through PGlite on sample, nulls and boundary: CREATE once, then the load twice, no errors. The ON CONFLICT clause is required so the second run does not hit the primary key."
 }

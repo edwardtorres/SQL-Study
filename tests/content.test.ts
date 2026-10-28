@@ -13,6 +13,7 @@ import { sameState } from '../src/grader/state';
 import { nodeTypes, planProblemFor } from '../src/grader/plan';
 import { readPolicy } from '../src/grader/policy';
 import { WarmEngine, type StateOptions } from '../src/engine/runtime';
+import { statedRuleWords } from './rules-lint';
 
 // The content check: every graded item must satisfy the Step 2 rules before it ships.
 // Wrong variants are measured against the engine on every dataset the item uses.
@@ -72,7 +73,27 @@ describe('content check: graded items', () => {
         expect(await isBareSkeleton(item.starterSql), `${item.id} starter must be a bare skeleton`).toBe(true);
       }
       if (item.starterStyle === 'blanks') expect(item.starterSql, `${item.id} guided blanks`).toContain('____');
+      if (item.starterStyle === 'empty') expect(item.starterSql.trim(), `${item.id} empty starter`).toBe('');
     }
+  });
+
+  // Coverage rule (CLAUDE.md): every rule a ticket states is declared, and each declared rule has a wrong variant that breaks it.
+  test('every stated rule is declared, every declared rule has a wrong variant, and every variant names a declared rule', () => {
+    const failures: string[] = [];
+    for (const item of items) {
+      const rules = item.rules ?? [];
+      const ids = rules.map((rule) => rule.id);
+      if (new Set(ids).size !== ids.length) failures.push(`${item.id} declares a rule id twice`);
+      const stated = statedRuleWords(item.instructions);
+      if (stated.length > 0 && rules.length === 0) failures.push(`${item.id} states rule words (${stated.join(', ')}) but declares no rules`);
+      for (const rule of rules) {
+        if (!item.wrongVariants.some((variant) => variant.rule === rule.id)) failures.push(`${item.id} rule "${rule.id}" has no wrong variant that breaks it`);
+      }
+      for (const variant of item.wrongVariants) {
+        if (variant.rule !== undefined && !ids.includes(variant.rule)) failures.push(`${item.id}/${variant.id} names undeclared rule "${variant.rule}"`);
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });
 
