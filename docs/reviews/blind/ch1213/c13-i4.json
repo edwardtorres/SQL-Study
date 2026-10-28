@@ -1,0 +1,59 @@
+{
+  "id": "c13-i4",
+  "solutionSql": "SELECT route_id,\n       COUNT(*) FILTER (WHERE status = 'queued') AS queued,\n       COUNT(*) FILTER (WHERE status = 'in_transit') AS in_transit,\n       COUNT(*) FILTER (WHERE status = 'delivered') AS delivered,\n       COUNT(*) FILTER (WHERE status = 'cancelled') AS cancelled,\n       COUNT(*) FILTER (WHERE status = 'returned') AS returned\nFROM shipments\nGROUP BY route_id\nORDER BY route_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      14,
+      8,
+      8,
+      10,
+      0
+    ],
+    [
+      2,
+      10,
+      7,
+      14,
+      9,
+      0
+    ],
+    [
+      3,
+      11,
+      7,
+      13,
+      9,
+      0
+    ],
+    [
+      4,
+      8,
+      9,
+      7,
+      16,
+      0
+    ],
+    [
+      5,
+      8,
+      8,
+      11,
+      13,
+      0
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 4,
+  "ambiguities": [
+    "'For each route' could mean every row of the routes table, with zeros for routes that have no shipments. The starter starts FROM shipments, so I built from shipments and a route with no shipments would not appear. The sample has no such route, so this is not exercised.",
+    "returned can never hold a value, because the CHECK on shipments.status excludes it, so that column is always 0. The ticket says so, so this is only a note.",
+    "The count columns are bigint, and the ticket names no types."
+  ],
+  "confidence": "high",
+  "notes": "Sample route 1: queued 14, in_transit 8, delivered 8, cancelled 10, returned 0, total 40. Queued and delivered were checked by hand against the seed. The nulls dataset returned every shipment as delivered (20 per route, 0 elsewhere), so that dataset does not separate the status columns."
+}

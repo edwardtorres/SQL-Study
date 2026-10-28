@@ -193,6 +193,7 @@ async function handle(request: EngineRequest): Promise<EngineValue> {
   }
   const runtime = await engine();
   if (request.type === 'preview') return runtime.run('sample', request.sql);
+  if (request.type === 'demonstrate') return runtime.demonstratePlan('sample', request.sql);
   if (request.type === 'state') return statePreview(runtime, request.challengeId, request.sql);
   if (request.type === 'schema') {
     if (!schema.some((table) => table.name === request.table)) throw new Error('Unknown table.');

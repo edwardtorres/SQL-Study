@@ -11,9 +11,11 @@ import { chapter8Items } from './items/ch8';
 import { chapter9Items } from './items/ch9';
 import { chapter10Items } from './items/ch10';
 import { chapter11Items } from './items/ch11';
+import { chapter12Items } from './items/ch12';
+import { chapter13Items } from './items/ch13';
 
 // Every graded item the engine can grade. The worker imports this module; lessons stay out of it.
-export const items: readonly Challenge[] = [...stepOneSamples, ...chapter1Items, ...chapter2Items, ...chapter3Items, ...chapter4Items, ...chapter5Items, ...chapter6Items, ...chapter7Items, ...chapter8Items, ...chapter9Items, ...chapter10Items, ...chapter11Items];
+export const items: readonly Challenge[] = [...stepOneSamples, ...chapter1Items, ...chapter2Items, ...chapter3Items, ...chapter4Items, ...chapter5Items, ...chapter6Items, ...chapter7Items, ...chapter8Items, ...chapter9Items, ...chapter10Items, ...chapter11Items, ...chapter12Items, ...chapter13Items];
 
 export function itemById(id: string): Challenge | undefined {
   return items.find((item) => item.id === id);

@@ -1,0 +1,42 @@
+{
+  "id": "c13-b1-p3",
+  "solutionSql": "SELECT customer_id,\n       id,\n       SUM(weight_kg) OVER (\n         PARTITION BY customer_id\n         ORDER BY booked_at, id\n         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_kg\nFROM shipments\nWHERE weight_kg IS NOT NULL\nORDER BY customer_id, booked_at, id;",
+  "sampleRowCount": 228,
+  "sampleFirstRows": [
+    [
+      1,
+      7,
+      1412
+    ],
+    [
+      1,
+      13,
+      3398
+    ],
+    [
+      1,
+      19,
+      4825
+    ],
+    [
+      1,
+      25,
+      5377
+    ],
+    [
+      1,
+      31,
+      5545
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 5,
+  "ambiguities": [
+    "running_kg is a SUM of integers, so it is bigint, and the ticket names no type."
+  ],
+  "confidence": "high",
+  "notes": "SUM(weight_kg) OVER (PARTITION BY customer_id ORDER BY booked_at, id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) after WHERE weight_kg IS NOT NULL. Sample customer 1: id 7 at 1412, id 13 at 3398 (1412 + 1986), id 19 at 4825 (3398 + 1427). The ROWS frame and the unique id tiebreak keep the running total unambiguous."
+}

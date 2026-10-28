@@ -129,8 +129,8 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
   ],
 };
 
-// Chapters 1 to 9 have lessons and graded tickets. Chapters 10 to 13 arrive in later steps.
-export const openChapterCount = 9;
+// Chapters 1 to 13 have lessons and graded tickets. Chapter 13 is the last in the curriculum.
+export const openChapterCount = 13;
 
 export const curriculum: readonly Chapter[] = chapterDefinitions.map(([title, guided, independent, pages], index) => {
   const id = index + 1;

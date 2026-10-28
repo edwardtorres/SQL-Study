@@ -38,7 +38,7 @@ const SqlEditor = forwardRef<SqlEditorHandle, Props>(function SqlEditor({ value,
           // basicSetup binds Mod-Enter to insertBlankLine; the run shortcut must take precedence.
           Prec.highest(keymap.of([{ key: 'Mod-Enter', run() { runCallback.current(); return true; } }])),
           EditorView.updateListener.of((update) => { if (update.docChanged) changeCallback.current(update.state.doc.toString()); }),
-          EditorView.theme({ '&': { fontSize: '13px', backgroundColor: '#fffefa' }, '.cm-content': { fontFamily: '"JetBrains Mono Variable", monospace', minHeight: '220px', padding: '18px 0', caretColor: '#173b3b' }, '.cm-line': { padding: '0 12px' }, '.cm-gutters': { background: '#f5f5ef', color: '#66756f', border: 'none', fontFamily: '"JetBrains Mono Variable", monospace' }, '&.cm-focused': { outline: '2px solid #487568', outlineOffset: '-2px' }, '.cm-scroller': { lineHeight: '1.8' }, '.cm-activeLine': { backgroundColor: '#173b3b05' } }),
+          EditorView.theme({ '&': { fontSize: '13px', backgroundColor: '#fffefa' }, '.cm-content': { fontFamily: '"JetBrains Mono Variable", monospace', minHeight: '220px', padding: '18px 0', caretColor: '#173b3b' }, '.cm-line': { padding: '0 12px' }, '.cm-gutters': { background: '#f5f5ef', color: '#5a6a63', border: 'none', fontFamily: '"JetBrains Mono Variable", monospace' }, '&.cm-focused': { outline: '2px solid #487568', outlineOffset: '-2px' }, '.cm-scroller': { lineHeight: '1.8' }, '.cm-activeLine': { backgroundColor: '#173b3b05' } }),
         ],
       }),
     });

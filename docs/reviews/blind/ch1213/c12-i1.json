@@ -1,0 +1,34 @@
+{
+  "id": "c12-i1",
+  "solutionSql": "SELECT id, status\nFROM shipment_scans_large\nWHERE id BETWEEN 100 AND 110\nORDER BY id;",
+  "sampleRowCount": 11,
+  "sampleFirstRows": [
+    [
+      100,
+      "booked"
+    ],
+    [
+      101,
+      "loaded"
+    ],
+    [
+      102,
+      "arrived"
+    ],
+    [
+      103,
+      "delivered"
+    ],
+    [
+      104,
+      "booked"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": "Index Scan (Forward) [shipment_scans_large_pkey]",
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Range condition on the primary key. Plan on all three datasets is Index Scan (Forward) on shipment_scans_large_pkey. Same 11 rows on each dataset because the scans table uses the same generator in every seed."
+}

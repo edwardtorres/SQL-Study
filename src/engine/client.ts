@@ -97,6 +97,10 @@ export class EngineClient {
   preview(sql: string): Promise<QueryResult> {
     return this.operate({ type: 'preview', sql }, 3500);
   }
+
+  demonstrate(sql: string): Promise<QueryResult> {
+    return this.operate({ type: 'demonstrate', sql }, 3500);
+  }
   previewState(challengeId: string, sql: string): Promise<StatePreview> {
     return this.operate({ type: 'state', challengeId, sql }, 3500);
   }

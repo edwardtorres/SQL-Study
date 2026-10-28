@@ -15,6 +15,8 @@ export interface PredictPrompt {
 export interface Demonstration {
   claim: string;
   sql: string;
+  // explain: the SQL is one EXPLAIN without ANALYZE, and its output is the engine's plan. Lessons never write plan text by hand.
+  explain?: boolean;
 }
 
 export interface LessonSection {

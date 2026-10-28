@@ -51,6 +51,13 @@ describe('engine features for chapters 10 to 13', () => {
     expect(wrapped).toContain('Seq Scan');
   });
 
+  test('a lesson demonstration plans one EXPLAIN on the sample and refuses ANALYZE', async () => {
+    const plan = await engine.demonstratePlan(sampleDataset.id, 'EXPLAIN SELECT id, status FROM shipment_scans_large WHERE id = 42;');
+    expect(plan.rows.map((row) => String(row[0])).join('\n')).toContain('Index Scan');
+    await expect(engine.demonstratePlan(sampleDataset.id, 'EXPLAIN ANALYZE SELECT 1;')).rejects.toThrow(/EXPLAIN ANALYZE runs the query/);
+    await expect(engine.demonstratePlan(sampleDataset.id, 'SELECT 1;')).rejects.toThrow(/not allowed/);
+  });
+
   test('EXPLAIN without ANALYZE is allowed for a ticket that allows it; EXPLAIN ANALYZE is refused', async () => {
     await expect(validateSql('EXPLAIN SELECT 1', { mode: 'write', allow: ['ExplainStmt'] })).resolves.toBeUndefined();
     await expect(validateSql('EXPLAIN ANALYZE SELECT 1', { mode: 'write', allow: ['ExplainStmt'] })).rejects.toThrow(/EXPLAIN ANALYZE runs the query/);

@@ -1,0 +1,45 @@
+{
+  "id": "c13-b1-p1",
+  "solutionSql": "SELECT DISTINCT ON (shipment_id)\n       shipment_id,\n       status,\n       occurred_at,\n       id AS event_id\nFROM shipment_events\nORDER BY shipment_id, occurred_at DESC, id DESC;",
+  "sampleRowCount": 218,
+  "sampleFirstRows": [
+    [
+      2,
+      "arrived",
+      "2025-12-28T10:00:00.000Z",
+      2
+    ],
+    [
+      3,
+      "arrived",
+      "2025-12-28T12:00:00.000Z",
+      5
+    ],
+    [
+      4,
+      "arrived",
+      "2025-12-28T14:00:00.000Z",
+      8
+    ],
+    [
+      5,
+      "arrived",
+      "2025-12-28T16:00:00.000Z",
+      11
+    ],
+    [
+      6,
+      "arrived",
+      "2025-12-28T18:00:00.000Z",
+      14
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 5,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "DISTINCT ON (shipment_id) with ORDER BY shipment_id, occurred_at DESC, id DESC, so the larger id wins a timestamp tie. Sample rows checked by hand: shipment 2 gives event 2 (arrived, 10:00), shipment 3 gives event 5 (arrived, 12:00), shipment 4 gives event 8 (arrived, 14:00). The ties dataset returned 163 rows; I did not inspect its tied events."
+}

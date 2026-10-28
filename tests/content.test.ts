@@ -147,7 +147,11 @@ describe('content check: lessons', () => {
           expect(new Set(section.predict.options.map((option) => option.id)).size, `${section.id} option ids`).toBe(section.predict.options.length);
           // Claims without a verbatim quote are shown as engine demonstrations; each must run on the visible sample.
           for (const demonstration of section.demonstrations ?? []) {
-            await parsedStatements(demonstration.sql, { mode: 'read' });
+            if (demonstration.explain) {
+              await parsedStatements(demonstration.sql, { mode: 'write', allow: ['ExplainStmt'] });
+            } else {
+              await parsedStatements(demonstration.sql, { mode: 'read' });
+            }
             await db.query(demonstration.sql).catch((error: unknown) => { throw new Error(`${section.id} demonstration failed: ${String(error)}`); });
           }
           for (const mistake of section.commonMistakes) expect(mistakeTags, `${section.id} mistake`).toContain(mistake.mistake);

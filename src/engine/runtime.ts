@@ -293,6 +293,21 @@ export class WarmEngine {
     });
   }
 
+  /**
+   * Lesson demonstrations only: one EXPLAIN without ANALYZE, run on the sample. The statement is planned, not executed,
+   * and the plan text is the engine's own output.
+   */
+  async demonstratePlan(datasetId: string, sql: string, timeoutMs = 1500): Promise<QueryResult> {
+    return this.serial(async () => {
+      if (this.closed) throw new Error('The practice engine is closed.');
+      const dataset = this.prepared.get(datasetId);
+      if (!dataset) throw new Error('The requested dataset is not loaded.');
+      const statements = await parsedStatements(sql, { mode: 'write', allow: ['ExplainStmt'] });
+      if (statements.length !== 1 || statements[0]?.kind !== 'ExplainStmt') throw new Error('A demonstration takes one EXPLAIN statement.');
+      return this.withDatasetTransaction(dataset, timeoutMs, () => this.executeStatements(statements, 1000));
+    });
+  }
+
   private async executeLearner(statements: readonly ParsedStatement[], rowLimit: number, tx: LearnerTransaction): Promise<void> {
     for (const statement of statements) {
       if (statement.transaction) {

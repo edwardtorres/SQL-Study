@@ -1,0 +1,37 @@
+{
+  "id": "c12-i4",
+  "solutionSql": "SELECT id, status\nFROM shipment_scans_large\nWHERE id BETWEEN 1 AND 50\n  AND status LIKE 'del%'\nORDER BY id;",
+  "sampleRowCount": 12,
+  "sampleFirstRows": [
+    [
+      3,
+      "delivered"
+    ],
+    [
+      7,
+      "delivered"
+    ],
+    [
+      11,
+      "delivered"
+    ],
+    [
+      15,
+      "delivered"
+    ],
+    [
+      19,
+      "delivered"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "ambiguities": [
+    "\"Begins with del\" does not say whether the match is case-sensitive. LIKE is case-sensitive here, but every status is lowercase, so the answer is the same either way.",
+    "The instructions say a prefix match can use an index, but status has no index in this schema and planRequirement is null, so no plan is graded. This did not change the answer."
+  ],
+  "confidence": "high",
+  "notes": "Result is 12 rows, ids 3, 7, 11 and so on to 47, all delivered. Same on all three datasets."
+}

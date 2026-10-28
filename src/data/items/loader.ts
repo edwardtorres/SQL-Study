@@ -20,6 +20,8 @@ const chapterLoaders: Readonly<Record<number, ChapterLoader>> = {
   9: async () => (await import('./ch9')).chapter9Items,
   10: async () => (await import('./ch10')).chapter10Items,
   11: async () => (await import('./ch11')).chapter11Items,
+  12: async () => (await import('./ch12')).chapter12Items,
+  13: async () => (await import('./ch13')).chapter13Items,
 };
 
 const loaded = new Map<number, Promise<readonly Challenge[]>>();

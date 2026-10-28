@@ -186,7 +186,7 @@ function addStaging(data: FreightData): void {
     // Scans 0 to 5 are already loaded; scan 6 sits exactly on the watermark, so it is not newer; the rest are new.
     occurred_at: timestamp(468 + index * 2),
   }));
-  // The feed sent scan 1007 twice: index 8 repeats index 7, so a load must keep one copy.
+  // The feed sent scan 1007 twice: index 8 repeats index 7 in place of scan 1008, so 1008 is absent and a load must keep one copy.
   data.staging_scans[8] = { ...data.staging_scans[7]! };
   data.staging_customer_regions = [
     { customer_id: 2, region: 'East', changed_at: timestamp(480) },

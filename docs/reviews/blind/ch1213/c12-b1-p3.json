@@ -1,0 +1,33 @@
+{
+  "id": "c12-b1-p3",
+  "solutionSql": "SELECT status, COUNT(*) AS scans\nFROM shipment_scans_large\nWHERE id BETWEEN 1 AND 200\nGROUP BY status\nORDER BY status;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      "arrived",
+      50
+    ],
+    [
+      "booked",
+      50
+    ],
+    [
+      "delivered",
+      50
+    ],
+    [
+      "loaded",
+      50
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "ambiguities": [
+    "The instructions say 'the count', but resultColumns requires the name scans. I aliased COUNT(*) AS scans.",
+    "The starter selects status, id, and id is not in resultColumns, so I replaced it with COUNT(*). resultColumns gives no types; COUNT(*) returns bigint."
+  ],
+  "confidence": "high",
+  "notes": "Each of the four statuses has 50 scans in ids 1 to 200, so the counts are 50 each on all three datasets. The scans column is bigint (OID 20)."
+}

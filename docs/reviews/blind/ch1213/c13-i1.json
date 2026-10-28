@@ -1,0 +1,45 @@
+{
+  "id": "c13-i1",
+  "solutionSql": "WITH scanned AS (\n  SELECT DISTINCT id\n  FROM staging_scans\n  WHERE id IS NOT NULL AND status IS NOT NULL\n),\nislands AS (\n  SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS island\n  FROM scanned\n)\nSELECT MIN(id) AS start_id,\n       MAX(id) AS end_id,\n       COUNT(*) AS scans\nFROM islands\nGROUP BY island\nORDER BY start_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1000,
+      1004,
+      5
+    ],
+    [
+      1006,
+      1007,
+      2
+    ],
+    [
+      1009,
+      1015,
+      7
+    ],
+    [
+      1017,
+      1026,
+      10
+    ],
+    [
+      1028,
+      1037,
+      10
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 6,
+  "ambiguities": [
+    "NULL scan ids are not ids, so they are excluded from the islands. The ticket does not say how to treat them.",
+    "An id sent twice with one copy carrying a status and one copy NULL: I counted it as carrying a status (WHERE status IS NOT NULL before DISTINCT). Another reading would require every copy to carry a status.",
+    "'Consecutive' is read as the id rising by exactly 1, so a missing id breaks an island. The ticket implies this but does not state it.",
+    "The count column is bigint, and the ticket names no types."
+  ],
+  "confidence": "high",
+  "notes": "Sample islands checked by hand: 1000-1004 (5), 1006-1007 (2, duplicate 1007 counted once), 1009-1015 (7), 1017-1026 (10), 1028-1037 (10), 1039 (1). All three named datasets returned identical output, so I cannot say from my runs whether hidden rows hold NULL ids or conflicting duplicates."
+}

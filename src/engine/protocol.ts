@@ -8,6 +8,7 @@ export interface WarmBenchmark { samplesMs: number[]; medianMs: number; maxMs: n
 export type EngineRequest =
   | { type: 'init'; devSeed?: number }
   | { type: 'preview'; sql: string }
+  | { type: 'demonstrate'; sql: string }
   | { type: 'state'; challengeId: string; sql: string }
   | { type: 'grade'; challengeId: string; sql: string }
   | { type: 'schema'; table: string }

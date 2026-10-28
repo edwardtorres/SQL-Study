@@ -1,0 +1,29 @@
+{
+  "id": "c13-i2",
+  "solutionSql": "WITH monthly AS (\n  SELECT date_trunc('month', booked_at AT TIME ZONE 'UTC') AS month_start,\n         COUNT(*) AS shipments\n  FROM shipments\n  GROUP BY 1\n)\nSELECT to_char(month_start, 'YYYY-MM') AS month,\n       shipments,\n       shipments - LAG(shipments) OVER (ORDER BY month_start) AS change\nFROM monthly\nORDER BY month_start;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      "2025-12",
+      46,
+      null
+    ],
+    [
+      "2026-01",
+      194,
+      148
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 5,
+  "ambiguities": [
+    "A calendar month with no bookings does not appear in the output, so 'previous month' means the previous month that has bookings. The ticket does not say whether empty months should appear with zero.",
+    "The ticket does not say whether cancelled shipments count as bookings. I counted all statuses.",
+    "The shipments and change columns are bigint, and the ticket names no types."
+  ],
+  "confidence": "high",
+  "notes": "Month taken with booked_at AT TIME ZONE 'UTC'. Sample: 2025-12 has 46 shipments (change NULL), 2026-01 has 194 (change 148); 46 + 194 = 240. The two January 31 rows at the 00:00 and 23:59:59.999 boundaries fall in 2026-01. Every dataset returned only Dec and Jan, so the empty-month question is not exercised."
+}

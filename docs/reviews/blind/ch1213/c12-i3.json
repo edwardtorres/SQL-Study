@@ -1,0 +1,34 @@
+{
+  "id": "c12-i3",
+  "solutionSql": "SELECT id, status\nFROM shipment_scans_large\nORDER BY id DESC\nLIMIT 5;",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    [
+      20000,
+      "booked"
+    ],
+    [
+      19999,
+      "delivered"
+    ],
+    [
+      19998,
+      "arrived"
+    ],
+    [
+      19997,
+      "loaded"
+    ],
+    [
+      19996,
+      "booked"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": "Limit, Index Scan (Backward) [shipment_scans_large_pkey]",
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "ORDER BY id DESC LIMIT 5 plans as Limit over Index Scan (Backward) on all three datasets. Ids are unique, so there are no ties."
+}

@@ -1,0 +1,37 @@
+{
+  "id": "c12-i2",
+  "solutionSql": "SELECT s.tracking_code, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.customer_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;",
+  "sampleRowCount": 66,
+  "sampleFirstRows": [
+    [
+      "JF-104729-0006",
+      "Fable Orchard"
+    ],
+    [
+      "JF-104729-0008",
+      "Brindle Pantry"
+    ],
+    [
+      "JF-104729-0020",
+      "Brindle Pantry"
+    ],
+    [
+      "JF-104729-0021",
+      "Cobalt Paperworks"
+    ],
+    [
+      "JF-104729-0027",
+      "Cobalt Paperworks"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "ambiguities": [
+    "\"Delivered\" is not tied to a column in the text. I used shipments.status = 'delivered'. shipment_events also has 'delivered' rows, which would give a different answer if the author meant an event.",
+    "The starter selects customer_id, which is not in resultColumns. I replaced the select list with tracking_code and customers.name AS customer_name, which needs the join."
+  ],
+  "confidence": "high",
+  "notes": "Inner join on the non-null customer foreign key to the unique customers.id, so no fan-out. Row counts differ by dataset (66 sample, 120 nulls, 43 boundary) because the shipments seeds differ. tracking_code is unique, so the order has no ties."
+}

@@ -37,7 +37,7 @@ function DemonstrationCard({ demonstration }: { demonstration: Demonstration }) 
   const [busy, setBusy] = useState(false);
   const run = async () => {
     setBusy(true); setMessage('');
-    try { await sqlEngine.initialize(); setResult(await sqlEngine.preview(demonstration.sql)); }
+    try { await sqlEngine.initialize(); setResult(await (demonstration.explain ? sqlEngine.demonstrate(demonstration.sql) : sqlEngine.preview(demonstration.sql))); }
     catch (error) { setResult(null); setMessage(error instanceof Error ? error.message : String(error)); }
     finally { setBusy(false); }
   };

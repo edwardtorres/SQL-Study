@@ -518,5 +518,25 @@
     "id": "pg-partial-index",
     "url": "https://www.postgresql.org/docs/18/sql-createindex.html",
     "quote": "A partial index is an index that contains entries for only a portion of a table, usually a portion that is more useful for indexing than the rest of the table."
+  },
+  {
+    "id": "pg-explain-plan",
+    "url": "https://www.postgresql.org/docs/18/sql-explain.html",
+    "quote": "The execution plan shows how the table(s) referenced by the statement will be scanned"
+  },
+  {
+    "id": "pg-explain-analyze",
+    "url": "https://www.postgresql.org/docs/18/sql-explain.html",
+    "quote": "The ANALYZE option causes the statement to be actually executed, not only planned."
+  },
+  {
+    "id": "pg-index-planner",
+    "url": "https://www.postgresql.org/docs/18/indexes-intro.html",
+    "quote": "But you might have to run the ANALYZE command regularly to update statistics to allow the query planner to make educated decisions."
+  },
+  {
+    "id": "pg-index-not-used",
+    "url": "https://www.postgresql.org/docs/18/indexes-intro.html",
+    "quote": "when and why the planner might choose not to use an index"
   }
 ]

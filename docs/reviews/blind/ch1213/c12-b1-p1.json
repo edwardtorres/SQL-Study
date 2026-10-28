@@ -1,0 +1,29 @@
+{
+  "id": "c12-b1-p1",
+  "solutionSql": "SELECT id, shipment_id, occurred_at\nFROM shipment_scans_large\nWHERE id BETWEEN 1000 AND 1010\n  AND status = 'arrived'\nORDER BY id;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      1002,
+      4839,
+      "2026-01-01T16:42:00.000Z"
+    ],
+    [
+      1006,
+      1515,
+      "2026-01-01T16:46:00.000Z"
+    ],
+    [
+      1010,
+      3191,
+      "2026-01-01T16:50:00.000Z"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": "Index Scan (Forward) [shipment_scans_large_pkey]",
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Arrived scans with ids 1000 to 1010 are 1002, 1006 and 1010. Plan is Index Scan (Forward) on the primary key on all three datasets. occurred_at is timestamptz (OID 1184); it is shown here as UTC ISO text, and its display depends on session TimeZone."
+}
