@@ -69,6 +69,10 @@ async function validatedTree(sql: string, options: SqlOptions): Promise<Ast> {
           if (child.chain) reject('AND CHAIN is not available in tickets.');
           if (typeof child.kind === 'string' && child.kind.includes('PREPARE')) reject('Two-phase commit is not available in tickets.');
         }
+        if (key === 'ExplainStmt' && record(child)) {
+          const options = Array.isArray(child.options) ? child.options : [];
+          if (options.some((option) => record(option) && record(option.DefElem) && String(option.DefElem.defname).toLowerCase() === 'analyze')) reject('EXPLAIN ANALYZE runs the query, so it is not part of tickets.');
+        }
       }
       if (key === 'SelectStmt' && record(child) && child.intoClause) reject('SELECT INTO is not allowed; use a schema ticket for DDL.');
       if (key === 'CreateStmt' && record(child) && (child.tablespacename || child.tableSpaceName || child.accessMethod || child.options || child.inhRelations || child.partbound || child.partspec)) reject('Storage, inheritance, and partition options are not available in schema tickets.');

@@ -9,10 +9,13 @@ export type Structure = 'window' | 'cte';
 export const statementKinds = [
   'SelectStmt', 'InsertStmt', 'UpdateStmt', 'DeleteStmt', 'MergeStmt',
   'CreateStmt', 'AlterTableStmt', 'DropStmt', 'TransactionStmt',
+  'ViewStmt', 'IndexStmt', 'ExplainStmt',
 ] as const;
 export type StatementKind = typeof statementKinds[number];
 // What one ticket allows. Read tickets allow SELECT only. Transaction control is accepted only when a ticket sets it.
 export interface Policy { allow: readonly StatementKind[]; transactions?: boolean }
+// A plan requirement on a read ticket: the planner's node types for the learner's SELECT must include mustContain and none of mustNotContain. The plan comes from EXPLAIN without ANALYZE, which does not run the query.
+export interface PlanCheck { mustContain: readonly string[]; mustNotContain?: readonly string[] }
 // A trusted query the grader runs after the learner's statements; its rows describe the resulting state.
 export interface CheckQuery { id: string; label: string; sql: string }
 // A statement that must succeed (expect 'ok') or fail (expect 'error', with a SQLSTATE class or code).
@@ -63,6 +66,12 @@ export interface Challenge {
   policy?: Policy;
   checks?: readonly CheckQuery[];
   constraintTests?: readonly ConstraintTest[];
+  // runs 2: the statements run twice in one rolled-back transaction, and the state after each run must match the reference (idempotency).
+  runs?: 1 | 2;
+  // plan: a read ticket's learner SELECT must produce the planner nodes named here, on every dataset.
+  plan?: PlanCheck;
+  // Chapter 13 items: the solve time the item is written for, in minutes.
+  estimatedMinutes?: number;
   hints: readonly [string, string, string];
   docs: readonly { label: string; url: string }[];
   datasets: readonly DatasetSpec[];

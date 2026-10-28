@@ -1,5 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
 import type { DatasetSpec, QueryResult } from '../core/types';
+import { nodeTypes } from '../grader/plan';
 import { parsedStatements } from '../grader';
 import type { ParsedStatement } from '../grader/structure';
 import type { CheckQuery, ConstraintTest, StatementKind } from '../core/types';
@@ -59,6 +60,7 @@ function translateTransaction(tx: LearnerTransaction, transaction: { kind: strin
 export interface StateOptions {
   allow: readonly StatementKind[];
   transactions?: boolean;
+  runs?: 1 | 2;
   checks: readonly CheckQuery[];
   tests: readonly ConstraintTest[];
   timeoutMs?: number;
@@ -66,7 +68,8 @@ export interface StateOptions {
 }
 export interface CheckOutcome { id: string; label: string; result: QueryResult | null; error: string | null }
 export interface TestOutcome { name: string; passed: boolean; message: string }
-export interface StateResult { learnerError: string | null; checks: CheckOutcome[]; tests: TestOutcome[] }
+// rerunChecks is present when the ticket runs its statements twice: the checks after the second run.
+export interface StateResult { learnerError: string | null; checks: CheckOutcome[]; tests: TestOutcome[]; rerunChecks?: CheckOutcome[] }
 
 /**
  * One instance belongs to one worker. Datasets are retained; learner effects
@@ -237,6 +240,7 @@ export class WarmEngine {
       const rowLimit = options.rowLimit ?? 1000;
       if (!Number.isInteger(rowLimit) || rowLimit < 1 || rowLimit > 10_000) throw new Error('Row limit must be an integer from 1 to 10000.');
       if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000) throw new Error('Statement timeout must be an integer from 1 to 10000 milliseconds.');
+      if (options.runs === 2 && options.transactions) throw new Error('A ticket that runs its statements twice cannot also set transactions.');
       const statements = await parsedStatements(sql, { mode: 'write', allow: options.allow, transactions: options.transactions ?? false });
       return this.withDatasetTransaction(dataset, timeoutMs, async (): Promise<StateResult> => {
         const tx = new LearnerTransaction();
@@ -249,9 +253,38 @@ export class WarmEngine {
         }
         const checks: CheckOutcome[] = [];
         for (const check of options.checks) checks.push(await this.checkOutcome(check, rowLimit));
+        let rerunChecks: CheckOutcome[] | undefined;
+        if (options.runs === 2) {
+          // An idempotent load leaves the same state when its statements run again on top of their own result.
+          try { await this.executeLearner(statements, rowLimit, new LearnerTransaction()); }
+          catch (error) {
+            if (isFatal(error)) throw error;
+            return { learnerError: `Running the statements a second time failed: ${learnerMessage(error)}`, checks: [], tests: [] };
+          }
+          rerunChecks = [];
+          for (const check of options.checks) rerunChecks.push(await this.checkOutcome(check, rowLimit));
+        }
         const tests: TestOutcome[] = [];
         for (const test of options.tests) tests.push(await this.constraintOutcome(test));
-        return { learnerError: null, checks, tests };
+        return rerunChecks ? { learnerError: null, checks, tests, rerunChecks } : { learnerError: null, checks, tests };
+      });
+    });
+  }
+
+  // The planner's node types for one read statement, from EXPLAIN without ANALYZE. The planner chooses a plan without running the query.
+  async planNodes(datasetId: string, sql: string, timeoutMs = 1500): Promise<string[]> {
+    return this.serial(async () => {
+      if (this.closed) throw new Error('The practice engine is closed.');
+      const dataset = this.prepared.get(datasetId);
+      if (!dataset) throw new Error('The requested dataset is not loaded.');
+      const statements = await parsedStatements(sql, { mode: 'read' });
+      const statement = statements[0];
+      if (statements.length !== 1 || !statement) throw new Error('A plan is taken from one SELECT statement.');
+      return this.withDatasetTransaction(dataset, timeoutMs, async () => {
+        const result = await this.db.query<Record<string, unknown>>(`EXPLAIN (FORMAT JSON) ${statement.sql.replace(/;\s*$/, '')}`);
+        const cell = Object.values(result.rows[0] ?? {})[0];
+        const plan: unknown = typeof cell === 'string' ? JSON.parse(cell) : cell;
+        return nodeTypes(plan);
       });
     });
   }

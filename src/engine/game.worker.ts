@@ -1,6 +1,7 @@
 import { datasetCatalog, hiddenDatasets, sampleDataset, schema, seedSql } from '../data';
 import type { DatasetSpec } from '../core/types';
 import { loadItem } from '../data/items/loader';
+import { planProblemFor } from '../grader/plan';
 import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
 import { readPolicy } from '../grader/policy';
@@ -51,6 +52,7 @@ function loadHidden(runtime: WarmEngine): Promise<void> {
   });
   return hiddenLoaded;
 }
+
 // Ticket definitions load per chapter: a request names its ticket, and the worker loads only that chapter.
 async function challengeOf(id: string): Promise<Challenge> {
   try { return await loadItem(id); }
@@ -78,7 +80,10 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
       actualResults.set(dataset.id, actual);
       if (!dataset.hidden) preview = actual;
       const expected = await runtime.run(dataset.id, challenge.referenceSql);
-      const diff = compareResults(actual, expected, { ordered: challenge.ordered, columns: challenge.columns });
+      const rowDiff = compareResults(actual, expected, { ordered: challenge.ordered, columns: challenge.columns });
+      // A plan requirement is checked on the same dataset, from the planner's choice for the learner's SELECT.
+      const planProblem = challenge.plan ? planProblemFor(challenge.plan, await runtime.planNodes(dataset.id, sql)) : undefined;
+      const diff = planProblem === undefined ? rowDiff : { passed: false, message: planProblem, missing: [], extra: [] };
       outcomes.push({ id: dataset.id, label: dataset.label, hidden: dataset.hidden, passed: diff.passed, diff });
     } catch (error) {
       if (fatalError(error)) throw error;
@@ -101,13 +106,13 @@ async function statePreview(runtime: WarmEngine, challengeId: string, sql: strin
   if (!challenge?.checks) throw new Error('This ticket is graded by its query result, not by database state.');
   const policy = challenge.policy ?? readPolicy;
   return runtime.runState(sampleDataset.id, sql, {
-    allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks, tests: challenge.constraintTests ?? [],
+    allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks, tests: challenge.constraintTests ?? [], ...(challenge.runs === 2 ? { runs: 2 as const } : {}),
   });
 }
 
 async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string, start: number): Promise<GradedSubmission> {
   const policy = challenge.policy ?? readPolicy;
-  const options: StateOptions = { allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks ?? [], tests: challenge.constraintTests ?? [] };
+  const options: StateOptions = { allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks ?? [], tests: challenge.constraintTests ?? [], ...(challenge.runs === 2 ? { runs: 2 as const } : {}) };
   const outcomes: DatasetOutcome[] = [];
   const actualStates = new Map<string, StateResult>();
   let preview: QueryResult | null = null;

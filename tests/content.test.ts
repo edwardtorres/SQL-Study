@@ -10,11 +10,19 @@ import { isBareSkeleton } from '../src/grader/skeleton';
 import { sameRows } from '../src/grader/compare';
 import { parsedStatements, validateSql } from '../src/grader/structure';
 import { sameState } from '../src/grader/state';
+import { nodeTypes, planProblemFor } from '../src/grader/plan';
 import { readPolicy } from '../src/grader/policy';
 import { WarmEngine, type StateOptions } from '../src/engine/runtime';
 
 // The content check: every graded item must satisfy the Step 2 rules before it ships.
 // Wrong variants are measured against the engine on every dataset the item uses.
+
+// The planner's node types for a SELECT, as the engine's EXPLAIN (FORMAT JSON) reports them.
+async function planNodesOf(db: PGlite, sql: string): Promise<string[]> {
+  const result = await db.query<Record<string, unknown>>(`EXPLAIN (FORMAT JSON) ${sql.replace(/;\s*$/, '')}`);
+  const cell = Object.values(result.rows[0] ?? {})[0];
+  return nodeTypes(typeof cell === 'string' ? JSON.parse(cell) : cell);
+}
 
 const bossGroups = new Map<string, Challenge[]>();
 for (const item of items) {
@@ -88,6 +96,10 @@ describe('content check: references and wrong variants on the engine', () => {
             return null;
           });
           if (!reference) continue;
+          if (item.plan) {
+            const referencePlan = planProblemFor(item.plan, await planNodesOf(db, item.referenceSql));
+            if (referencePlan) failures.push(`${item.id} reference plan fails on ${dataset.id}: ${referencePlan}`);
+          }
           const columns = reference.fields.map((field) => `${field.name}:${field.dataTypeID}`).join(',');
           const contract = item.columns.map((column) => `${column.name}:${column.type}`).join(',');
           if (columns !== contract) failures.push(`${item.id} columns ${columns} do not match ${contract}`);
@@ -98,7 +110,9 @@ describe('content check: references and wrong variants on the engine', () => {
               return null;
             });
             if (!wrong) continue;
-            const same = sameRows({ fields: reference.fields, rows: reference.rows as unknown[][] }, { fields: wrong.fields, rows: wrong.rows as unknown[][] }, item.ordered);
+            // A plan requirement counts too: a variant whose rows match but whose plan is wrong is caught by its plan.
+            const planProblem = item.plan ? planProblemFor(item.plan, await planNodesOf(db, variant.sql)) : undefined;
+            const same = sameRows({ fields: reference.fields, rows: reference.rows as unknown[][] }, { fields: wrong.fields, rows: wrong.rows as unknown[][] }, item.ordered) && planProblem === undefined;
             if (!same) caught.set(key, (caught.get(key) ?? 0) + 1);
             if (!same && dataset.id === 'sample') visibleCatches.add(key);
             else caught.set(key, caught.get(key) ?? 0);
@@ -155,7 +169,7 @@ describe('content check: write items on the engine', () => {
       for (const item of items.filter((candidate) => candidate.checks)) {
         const policy = item.policy ?? readPolicy;
         const transactions = policy.transactions ?? false;
-        const options: StateOptions = { allow: policy.allow, transactions, checks: item.checks ?? [], tests: item.constraintTests ?? [] };
+        const options: StateOptions = { allow: policy.allow, transactions, checks: item.checks ?? [], tests: item.constraintTests ?? [], ...(item.runs === 2 ? { runs: 2 as const } : {}) };
         await validateSql(item.referenceSql, { mode: 'write', allow: policy.allow, transactions }).catch((error: unknown) => {
           failures.push(`${item.id} reference breaks its policy: ${String(error)}`);
         });

@@ -13,11 +13,26 @@ describe('fictional deterministic freight seeds', () => {
     expect(() => generateSeed(Number.NaN)).toThrow(/safe integer/);
   });
 
-  test('all eight tables have unique primary keys and valid non-null foreign keys', () => {
-    expect(schema).toHaveLength(8);
+  // Chapters 10 to 13 add staging and large tables; the eight core tables keep their keys and foreign keys.
+  const EXTRA_TABLES = ['staging_scans', 'staging_customer_regions', 'load_watermark', 'staging_shipments_flat', 'shipment_scans_large'];
+  const coreTables = schema.filter((table) => !EXTRA_TABLES.includes(table.name));
+  test('every table in the seed has every declared column on every row, and the watermark has one row', () => {
     for (const dataset of datasetCatalog) {
       const data = generateSeed(dataset.seed, dataset.variant);
-      for (const table of schema) {
+      for (const table of schema.filter((item) => item.name !== 'shipment_scans_large')) {
+        for (const row of data[table.name]) {
+          for (const column of table.columns) expect(column.name in row, `${dataset.id} ${table.name}.${column.name}`).toBe(true);
+        }
+      }
+      expect(data.load_watermark, `${dataset.id} watermark`).toHaveLength(1);
+    }
+  });
+
+  test('all eight core tables have unique primary keys and valid non-null foreign keys', () => {
+    expect(coreTables).toHaveLength(8);
+    for (const dataset of datasetCatalog) {
+      const data = generateSeed(dataset.seed, dataset.variant);
+      for (const table of coreTables) {
         const rows = data[table.name];
         expect(new Set(rows.map((row) => row.id)).size, `${dataset.id}.${table.name} PKs`).toBe(rows.length);
         for (const column of table.columns) {
