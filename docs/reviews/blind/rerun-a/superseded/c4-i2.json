@@ -1,0 +1,27 @@
+{
+  "id": "c4-i2",
+  "solutionSql": "SELECT d.id, d.name, s.name AS supervisor_name\nFROM drivers AS d\nLEFT JOIN drivers AS s ON s.id = d.supervisor_id\nORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      "Nera Vale",
+      null
+    ],
+    [
+      2,
+      "Olin Moss",
+      "Nera Vale"
+    ],
+    [
+      3,
+      "Pella Reed",
+      "Nera Vale"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Nera Vale is the only driver with a NULL supervisor, so supervisor_name is NULL only for id 1.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

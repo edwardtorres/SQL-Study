@@ -1,0 +1,24 @@
+{
+  "id": "c5-i5",
+  "solutionSql": "WITH per_customer AS (\n  SELECT customer_id, AVG(weight_kg) AS avg_w\n  FROM shipments\n  GROUP BY customer_id\n), overall AS (\n  SELECT AVG(weight_kg) AS avg_all\n  FROM shipments\n)\nSELECT c.id, c.name\nFROM customers AS c\nJOIN per_customer AS p ON p.customer_id = c.id\nCROSS JOIN overall AS o\nWHERE p.avg_w > o.avg_all\nORDER BY c.id;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ],
+    [
+      5,
+      "Emberwood Games"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Customers 2, 4 and 5 sit above the 1032.04 overall average. Customer 1 at 1020.87 is the closest customer below it.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

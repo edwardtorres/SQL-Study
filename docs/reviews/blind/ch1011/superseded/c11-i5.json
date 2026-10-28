@@ -1,0 +1,37 @@
+{
+  "id": "c11-i5",
+  "solutionSql": "SELECT s.id, s.shipment_id\nFROM staging_scans AS s\nWHERE NOT EXISTS (\n  SELECT 1 FROM shipments AS sh WHERE sh.id = s.shipment_id\n)\nORDER BY s.id;\n",
+  "sampleRowCount": 5,
+  "sampleFirstRows": [
+    [
+      1000,
+      9000
+    ],
+    [
+      1009,
+      9009
+    ],
+    [
+      1018,
+      9018
+    ],
+    [
+      1027,
+      9027
+    ],
+    [
+      1036,
+      9036
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    "A scan with a NULL shipment_id: \"names a shipment missing from shipments\" would exclude it, but the title \"Find scans with no shipment\" would include it. My NOT EXISTS includes it. No dataset has a NULL shipment_id, so the result did not change.",
+    "Duplicate orphan rows are listed once per row. No orphan id repeats in any dataset, so this did not change the answer."
+  ],
+  "confidence": "high",
+  "notes": "Row counts: sample 5, nulls 19, boundary 13. Only the sample rows are in the record. Output columns are id and shipment_id, as the ticket asks. Re-checked against the revised text (a scan with no shipment id counts as having no shipment and is listed): solution unchanged. Re-run on sample, nulls and boundary gives the same rows as before. Probe: a scan with NULL shipment_id added inside a transaction is listed with shipment_id null. The NULL-shipment ambiguity above is resolved by the revised text.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

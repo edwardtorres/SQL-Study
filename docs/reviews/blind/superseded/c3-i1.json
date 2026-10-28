@@ -1,0 +1,30 @@
+{
+  "id": "c3-i1",
+  "solutionSql": "SELECT s.customer_id,\n       SUM(i.amount) AS billed_amount\nFROM invoices i\nJOIN shipments s ON s.id = i.shipment_id\nGROUP BY s.customer_id\nORDER BY s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "540437027.06"
+    ],
+    [
+      2,
+      "630509169.07"
+    ],
+    [
+      3,
+      "630508819.07"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return customer_id and billed_amount, the sum of invoice amounts for each customer, ordered by customer_id.",
+      "readingChosen": "Only customers that have at least one invoice appear, so customers 7 and 8 are absent.",
+      "alternativeReading": "Every customer appears, with billed_amount 0 or NULL for customers with no invoices."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Joining invoices to shipments does not double count, because each invoice has one shipment and each shipment has at most one invoice. Several invoices are exactly 90071992.01, which dominates every sum here, so the result is unusual but the schema says repeated amounts are legitimate.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

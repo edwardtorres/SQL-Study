@@ -1,0 +1,30 @@
+{
+  "id": "c4-i7",
+  "solutionSql": "SELECT d.id, d.name\nFROM drivers AS d\nWHERE EXISTS (\n  SELECT 1\n  FROM shipments AS s\n  WHERE s.driver_id = d.id\n    AND s.status = 'delivered'\n    AND s.route_id IN (1, 2)\n)\nORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      "Nera Vale"
+    ],
+    [
+      2,
+      "Olin Moss"
+    ],
+    [
+      3,
+      "Pella Reed"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "carries at least one shipment with status delivered",
+      "readingChosen": "shipments.status = 'delivered', reached through shipments.driver_id.",
+      "alternativeReading": "A shipment_events row with status 'delivered' for a shipment the driver carries. Measured here: the same four drivers."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Each of the four drivers has a delivered route 1 or 2 shipment. The event-based alternative returns the same four drivers.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

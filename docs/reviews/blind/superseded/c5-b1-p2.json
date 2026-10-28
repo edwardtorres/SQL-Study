@@ -1,0 +1,30 @@
+{
+  "id": "c5-b1-p2",
+  "solutionSql": "SELECT c.id,\n       c.name\nFROM customers c\nWHERE EXISTS (\n  SELECT 1\n  FROM shipments s\n  WHERE s.customer_id = c.id\n    AND s.weight_kg >= 900\n)\nORDER BY c.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "Aster Loomworks"
+    ],
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      3,
+      "Cobalt Paperworks"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Find the customers who have booked at least one shipment of 900 kg or more.",
+      "readingChosen": "Any shipment status counts, including cancelled, because a cancelled shipment was still booked.",
+      "alternativeReading": "Only shipments that are not cancelled count, since a cancelled booking is not a real customer booking."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All six shipping customers qualify under the chosen reading, and customers 7 and 8 do not. The sample does not show whether the cancelled rows change the answer, so hidden datasets should test it.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

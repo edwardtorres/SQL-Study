@@ -1,0 +1,50 @@
+{
+  "id": "c8-i5",
+  "solutionSql": "SELECT shipment_id,\n       id AS event_id,\n       FLOOR(EXTRACT(EPOCH FROM (\n         LEAD(occurred_at) OVER (PARTITION BY shipment_id ORDER BY occurred_at, id) - occurred_at\n       )))::integer AS seconds_to_next\nFROM shipment_events\nORDER BY shipment_id, occurred_at, id;",
+  "sampleRowCount": 678,
+  "sampleFirstRows": [
+    [
+      2,
+      1,
+      14400
+    ],
+    [
+      2,
+      3,
+      14400
+    ],
+    [
+      2,
+      2,
+      null
+    ],
+    [
+      3,
+      4,
+      14400
+    ],
+    [
+      3,
+      6,
+      14400
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "return the whole seconds from its occurred_at to the next scan",
+      "readingChosen": "Truncate the fraction (FLOOR) of the elapsed time.",
+      "alternativeReading": "Round to the nearest whole second. Identical on the sample, where every event time is a whole hour."
+    },
+    {
+      "phrase": "Order scans by occurred_at, then by id.",
+      "readingChosen": "The next scan is the next row in that order, so a scan tied with the following one gets 0 seconds (24 sample rows).",
+      "alternativeReading": "The next scan must be strictly later in time, so a tied scan with no later scan gets NULL. Those 24 rows would change from 0 to NULL."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "The sample has 218 NULLs (last scan per shipment) and 24 zero-second ties from arrived and delivered sharing a timestamp. Only the tie reading is submitted.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

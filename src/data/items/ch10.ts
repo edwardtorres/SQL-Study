@@ -47,10 +47,16 @@ export const chapter10Items: readonly Challenge[] = [
     checks: [keysOf('dim_route'), constraintsOf('dim_route')],
     columns: [],
     wrongVariants: [
-      { id: 'g1-typed-key', mistake: 'IDENTITY_MISSING', sql: 'CREATE TABLE dim_route (\n  route_key integer PRIMARY KEY,\n  origin text NOT NULL,\n  destination text NOT NULL,\n  UNIQUE (origin, destination)\n);', explanation: 'It looks like the key was left as an ordinary integer. Without GENERATED ALWAYS AS IDENTITY, every row needs a route_key typed in by hand, and nothing gives a new route a fresh key. The ticket asks for a generated surrogate key.' },
-      { id: 'g1-no-unique', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE dim_route (\n  route_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  origin text NOT NULL,\n  destination text NOT NULL\n);', explanation: 'It looks like the UNIQUE rule on origin and destination was left out. Then the same route pair can be stored many times, and the dimension stops listing each route once.' },
+      { id: 'g1-typed-key', rule: 'route-key-generated', mistake: 'IDENTITY_MISSING', sql: 'CREATE TABLE dim_route (\n  route_key integer PRIMARY KEY,\n  origin text NOT NULL,\n  destination text NOT NULL,\n  UNIQUE (origin, destination)\n);', explanation: 'It looks like the key was left as an ordinary integer. Without GENERATED ALWAYS AS IDENTITY, every row needs a route_key typed in by hand, and nothing gives a new route a fresh key. The ticket asks for a generated surrogate key.' },
+      { id: 'g1-no-unique', rule: 'pair-once', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE dim_route (\n  route_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  origin text NOT NULL,\n  destination text NOT NULL\n);', explanation: 'It looks like the UNIQUE rule on origin and destination was left out. Then the same route pair can be stored many times, and the dimension stops listing each route once.' },
+      { id: "g1-nullable-origin", rule: "origin-destination-present", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE dim_route (\n  route_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  origin text,\n  destination text NOT NULL,\n  UNIQUE (origin, destination)\n);", explanation: "It looks like NOT NULL was left off origin. A route with no origin is then accepted." },
     ],
     ordered: true,
+    rules: [
+      { id: "pair-once", text: "Each origin and destination pair is listed once." },
+      { id: "route-key-generated", text: "route_key is generated, and no one types it in." },
+      { id: "origin-destination-present", text: "origin and destination must be present." },
+    ],
     hints: [
       'A surrogate key is one the database makes for you. Which clause on an integer column asks PostgreSQL to generate it?',
       'Write GENERATED ALWAYS AS IDENTITY after the integer type, before PRIMARY KEY.',
@@ -70,10 +76,13 @@ export const chapter10Items: readonly Challenge[] = [
     checks: [routeRows],
     columns: [],
     wrongVariants: [
-      { id: 'g2-no-distinct', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_ROUTE_DDL}\nINSERT INTO dim_route (origin, destination)\nSELECT origin, destination\nFROM staging_shipments_flat\nORDER BY origin, destination;`, explanation: 'It looks like DISTINCT was left out. Every shipment’s pair is inserted, so a repeated pair breaks the UNIQUE rule on origin and destination and the whole load fails. Removing repeats first is what lists each pair once.' },
+      { id: 'g2-no-distinct', rule: 'pair-once', mistake: 'DIMENSION_DUPLICATE', sql: `${DIM_ROUTE_DDL}\nINSERT INTO dim_route (origin, destination)\nSELECT origin, destination\nFROM staging_shipments_flat\nORDER BY origin, destination;`, explanation: 'It looks like DISTINCT was left out. Every shipment’s pair is inserted, so a repeated pair breaks the UNIQUE rule on origin and destination and the whole load fails. Removing repeats first is what lists each pair once.' },
       { id: 'g2-swapped', mistake: 'DIRECTION_SWAPPED', sql: `${DIM_ROUTE_DDL}\nINSERT INTO dim_route (origin, destination)\nSELECT DISTINCT destination, origin\nFROM staging_shipments_flat\nORDER BY destination, origin;`, explanation: 'It looks like the two columns were swapped in the SELECT. The table then stores each route backwards, so a destination becomes an origin. The insert lists origin first, so the SELECT must list origin first too.' },
     ],
     ordered: true,
+    rules: [
+      { id: "pair-once", text: "Each origin and destination pair is kept once." },
+    ],
     hints: [
       'A repeated pair would be stored twice. Which keyword keeps each distinct value once?',
       'Put DISTINCT right after SELECT. The insert lists origin first, then destination.',
@@ -98,10 +107,16 @@ export const chapter10Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i1-natural-pk', mistake: 'NATURAL_KEY_AS_SURROGATE', sql: 'CREATE TABLE dim_customer (customer_name text PRIMARY KEY);', explanation: 'It looks like the customer name became the primary key. A name is a natural key that can change or be shared, so there is no stable surrogate key for facts to point at. The ticket asks for a generated key that stays fixed.' },
-      { id: 'i1-by-default', mistake: 'IDENTITY_BY_DEFAULT', sql: 'CREATE TABLE dim_customer (customer_key integer GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, customer_name text NOT NULL UNIQUE);', explanation: 'It looks like GENERATED BY DEFAULT was used. A default identity accepts a key typed in by hand, so a load could write a key that the sequence later repeats. GENERATED ALWAYS refuses that and keeps the key under the database’s control.' },
+      { id: 'i1-natural-pk', rule: 'surrogate-key', mistake: 'NATURAL_KEY_AS_SURROGATE', sql: 'CREATE TABLE dim_customer (customer_name text PRIMARY KEY);', explanation: 'It looks like the customer name became the primary key. A name is a natural key that can change or be shared, so there is no stable surrogate key for facts to point at. The ticket asks for a generated key that stays fixed.' },
+      { id: 'i1-by-default', rule: 'key-generated', mistake: 'IDENTITY_BY_DEFAULT', sql: 'CREATE TABLE dim_customer (customer_key integer GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, customer_name text NOT NULL UNIQUE);', explanation: 'It looks like GENERATED BY DEFAULT was used. A default identity accepts a key typed in by hand, so a load could write a key that the sequence later repeats. GENERATED ALWAYS refuses that and keeps the key under the database’s control.' },
+      { id: "i1-no-unique", rule: "name-unique", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE dim_customer (customer_key integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY, customer_name text NOT NULL);", explanation: "It looks like the UNIQUE rule on customer_name was left out. Two customers can then share a name, which is the natural key." },
     ],
     ordered: true,
+    rules: [
+      { id: "surrogate-key", text: "customer_key is the surrogate key and the primary key." },
+      { id: "key-generated", text: "The database generates customer_key, and no statement supplies a value for it." },
+      { id: "name-unique", text: "customer_name is unique across customers." },
+    ],
     hints: [
       'A surrogate key is never typed in by a loader. Which identity clause refuses a typed-in value?',
       'Use GENERATED ALWAYS AS IDENTITY for customer_key, and NOT NULL UNIQUE for customer_name.',
@@ -126,10 +141,14 @@ export const chapter10Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i2-no-fk', mistake: 'CONSTRAINT_MISSING', sql: `${DIM_CUSTOMER_DDL}\nCREATE TABLE fact_shipment (\n  tracking_code text PRIMARY KEY,\n  customer_key integer NOT NULL,\n  weight_kg integer,\n  status text NOT NULL,\n  booked_at timestamptz NOT NULL\n);`, explanation: 'It looks like the REFERENCES clause was left out. A shipment can then name a customer key that does not exist, and the fact no longer ties to the dimension.' },
-      { id: 'i2-weight-required', mistake: 'CONSTRAINT_TOO_STRICT', sql: `${DIM_CUSTOMER_DDL}\nCREATE TABLE fact_shipment (\n  tracking_code text PRIMARY KEY,\n  customer_key integer NOT NULL REFERENCES dim_customer (customer_key),\n  weight_kg integer NOT NULL,\n  status text NOT NULL,\n  booked_at timestamptz NOT NULL\n);`, explanation: 'It looks like weight_kg was made required. The ticket says a weight may be missing, and a shipment with no weight recorded is then refused.' },
+      { id: 'i2-no-fk', rule: 'fact-names-customer', mistake: 'CONSTRAINT_MISSING', sql: `${DIM_CUSTOMER_DDL}\nCREATE TABLE fact_shipment (\n  tracking_code text PRIMARY KEY,\n  customer_key integer NOT NULL,\n  weight_kg integer,\n  status text NOT NULL,\n  booked_at timestamptz NOT NULL\n);`, explanation: 'It looks like the REFERENCES clause was left out. A shipment can then name a customer key that does not exist, and the fact no longer ties to the dimension.' },
+      { id: 'i2-weight-required', rule: 'weight-optional', mistake: 'CONSTRAINT_TOO_STRICT', sql: `${DIM_CUSTOMER_DDL}\nCREATE TABLE fact_shipment (\n  tracking_code text PRIMARY KEY,\n  customer_key integer NOT NULL REFERENCES dim_customer (customer_key),\n  weight_kg integer NOT NULL,\n  status text NOT NULL,\n  booked_at timestamptz NOT NULL\n);`, explanation: 'It looks like weight_kg was made required. The ticket says a weight may be missing, and a shipment with no weight recorded is then refused.' },
     ],
     ordered: true,
+    rules: [
+      { id: "fact-names-customer", text: "customer_key must name a dim_customer row." },
+      { id: "weight-optional", text: "weight_kg may be missing." },
+    ],
     hints: [
       'A fact row must name a dimension row. Which clause on the column ties the two tables together?',
       'Write customer_key integer NOT NULL REFERENCES dim_customer (customer_key). Leave weight_kg without NOT NULL.',

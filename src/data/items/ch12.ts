@@ -97,10 +97,14 @@ export const chapter12Items: readonly Challenge[] = [
     referenceSql: "SELECT s.tracking_code, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.customer_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;",
     columns: [{ name: 'tracking_code', type: 25 }, { name: 'customer_name', type: 25 }],
     wrongVariants: [
-      { id: 'i2-star', mistake: 'SELECT_STAR_COST', sql: "SELECT s.*, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.customer_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;", explanation: 'It looks like every shipment column was selected. The report needs two columns. Extra columns add work for the query and widen the result that the report reads.' },
-      { id: 'i2-wrong-key', mistake: 'JOIN_KEY', sql: "SELECT s.tracking_code, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.driver_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;", explanation: 'It looks like the join used driver_id instead of customer_id. Each shipment is then paired with the customer whose number matches its driver, which is the wrong customer, and shipments with no driver drop out.' },
+      { id: 'i2-star', rule: 'two-columns-only', mistake: 'SELECT_STAR_COST', sql: "SELECT s.*, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.customer_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;", explanation: 'It looks like every shipment column was selected. The report needs two columns. Extra columns add work for the query and widen the result that the report reads.' },
+      { id: 'i2-wrong-key', rule: 'customer-of-shipment', mistake: 'JOIN_KEY', sql: "SELECT s.tracking_code, c.name AS customer_name\nFROM shipments AS s\nJOIN customers AS c ON c.id = s.driver_id\nWHERE s.status = 'delivered'\nORDER BY s.tracking_code;", explanation: 'It looks like the join used driver_id instead of customer_id. Each shipment is then paired with the customer whose number matches its driver, which is the wrong customer, and shipments with no driver drop out.' },
     ],
     ordered: true,
+    rules: [
+      { id: "two-columns-only", text: "The report lists only tracking_code and customer_name." },
+      { id: "customer-of-shipment", text: "Each shipment shows its own customer." },
+    ],
     hints: [
       'A shipment names its customer in customer_id. Which column of customers holds the same number?',
       'Join shipments to customers on customers.id = shipments.customer_id, and keep only the two columns the report needs.',
@@ -119,10 +123,16 @@ export const chapter12Items: readonly Challenge[] = [
     columns: [{ name: 'id', type: 23 }, { name: 'status', type: 25 }],
     plan: { mustContain: ['Index Scan'], mustNotContain: ['Seq Scan'] },
     wrongVariants: [
-      { id: 'i3-ascending', mistake: 'ORDER_DIRECTION', sql: 'SELECT id, status\nFROM shipment_scans_large\nORDER BY id\nLIMIT 5;', explanation: 'It looks like the order was left ascending. The query returns the five oldest scans, not the five newest.' },
-      { id: 'i3-wrapped', mistake: 'FUNCTION_ON_INDEXED_COLUMN', sql: 'SELECT id, status\nFROM shipment_scans_large\nORDER BY id + 0 DESC\nLIMIT 5;', explanation: 'It looks like id was wrapped in an expression in the ORDER BY. The rows are right, but the planner must sort every scan instead of reading the index from the top.' },
+      { id: 'i3-ascending', rule: 'largest-first', mistake: 'ORDER_DIRECTION', sql: 'SELECT id, status\nFROM shipment_scans_large\nORDER BY id\nLIMIT 5;', explanation: 'It looks like the order was left ascending. The query returns the five oldest scans, not the five newest.' },
+      { id: 'i3-wrapped', rule: 'primary-key-order', mistake: 'FUNCTION_ON_INDEXED_COLUMN', sql: 'SELECT id, status\nFROM shipment_scans_large\nORDER BY id + 0 DESC\nLIMIT 5;', explanation: 'It looks like id was wrapped in an expression in the ORDER BY. The rows are right, but the planner must sort every scan instead of reading the index from the top.' },
+      { id: "i3-no-limit", rule: "five-rows", mistake: "LIMIT_MISSING", sql: "SELECT id, status\nFROM shipment_scans_large\nORDER BY id DESC;", explanation: "It looks like the LIMIT was left out. Every scan comes back, not the five with the largest ids." },
     ],
     ordered: true,
+    rules: [
+      { id: "largest-first", text: "The largest id comes first." },
+      { id: "five-rows", text: "Five scans are returned." },
+      { id: "primary-key-order", text: "The order uses the primary key index." },
+    ],
     hints: [
       'The newest scans have the largest ids. Which direction does the ordering need?',
       'ORDER BY id DESC with LIMIT 5 returns the five largest ids, and the primary key index can supply that order.',
@@ -135,15 +145,19 @@ export const chapter12Items: readonly Challenge[] = [
     id: 'c12-i4', chapterId: 12, role: 'independent', starterStyle: 'skeleton', title: 'Early deliveries, by a prefix',
     ...PIPELINE,
     summary: 'Among the first fifty scans, list those whose status begins with “del”.',
-    instructions: 'List the id and status of each scan among the first fifty (ids 1 to 50) whose status begins with del, in id order. Statuses are lowercase, so the match is exact in case. A prefix match can use an index; a match on the end of the value cannot. Write the query only.',
+    instructions: 'List the id and status of each scan among the first fifty (ids 1 to 50) whose status begins with del, in id order. A prefix match can use an index; a match on the end of the value cannot. Write the query only.',
     starterSql: 'SELECT id, status\nFROM shipment_scans_large;\n',
     referenceSql: "SELECT id, status\nFROM shipment_scans_large\nWHERE id <= 50 AND status LIKE 'del%'\nORDER BY id;",
     columns: [{ name: 'id', type: 23 }, { name: 'status', type: 25 }],
     wrongVariants: [
-      { id: 'i4-leading', mistake: 'LEADING_WILDCARD', sql: "SELECT id, status\nFROM shipment_scans_large\nWHERE id <= 50 AND status LIKE '%ed'\nORDER BY id;", explanation: 'It looks like the wildcard was put first. The pattern now matches any status that ends in ed, such as booked and loaded, and it cannot be answered by a prefix search.' },
-      { id: 'i4-strict', mistake: 'BETWEEN_END_BOUND', sql: "SELECT id, status\nFROM shipment_scans_large\nWHERE id <= 51 AND status LIKE 'del%'\nORDER BY id;", explanation: 'It looks like the range runs one scan past the fifty the ticket names. Scan 51 is delivered, so it is listed as well.' },
+      { id: 'i4-leading', rule: 'begins-with-del', mistake: 'LEADING_WILDCARD', sql: "SELECT id, status\nFROM shipment_scans_large\nWHERE id <= 50 AND status LIKE '%ed'\nORDER BY id;", explanation: 'It looks like the wildcard was put first. The pattern now matches any status that ends in ed, such as booked and loaded, and it cannot be answered by a prefix search.' },
+      { id: 'i4-strict', rule: 'ids-one-to-fifty', mistake: 'BETWEEN_END_BOUND', sql: "SELECT id, status\nFROM shipment_scans_large\nWHERE id <= 51 AND status LIKE 'del%'\nORDER BY id;", explanation: 'It looks like the range runs one scan past the fifty the ticket names. Scan 51 is delivered, so it is listed as well.' },
     ],
     ordered: true,
+    rules: [
+      { id: "ids-one-to-fifty", text: "Only ids 1 to 50 are considered." },
+      { id: "begins-with-del", text: "Only statuses that begin with del are returned." },
+    ],
     hints: [
       'A prefix pattern puts the wildcard after the text. Where does the wildcard go in del%?',
       'Keep the wildcard at the end, and use id <= 50 for the first fifty.',

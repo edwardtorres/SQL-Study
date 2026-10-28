@@ -40,10 +40,16 @@ export const chapter9Items: readonly Challenge[] = [
     checks: [columnsOf('carriers'), constraintsOf('carriers')],
     columns: [],
     wrongVariants: [
-      { id: 'g1-no-key', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer, name text NOT NULL);', explanation: 'It looks like the primary key was left out. Without it, the same id can appear on two carriers, and the ticket says each id identifies one carrier.' },
-      { id: 'g1-nullable-name', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text);', explanation: 'It looks like NOT NULL was left off name. A carrier with no name is then accepted, but the ticket says every carrier has a name.' },
+      { id: 'g1-no-key', rule: 'id-unique', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer, name text NOT NULL);', explanation: 'It looks like the primary key was left out. Without it, the same id can appear on two carriers, and the ticket says each id identifies one carrier.' },
+      { id: 'g1-nullable-name', rule: 'name-present', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text);', explanation: 'It looks like NOT NULL was left off name. A carrier with no name is then accepted, but the ticket says every carrier has a name.' },
+      { id: "g1-nullable-id", rule: "id-present", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer UNIQUE, name text NOT NULL);", explanation: "It looks like id was made unique without being required. Two carriers can then share one missing id, so the id can be missing." },
     ],
     ordered: true,
+    rules: [
+      { id: "id-unique", text: "id never repeats." },
+      { id: "id-present", text: "id is never missing." },
+      { id: "name-present", text: "name is never missing." },
+    ],
     hints: [
       'A primary key is a constraint on one column. Which keyword after the column type declares it?',
       'Write PRIMARY KEY after integer in the id definition.',
@@ -66,10 +72,15 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'g2-no-where', mistake: 'MISSING_WHERE_ON_UPDATE', sql: "UPDATE shipments SET status = 'cancelled';", explanation: 'It looks like the WHERE clause was left out. Every shipment is cancelled, not only shipment 7. An UPDATE without WHERE changes every row in the table.' },
-      { id: 'g2-or', mistake: 'AND_OR_PRECEDENCE', sql: "UPDATE shipments SET status = 'cancelled' WHERE status = 'queued' OR id = 7;", explanation: 'It looks like an OR was added. Every queued shipment is cancelled as well as shipment 7. Only the shipment the ticket names should change.' },
+      { id: 'g2-no-where', rule: 'only-shipment-seven', mistake: 'MISSING_WHERE_ON_UPDATE', sql: "UPDATE shipments SET status = 'cancelled';", explanation: 'It looks like the WHERE clause was left out. Every shipment is cancelled, not only shipment 7. An UPDATE without WHERE changes every row in the table.' },
+      { id: 'g2-or', rule: 'only-shipment-seven', mistake: 'AND_OR_PRECEDENCE', sql: "UPDATE shipments SET status = 'cancelled' WHERE status = 'queued' OR id = 7;", explanation: 'It looks like an OR was added. Every queued shipment is cancelled as well as shipment 7. Only the shipment the ticket names should change.' },
+      { id: "g2-delivered", rule: "marked-cancelled", mistake: "WRONG_VALUE", sql: "UPDATE shipments SET status = 'delivered' WHERE id = 7;", explanation: "It looks like the status was set to delivered. The ticket asks for cancelled, so the shipment reads the wrong status." },
     ],
     ordered: true,
+    rules: [
+      { id: "only-shipment-seven", text: "Only shipment 7 changes." },
+      { id: "marked-cancelled", text: "Shipment 7 is marked cancelled." },
+    ],
     hints: [
       'The ticket names one shipment. Which clause limits an UPDATE to the rows that match?',
       'Keep WHERE id = and put the shipment number from the ticket in the blank.',
@@ -92,10 +103,14 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'g3-commit', mistake: 'ROLLBACK_MISSING', sql: 'BEGIN;\nUPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;\nCOMMIT;', explanation: 'It looks like COMMIT was used. COMMIT keeps the change, so every paid date is cleared. A dry run must end with ROLLBACK to restore the table.' },
-      { id: 'g3-open', mistake: 'ROLLBACK_MISSING', sql: 'BEGIN;\nUPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;', explanation: 'It looks like the transaction was never ended. The change is still open when the check runs, so the paid dates are cleared. ROLLBACK ends the transaction and restores them.' },
+      { id: 'g3-commit', rule: 'undone', mistake: 'ROLLBACK_MISSING', sql: 'BEGIN;\nUPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;\nCOMMIT;', explanation: 'It looks like COMMIT was used. COMMIT keeps the change, so every paid date is cleared. A dry run must end with ROLLBACK to restore the table.' },
+      { id: 'g3-open', rule: 'transaction-ends', mistake: 'ROLLBACK_MISSING', sql: 'BEGIN;\nUPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;', explanation: 'It looks like the transaction was never ended. The change is still open when the check runs, so the paid dates are cleared. ROLLBACK ends the transaction and restores them.' },
     ],
     ordered: true,
+    rules: [
+      { id: "undone", text: "The change is undone, so the invoices end as they started." },
+      { id: "transaction-ends", text: "The transaction is ended, not left open." },
+    ],
     hints: [
       'The ticket asks you to undo the change. Which statement discards everything since BEGIN?',
       'End with ROLLBACK, not COMMIT. COMMIT would keep the cleared paid dates.',
@@ -120,10 +135,15 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'g4-no-check', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE shipment_holds (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  hold_hours integer\n);', explanation: 'It looks like the CHECK was left out. A hold of zero hours is accepted, but the ticket requires hours above zero.' },
-      { id: 'g4-zero-allowed', mistake: 'GE_VS_GT', sql: 'CREATE TABLE shipment_holds (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  hold_hours integer CHECK (hold_hours >= 0)\n);', explanation: 'It looks like >= was used. Zero passes that test, so a zero-hour hold is accepted. The ticket needs strictly more than zero.' },
+      { id: 'g4-no-check', rule: 'above-zero', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE shipment_holds (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  hold_hours integer\n);', explanation: 'It looks like the CHECK was left out. A hold of zero hours is accepted, but the ticket requires hours above zero.' },
+      { id: 'g4-zero-allowed', rule: 'above-zero', mistake: 'GE_VS_GT', sql: 'CREATE TABLE shipment_holds (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  hold_hours integer CHECK (hold_hours >= 0)\n);', explanation: 'It looks like >= was used. Zero passes that test, so a zero-hour hold is accepted. The ticket needs strictly more than zero.' },
+      { id: "g4-no-fk", rule: "names-real-shipment", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE shipment_holds (\n  id integer PRIMARY KEY,\n  shipment_id integer NOT NULL,\n  hold_hours integer CHECK (hold_hours > 0)\n);", explanation: "It looks like the reference to shipments was left out. A hold can then name a shipment that does not exist." },
     ],
     ordered: true,
+    rules: [
+      { id: "above-zero", text: "hold_hours must be above zero." },
+      { id: "names-real-shipment", text: "Each hold names a shipment that exists." },
+    ],
     hints: [
       'A rule on one column is a CHECK constraint. Which comparison excludes zero?',
       'Write CHECK (hold_hours > 0) after the column type.',
@@ -148,10 +168,20 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i1-no-unique', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, code text NOT NULL, name text NOT NULL);', explanation: 'It looks like UNIQUE was left off code. Two carriers can then share a code, which the ticket forbids.' },
-      { id: 'i1-nullable-code', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, code text UNIQUE, name text NOT NULL);', explanation: 'It looks like NOT NULL was left off code. A carrier with no code is then accepted, and the ticket requires a code for every carrier.' },
+      { id: 'i1-no-unique', rule: 'code-unique', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, code text NOT NULL, name text NOT NULL);', explanation: 'It looks like UNIQUE was left off code. Two carriers can then share a code, which the ticket forbids.' },
+      { id: 'i1-nullable-code', rule: 'code-present', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, code text UNIQUE, name text NOT NULL);', explanation: 'It looks like NOT NULL was left off code. A carrier with no code is then accepted, and the ticket requires a code for every carrier.' },
+      { id: "i1-id-repeats", rule: "id-unique", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer NOT NULL, code text NOT NULL UNIQUE, name text NOT NULL);", explanation: "It looks like the primary key was left off id. The id is still required, but nothing stops two carriers sharing one id." },
+      { id: "i1-nullable-id", rule: "id-present", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer UNIQUE, code text NOT NULL UNIQUE, name text NOT NULL);", explanation: "It looks like id was made unique without being required, so a carrier can have no id." },
+      { id: "i1-nullable-name", rule: "name-present", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer PRIMARY KEY, code text NOT NULL UNIQUE, name text);", explanation: "It looks like NOT NULL was left off name. A carrier with no name is then accepted." },
     ],
     ordered: true,
+    rules: [
+      { id: "id-unique", text: "The id never repeats." },
+      { id: "id-present", text: "The id is never missing." },
+      { id: "code-present", text: "The code is present." },
+      { id: "code-unique", text: "The code is unique across carriers." },
+      { id: "name-present", text: "The name is present." },
+    ],
     hints: [
       'Two rules apply to code: it must be present, and it must not repeat. Which two column constraints express them?',
       'Put NOT NULL and UNIQUE after the code column type.',
@@ -177,10 +207,20 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i2-no-carrier-fk', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL REFERENCES shipments (id), carrier_id integer NOT NULL, PRIMARY KEY (shipment_id, carrier_id));', explanation: 'It looks like the reference from carrier_id to carriers was left out. An assignment can then name a carrier that does not exist, which the ticket forbids.' },
-      { id: 'i2-no-shipment-fk', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL, carrier_id integer NOT NULL REFERENCES carriers (id), PRIMARY KEY (shipment_id, carrier_id));', explanation: 'It looks like the reference from shipment_id to shipments was left out. An assignment can then name a shipment that does not exist.' },
+      { id: 'i2-no-carrier-fk', rule: 'carrier-fk', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL REFERENCES shipments (id), carrier_id integer NOT NULL, PRIMARY KEY (shipment_id, carrier_id));', explanation: 'It looks like the reference from carrier_id to carriers was left out. An assignment can then name a carrier that does not exist, which the ticket forbids.' },
+      { id: 'i2-no-shipment-fk', rule: 'shipment-fk', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE carriers (id integer PRIMARY KEY, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL, carrier_id integer NOT NULL REFERENCES carriers (id), PRIMARY KEY (shipment_id, carrier_id));', explanation: 'It looks like the reference from shipment_id to shipments was left out. An assignment can then name a shipment that does not exist.' },
+      { id: "i2-carrier-no-key", rule: "carrier-key", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL REFERENCES shipments (id), carrier_id integer NOT NULL REFERENCES carriers (id), PRIMARY KEY (shipment_id, carrier_id));", explanation: "It looks like the primary key was left off carriers. Two carriers can then share an id, so a shipment cannot name one carrier." },
+      { id: "i2-nullable-name", rule: "carrier-name", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer PRIMARY KEY, name text);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL REFERENCES shipments (id), carrier_id integer NOT NULL REFERENCES carriers (id), PRIMARY KEY (shipment_id, carrier_id));", explanation: "It looks like NOT NULL was left off the carrier name. A carrier with no name is then accepted." },
+      { id: "i2-pair-repeats", rule: "pair-once", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE carriers (id integer PRIMARY KEY, name text NOT NULL);\nCREATE TABLE shipment_carriers (shipment_id integer NOT NULL REFERENCES shipments (id), carrier_id integer NOT NULL REFERENCES carriers (id));", explanation: "It looks like the primary key on the pair was left out. The same shipment can then be given to the same carrier twice." },
     ],
     ordered: true,
+    rules: [
+      { id: "carrier-key", text: "carriers has an integer id primary key." },
+      { id: "carrier-name", text: "carriers has a required name." },
+      { id: "carrier-fk", text: "carrier_id must match a carrier." },
+      { id: "shipment-fk", text: "shipment_id must match a shipment." },
+      { id: "pair-once", text: "The same pair of shipment_id and carrier_id can appear only once." },
+    ],
     hints: [
       'A column that must match another table is a foreign key. Which clause writes that reference?',
       'Each assignment column needs REFERENCES to the table it points at: shipments for shipment_id, carriers for carrier_id.',
@@ -203,10 +243,14 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i3-no-where', mistake: 'MISSING_WHERE_ON_UPDATE', sql: 'UPDATE invoices SET paid_at = NULL;', explanation: 'It looks like the WHERE clause was left out. Every invoice loses its paid date, not only the invoices of cancelled shipments.' },
-      { id: 'i3-paid-filter', mistake: 'MISSING_WHERE_ON_UPDATE', sql: 'UPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;', explanation: 'It looks like the filter checked the invoice’s own paid date instead of the shipment’s status. Paid invoices for shipments that are not cancelled are cleared too.' },
+      { id: 'i3-no-where', rule: 'others-unchanged', mistake: 'MISSING_WHERE_ON_UPDATE', sql: 'UPDATE invoices SET paid_at = NULL;', explanation: 'It looks like the WHERE clause was left out. Every invoice loses its paid date, not only the invoices of cancelled shipments.' },
+      { id: 'i3-paid-filter', rule: 'cancelled-cleared', mistake: 'MISSING_WHERE_ON_UPDATE', sql: 'UPDATE invoices SET paid_at = NULL WHERE paid_at IS NOT NULL;', explanation: 'It looks like the filter checked the invoice’s own paid date instead of the shipment’s status. Paid invoices for shipments that are not cancelled are cleared too.' },
     ],
     ordered: true,
+    rules: [
+      { id: "cancelled-cleared", text: "Invoices of cancelled shipments have no paid date." },
+      { id: "others-unchanged", text: "Leave every other invoice unchanged." },
+    ],
     hints: [
       'The condition is about the shipment, so the UPDATE must reach into shipments. Which clause can hold a subquery?',
       'WHERE shipment_id IN (SELECT id FROM shipments WHERE status = ...) limits the rows to cancelled shipments.',
@@ -228,10 +272,15 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'i4-rollback', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO customers (id, name, region) VALUES (9, 'Juniper Crate', 'North'), (10, 'Kestrel Mills', NULL);\nROLLBACK;", explanation: 'It looks like ROLLBACK was used. ROLLBACK discards both customers, so neither appears. COMMIT keeps them.' },
-      { id: 'i4-first-only', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO customers (id, name, region) VALUES (9, 'Juniper Crate', 'North');\nCOMMIT;", explanation: 'It looks like the second customer was left out. The ticket asks for both rows in one transaction, so only one is kept.' },
+      { id: 'i4-rollback', rule: 'both-rows-kept', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO customers (id, name, region) VALUES (9, 'Juniper Crate', 'North'), (10, 'Kestrel Mills', NULL);\nROLLBACK;", explanation: 'It looks like ROLLBACK was used. ROLLBACK discards both customers, so neither appears. COMMIT keeps them.' },
+      { id: 'i4-first-only', rule: 'both-rows-kept', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO customers (id, name, region) VALUES (9, 'Juniper Crate', 'North');\nCOMMIT;", explanation: 'It looks like the second customer was left out. The ticket asks for both rows in one transaction, so only one is kept.' },
+      { id: "i4-empty-region", rule: "region-null", mistake: "NULL_AS_DEFAULT", sql: "BEGIN;\nINSERT INTO customers (id, name, region) VALUES (9, 'Juniper Crate', 'North'), (10, 'Kestrel Mills', 'Unknown');\nCOMMIT;", explanation: "It looks like the missing region was filled with a placeholder. The ticket says Kestrel Mills has no region, so the region stays NULL." },
     ],
     ordered: true,
+    rules: [
+      { id: "both-rows-kept", text: "Both customers are added and kept." },
+      { id: "region-null", text: "Kestrel Mills has no region, so its region is NULL." },
+    ],
     hints: [
       'Both rows must be kept, so the transaction must end with the statement that keeps them. Which one?',
       'Start with BEGIN; put both customers in one INSERT; end with COMMIT.',
@@ -306,10 +355,15 @@ export const chapter9Items: readonly Challenge[] = [
     ],
     columns: [],
     wrongVariants: [
-      { id: 'p1-no-check', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE rate_card (id integer PRIMARY KEY, carrier_code text NOT NULL, lane text NOT NULL, rate_per_kg numeric(8,2) NOT NULL, UNIQUE (carrier_code, lane));', explanation: 'It looks like the CHECK on rate_per_kg was left out. A rate of zero is accepted, but the ticket requires every rate to be above zero.' },
-      { id: 'p1-zero-allowed', mistake: 'GE_VS_GT', sql: 'CREATE TABLE rate_card (id integer PRIMARY KEY, carrier_code text NOT NULL, lane text NOT NULL, rate_per_kg numeric(8,2) NOT NULL CHECK (rate_per_kg >= 0), UNIQUE (carrier_code, lane));', explanation: 'It looks like >= was used. Zero passes that test, so a zero rate is accepted. The ticket needs strictly more than zero.' },
+      { id: 'p1-no-check', rule: 'rate-above-zero', mistake: 'CONSTRAINT_MISSING', sql: 'CREATE TABLE rate_card (id integer PRIMARY KEY, carrier_code text NOT NULL, lane text NOT NULL, rate_per_kg numeric(8,2) NOT NULL, UNIQUE (carrier_code, lane));', explanation: 'It looks like the CHECK on rate_per_kg was left out. A rate of zero is accepted, but the ticket requires every rate to be above zero.' },
+      { id: 'p1-zero-allowed', rule: 'rate-above-zero', mistake: 'GE_VS_GT', sql: 'CREATE TABLE rate_card (id integer PRIMARY KEY, carrier_code text NOT NULL, lane text NOT NULL, rate_per_kg numeric(8,2) NOT NULL CHECK (rate_per_kg >= 0), UNIQUE (carrier_code, lane));', explanation: 'It looks like >= was used. Zero passes that test, so a zero rate is accepted. The ticket needs strictly more than zero.' },
+      { id: "p1-no-unique", rule: "lane-once", mistake: "CONSTRAINT_MISSING", sql: "CREATE TABLE rate_card (id integer PRIMARY KEY, carrier_code text NOT NULL, lane text NOT NULL, rate_per_kg numeric(8,2) NOT NULL CHECK (rate_per_kg > 0));", explanation: "It looks like the unique rule on carrier and lane was left out. A carrier can then list the same lane twice." },
     ],
     ordered: true,
+    rules: [
+      { id: "rate-above-zero", text: "rate_per_kg must be above zero." },
+      { id: "lane-once", text: "A carrier can list each lane only once." },
+    ],
     hints: [
       'Two constraints are asked for: uniqueness of the carrier and lane pair, and a rule on rate_per_kg. Which clauses express each?',
       'UNIQUE (carrier_code, lane) is a table constraint; CHECK (rate_per_kg > 0) goes on the rate column.',
@@ -354,14 +408,20 @@ export const chapter9Items: readonly Challenge[] = [
     policy: UPDATE_INSERT_TX,
     checks: [
       { id: 'shipment-three', label: 'Shipment 3', sql: 'SELECT id, status FROM shipments WHERE id = 3' },
-      { id: 'scan-1000', label: 'Scan 1000', sql: 'SELECT id, shipment_id, status, occurred_at FROM shipment_events WHERE id = 1000' },
+      { id: 'scan-1000', label: 'Scan 1000', sql: 'SELECT id, shipment_id, status, occurred_at, note FROM shipment_events WHERE id = 1000' },
     ],
     columns: [],
     wrongVariants: [
-      { id: 'p3-rollback', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nUPDATE shipments SET status = 'delivered' WHERE id = 3;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note) VALUES (1000, 3, 'delivered', '2026-02-01T10:00:00Z', NULL);\nROLLBACK;", explanation: 'It looks like ROLLBACK was used. Both changes are discarded, so shipment 3 keeps its old status and the scan is missing. COMMIT keeps both.' },
-      { id: 'p3-no-status', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note) VALUES (1000, 3, 'delivered', '2026-02-01T10:00:00Z', NULL);\nCOMMIT;", explanation: 'It looks like the shipment update was left out. The scan says delivered, but the shipment keeps its old status. The ticket keeps both changes together.' },
+      { id: 'p3-rollback', rule: 'both-changes-kept', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nUPDATE shipments SET status = 'delivered' WHERE id = 3;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note) VALUES (1000, 3, 'delivered', '2026-02-01T10:00:00Z', NULL);\nROLLBACK;", explanation: 'It looks like ROLLBACK was used. Both changes are discarded, so shipment 3 keeps its old status and the scan is missing. COMMIT keeps both.' },
+      { id: 'p3-no-status', rule: 'shipment-delivered', mistake: 'COMMIT_MISSING', sql: "BEGIN;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note) VALUES (1000, 3, 'delivered', '2026-02-01T10:00:00Z', NULL);\nCOMMIT;", explanation: 'It looks like the shipment update was left out. The scan says delivered, but the shipment keeps its old status. The ticket keeps both changes together.' },
+      { id: "p3-note", rule: "note-null", mistake: "NULL_AS_DEFAULT", sql: "BEGIN;\nUPDATE shipments SET status = 'delivered' WHERE id = 3;\nINSERT INTO shipment_events (id, shipment_id, status, occurred_at, note) VALUES (1000, 3, 'delivered', '2026-02-01T10:00:00Z', '');\nCOMMIT;", explanation: "It looks like an empty note was stored in place of NULL. The ticket says the scan has no note, which is NULL." },
     ],
     ordered: true,
+    rules: [
+      { id: "both-changes-kept", text: "Both changes are kept." },
+      { id: "shipment-delivered", text: "Shipment 3 is marked delivered." },
+      { id: "note-null", text: "The scan has no note." },
+    ],
     hints: [
       'Two changes must be kept together. Which transaction statement wraps both and keeps them?',
       'Start with BEGIN;, then the UPDATE and the INSERT, then COMMIT;.',

@@ -1,0 +1,28 @@
+{
+  "id": "c13-i2",
+  "solutionSql": "WITH monthly AS (\n  SELECT date_trunc('month', booked_at AT TIME ZONE 'UTC') AS month_start,\n         CAST(COUNT(*) AS integer) AS shipments\n  FROM shipments\n  GROUP BY 1\n)\nSELECT to_char(month_start, 'YYYY-MM') AS month,\n       shipments,\n       shipments - LAG(shipments) OVER (ORDER BY month_start) AS change\nFROM monthly\nORDER BY month_start;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      "2025-12",
+      46,
+      null
+    ],
+    [
+      "2026-01",
+      194,
+      148
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "planNodes": null,
+  "solveMinutes": 3,
+  "ambiguities": [
+    "After a month with no bookings is left out, 'the change from the previous month' is still unclear. I compute it against the previous listed month, not the previous calendar month, which would be zero. No dataset I ran has a gap, so this is not exercised."
+  ],
+  "confidence": "high",
+  "notes": "Revised text: every shipment counts, whatever its status, which is how the query already worked. Casts: shipments cast to integer (was bigint); change is integer minus integer. Month taken with booked_at AT TIME ZONE 'UTC'. Sample: 2025-12 has 46 shipments (change NULL), 2026-01 has 194 (change 148). Each dataset returned only Dec and Jan.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

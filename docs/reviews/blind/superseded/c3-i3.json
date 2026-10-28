@@ -1,0 +1,27 @@
+{
+  "id": "c3-i3",
+  "solutionSql": "SELECT customer_id,\n       MIN(booked_at) AS first_booked,\n       MAX(booked_at) AS last_booked\nFROM shipments\nGROUP BY customer_id\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "2025-12-28T12:00:00.000Z",
+      "2026-01-31T00:00:00.000Z"
+    ],
+    [
+      2,
+      "2025-12-28T14:00:00.000Z",
+      "2026-01-31T23:59:59.999Z"
+    ],
+    [
+      3,
+      "2025-12-28T04:00:00.000Z",
+      "2026-01-16T16:00:00.000Z"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Shipments 1 and 2 are booked on 2026-01-31, out of sequence with their neighbours, so they set last_booked for customers 1 and 2. Customers 7 and 8 have no shipments and so do not appear, which the grouping implies.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

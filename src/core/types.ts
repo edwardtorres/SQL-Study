@@ -45,6 +45,12 @@ export const mistakeTags = [
   'LATEST_TIE_BREAK', 'STREAK_GAP_MISSED', 'MONTH_BOUNDARY_TZ', 'COHORT_DENOMINATOR', 'PIVOT_CASE_ELSE', 'SECOND_HIGHEST_RANK',
   // Step 3b review: rules that a variant must break on its own.
   'TIE_BREAK_REVERSED', 'COHORT_SAME_MONTH', 'RERUN_CHANGES_ROWS', 'INDEX_COLUMN_ORDER',
+  // Rule sweep: a required filter, row limit or outer-join keep is missing.
+  'FILTER_MISSING', 'LIMIT_MISSING',
+  // A value is read from the wrong table (for example shipment events instead of shipments).
+  'WRONG_SOURCE',
+  // A value is set to the wrong content, such as the wrong status or a different timestamp.
+  'WRONG_VALUE',
 ] as const;
 export type MistakeTag = typeof mistakeTags[number];
 // rule: the declared rule (Challenge.rules) this variant breaks and no other. Every declared rule needs at least one such variant.

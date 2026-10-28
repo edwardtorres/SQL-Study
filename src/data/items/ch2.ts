@@ -17,11 +17,14 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, tracking_code\nFROM shipments\nWHERE driver_id ____ NULL\nORDER BY id;',
     referenceSql: 'SELECT id, tracking_code FROM shipments WHERE driver_id IS NULL ORDER BY id;',
     wrongVariants: [
-      { id: 'g1-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id = NULL ORDER BY id;', explanation: 'It looks like NULL was compared with =. Nothing equals NULL, not even NULL, so the test is never true and no rows return. Use IS NULL to find missing values.' },
-      { id: 'g1-not-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id <> NULL ORDER BY id;', explanation: 'It looks like NULL was compared with <>. A comparison with NULL is unknown, so the rows never match. Use IS NULL or IS NOT NULL.' },
+      { id: 'g1-equals', rule: 'missing-driver', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id = NULL ORDER BY id;', explanation: 'It looks like NULL was compared with =. Nothing equals NULL, not even NULL, so the test is never true and no rows return. Use IS NULL to find missing values.' },
+      { id: 'g1-not-equals', rule: 'missing-driver', mistake: 'NULL_EQUALS', sql: 'SELECT id, tracking_code FROM shipments WHERE driver_id <> NULL ORDER BY id;', explanation: 'It looks like NULL was compared with <>. A comparison with NULL is unknown, so the rows never match. Use IS NULL or IS NOT NULL.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'tracking_code', type: 25 }],
+    rules: [
+      { id: "missing-driver", text: "Shipments with a missing driver_id are returned, and only those." },
+    ],
     hints: [
       'Comparing with = asks whether the value equals something. A missing value equals nothing.',
       'Use the special test for missing values: IS NULL or IS NOT NULL.',
@@ -38,11 +41,14 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: "SELECT id, ____(region, '____') AS region\nFROM customers\nORDER BY id;",
     referenceSql: "SELECT id, COALESCE(region, 'unassigned') AS region FROM customers ORDER BY id;",
     wrongVariants: [
-      { id: 'g2-case-equals', mistake: 'NULL_EQUALS', sql: "SELECT id, CASE WHEN region = NULL THEN 'unassigned' ELSE region END AS region FROM customers ORDER BY id;", explanation: 'It looks like the CASE tests region = NULL. That is never true, so missing regions stay missing. Use COALESCE, or CASE WHEN region IS NULL.' },
-      { id: 'g2-empty-text', mistake: 'NULL_AS_DEFAULT', sql: "SELECT id, COALESCE(region, '') AS region FROM customers ORDER BY id;", explanation: 'It looks like a missing region was replaced with empty text. The ticket asks for the label unassigned.' },
+      { id: 'g2-case-equals', rule: 'missing-labelled', mistake: 'NULL_EQUALS', sql: "SELECT id, CASE WHEN region = NULL THEN 'unassigned' ELSE region END AS region FROM customers ORDER BY id;", explanation: 'It looks like the CASE tests region = NULL. That is never true, so missing regions stay missing. Use COALESCE, or CASE WHEN region IS NULL.' },
+      { id: 'g2-empty-text', rule: 'missing-labelled', mistake: 'NULL_AS_DEFAULT', sql: "SELECT id, COALESCE(region, '') AS region FROM customers ORDER BY id;", explanation: 'It looks like a missing region was replaced with empty text. The ticket asks for the label unassigned.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'region', type: 25 }],
+    rules: [
+      { id: "missing-labelled", text: "A missing region is shown as the text unassigned." },
+    ],
     hints: [
       'Which function returns the first value that is not NULL?',
       'COALESCE takes a value and a fallback. Put the fallback label second.',
@@ -59,11 +65,15 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: "SELECT COUNT(*) FILTER (WHERE driver_id ____)::integer AS unassigned_count,\n       COUNT(____)::integer AS weighed_count\nFROM shipments;",
     referenceSql: 'SELECT COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count, COUNT(weight_kg)::integer AS weighed_count FROM shipments;',
     wrongVariants: [
-      { id: 'g3-count-star', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count, COUNT(*)::integer AS weighed_count FROM shipments;', explanation: 'It looks like COUNT(*) was used for weighed shipments. COUNT(*) counts every row, including shipments with no weight. COUNT(weight_kg) counts only the recorded weights.' },
-      { id: 'g3-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id = NULL)::integer AS unassigned_count, COUNT(weight_kg)::integer AS weighed_count FROM shipments;', explanation: 'It looks like the unassigned count tests driver_id = NULL. That is never true, so the count is zero. Use FILTER (WHERE driver_id IS NULL).' },
+      { id: 'g3-count-star', rule: 'weighed-count', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id IS NULL)::integer AS unassigned_count, COUNT(*)::integer AS weighed_count FROM shipments;', explanation: 'It looks like COUNT(*) was used for weighed shipments. COUNT(*) counts every row, including shipments with no weight. COUNT(weight_kg) counts only the recorded weights.' },
+      { id: 'g3-equals-null', rule: 'unassigned-count', mistake: 'NULL_EQUALS', sql: 'SELECT COUNT(*) FILTER (WHERE driver_id = NULL)::integer AS unassigned_count, COUNT(weight_kg)::integer AS weighed_count FROM shipments;', explanation: 'It looks like the unassigned count tests driver_id = NULL. That is never true, so the count is zero. Use FILTER (WHERE driver_id IS NULL).' },
     ],
     ordered: true,
     columns: [{ name: 'unassigned_count', type: 23 }, { name: 'weighed_count', type: 23 }],
+    rules: [
+      { id: "unassigned-count", text: "unassigned_count counts shipments with no driver_id." },
+      { id: "weighed-count", text: "weighed_count counts shipments with a recorded weight_kg." },
+    ],
     hints: [
       'Two different counts. One counts rows with a test; the other counts only non-missing values.',
       'COUNT(column) skips NULL values. COUNT(*) does not. FILTER restricts the rows one count sees.',
@@ -80,11 +90,14 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: 'SELECT id, name FROM customers WHERE region IS NULL ORDER BY id;',
     wrongVariants: [
-      { id: 'i1-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region = NULL ORDER BY id;', explanation: 'It looks like region = NULL was used. That is never true, so the list comes back empty. Use IS NULL.' },
-      { id: 'i1-inverted', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the customers whose region is known, the opposite of the ticket.' },
+      { id: 'i1-equals-null', rule: 'missing-region', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region = NULL ORDER BY id;', explanation: 'It looks like region = NULL was used. That is never true, so the list comes back empty. Use IS NULL.' },
+      { id: 'i1-inverted', rule: 'missing-region', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM customers WHERE region IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the customers whose region is known, the opposite of the ticket.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "missing-region", text: "Customers whose region is missing are returned, and only those." },
+    ],
     hints: [
       'Which test asks whether a value is missing?',
       'IS NULL is true only for missing values. = NULL is never true.',
@@ -101,11 +114,16 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT weight_kg\nFROM shipments;\n',
     referenceSql: 'SELECT ROUND(AVG(weight_kg), 1) AS avg_weight_kg FROM shipments;',
     wrongVariants: [
-      { id: 'i2-count-star', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT ROUND(SUM(weight_kg)::numeric / COUNT(*), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like the total was divided by COUNT(*), which counts shipments with no weight too. Divide by the number of recorded weights, which AVG does for you.' },
-      { id: 'i2-null-zero', mistake: 'NULL_AS_DEFAULT', sql: 'SELECT ROUND(AVG(COALESCE(weight_kg, 0)), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like missing weights were counted as zero. The ticket says they are not counted at all, so the average drops.' },
+      { id: 'i2-count-star', rule: 'no-weight-not-counted', mistake: 'COUNT_STAR_VS_COL', sql: 'SELECT ROUND(SUM(weight_kg)::numeric / COUNT(*), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like the total was divided by COUNT(*), which counts shipments with no weight too. Divide by the number of recorded weights, which AVG does for you.' },
+      { id: 'i2-null-zero', rule: 'no-weight-not-counted', mistake: 'NULL_AS_DEFAULT', sql: 'SELECT ROUND(AVG(COALESCE(weight_kg, 0)), 1) AS avg_weight_kg FROM shipments;', explanation: 'It looks like missing weights were counted as zero. The ticket says they are not counted at all, so the average drops.' },
+      { id: "i2-round-zero", rule: "one-decimal", mistake: "CAST_ROUNDING", sql: "SELECT ROUND(AVG(weight_kg), 0) AS avg_weight_kg FROM shipments;", explanation: "It looks like the average was rounded to a whole number. The ticket asks for one decimal place." },
     ],
     ordered: true,
     columns: [{ name: 'avg_weight_kg', type: 1700 }],
+    rules: [
+      { id: "no-weight-not-counted", text: "Shipments with no recorded weight are not counted." },
+      { id: "one-decimal", text: "The average is rounded to one decimal place." },
+    ],
     hints: [
       'AVG already skips missing values. What does it divide by?',
       'Use AVG on weight_kg by itself, then round the result to one decimal place.',
@@ -122,11 +140,15 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL AND c.region IS NULL ORDER BY c.id;',
     wrongVariants: [
-      { id: 'i3-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like the LEFT JOIN became an inner join. Customers with no shipments are then removed before the IS NULL test, so no rows remain.' },
-      { id: 'i3-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id = NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like s.id = NULL was used to find customers with no shipments. That is never true. Use IS NULL.' },
+      { id: 'i3-inner', rule: 'no-shipments', mistake: 'LEFT_TO_INNER', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like the LEFT JOIN became an inner join. Customers with no shipments are then removed before the IS NULL test, so no rows remain.' },
+      { id: 'i3-equals-null', rule: 'region-missing', mistake: 'NULL_EQUALS', sql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id = NULL AND c.region IS NULL ORDER BY c.id;', explanation: 'It looks like s.id = NULL was used to find customers with no shipments. That is never true. Use IS NULL.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "no-shipments", text: "Only customers with no shipments are returned." },
+      { id: "region-missing", text: "The customer region is missing." },
+    ],
     hints: [
       'Keep every customer with a LEFT JOIN, then look for the missing shipment on the right.',
       'After a LEFT JOIN, a customer with no shipment has NULL in the shipment columns. Test that with IS NULL.',
@@ -143,11 +165,14 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, shipment_id, amount\nFROM invoices;\n',
     referenceSql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at IS NULL ORDER BY id;',
     wrongVariants: [
-      { id: 'i4-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at = NULL ORDER BY id;', explanation: 'It looks like paid_at = NULL was used. That is never true, so no open invoices appear. Use IS NULL.' },
-      { id: 'i4-paid', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the paid invoices, the opposite of the ticket.' },
+      { id: 'i4-equals-null', rule: 'no-paid-date', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at = NULL ORDER BY id;', explanation: 'It looks like paid_at = NULL was used. That is never true, so no open invoices appear. Use IS NULL.' },
+      { id: 'i4-paid', rule: 'no-paid-date', mistake: 'NULL_EQUALS', sql: 'SELECT id, shipment_id, amount FROM invoices WHERE paid_at IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the paid invoices, the opposite of the ticket.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'shipment_id', type: 23 }, { name: 'amount', type: 1700 }],
+    rules: [
+      { id: "no-paid-date", text: "Only invoices with no paid_at date are returned." },
+    ],
     hints: [
       'Open invoices have no payment date. How do you test for a missing value?',
       'Use IS NULL on paid_at, not an equals sign.',
@@ -164,11 +189,14 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM drivers;\n',
     referenceSql: 'SELECT id, name FROM drivers WHERE supervisor_id IS NULL ORDER BY id;',
     wrongVariants: [
-      { id: 'b2p1-equals', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id = NULL ORDER BY id;', explanation: 'It looks like supervisor_id = NULL was used. Nothing equals NULL, so the list is empty. Use IS NULL.' },
-      { id: 'b2p1-inverted', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the drivers who do have a supervisor.' },
+      { id: 'b2p1-equals', rule: 'no-supervisor', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id = NULL ORDER BY id;', explanation: 'It looks like supervisor_id = NULL was used. Nothing equals NULL, so the list is empty. Use IS NULL.' },
+      { id: 'b2p1-inverted', rule: 'no-supervisor', mistake: 'NULL_EQUALS', sql: 'SELECT id, name FROM drivers WHERE supervisor_id IS NOT NULL ORDER BY id;', explanation: 'It looks like IS NOT NULL was used. That returns the drivers who do have a supervisor.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "no-supervisor", text: "Only drivers with no supervisor are returned." },
+    ],
     hints: [
       'A missing supervisor is stored as NULL. Which test finds missing values?',
       'Use IS NULL on supervisor_id.',
@@ -185,11 +213,15 @@ export const chapter2Items: readonly Challenge[] = [
     starterSql: 'SELECT id, paid_at\nFROM invoices;\n',
     referenceSql: 'SELECT id, COALESCE(paid_at, issued_at) AS settled_at FROM invoices ORDER BY id;',
     wrongVariants: [
-      { id: 'b2p2-reversed', mistake: 'COALESCE_ORDER', sql: 'SELECT id, COALESCE(issued_at, paid_at) AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the COALESCE arguments are reversed. issued_at is always present, so it always wins, and paid invoices show the wrong date.' },
-      { id: 'b2p2-no-fallback', mistake: 'NULL_NO_FALLBACK', sql: 'SELECT id, paid_at AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the fallback was left out. Open invoices show NULL instead of their issued date.' },
+      { id: 'b2p2-reversed', rule: 'paid-when-present', mistake: 'COALESCE_ORDER', sql: 'SELECT id, COALESCE(issued_at, paid_at) AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the COALESCE arguments are reversed. issued_at is always present, so it always wins, and paid invoices show the wrong date.' },
+      { id: 'b2p2-no-fallback', rule: 'fallback-issued', mistake: 'NULL_NO_FALLBACK', sql: 'SELECT id, paid_at AS settled_at FROM invoices ORDER BY id;', explanation: 'It looks like the fallback was left out. Open invoices show NULL instead of their issued date.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'settled_at', type: 1184 }],
+    rules: [
+      { id: "paid-when-present", text: "The paid_at value is used when paid_at is not missing." },
+      { id: "fallback-issued", text: "Otherwise the issued_at value is used." },
+    ],
     hints: [
       'Two dates exist for each invoice. Which one should win when it is present?',
       'COALESCE returns its first argument when that argument is not NULL, otherwise the next one.',

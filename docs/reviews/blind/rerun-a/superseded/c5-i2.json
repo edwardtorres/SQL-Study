@@ -1,0 +1,33 @@
+{
+  "id": "c5-i2",
+  "solutionSql": "WITH avg_by_customer AS (\n  SELECT customer_id, AVG(weight_kg) AS avg_kg\n  FROM shipments\n  GROUP BY customer_id\n)\nSELECT s.id, s.customer_id, s.weight_kg\nFROM shipments AS s\nJOIN avg_by_customer AS a ON a.customer_id = s.customer_id\nWHERE s.id BETWEEN 1 AND 40\n  AND s.weight_kg > a.avg_kg\nORDER BY s.id;",
+  "sampleRowCount": 21,
+  "sampleFirstRows": [
+    [
+      6,
+      6,
+      1931
+    ],
+    [
+      7,
+      1,
+      1412
+    ],
+    [
+      8,
+      2,
+      1214
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "the average weight_kg of all shipments with the same customer_id, including the shipment itself",
+      "readingChosen": "The average covers every shipment in the table for that customer, not only ids 1 to 40.",
+      "alternativeReading": "Average over shipments with ids 1 to 40 only. Measured here: the same 21 rows."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Shipments 20 and 39 have NULL weight and are skipped. The table-wide and ids-1-to-40 averages return the same 21 rows on this sample.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "c5-i5",
+  "solutionSql": "SELECT c.id,\n       c.name\nFROM customers c\nJOIN (\n  SELECT customer_id,\n         AVG(weight_kg) AS avg_w\n  FROM shipments\n  WHERE weight_kg IS NOT NULL\n  GROUP BY customer_id\n) cs ON cs.customer_id = c.id\nWHERE cs.avg_w > (SELECT AVG(weight_kg) FROM shipments)\nORDER BY c.id;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      2,
+      "Brindle Pantry"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ],
+    [
+      5,
+      "Emberwood Games"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Return id and name for each customer whose average shipment weight is greater than the average weight of all shipments.",
+      "readingChosen": "The table average is the mean of every recorded shipment weight, so each shipment counts equally.",
+      "alternativeReading": "The table average is the mean of the per-customer averages, so each customer counts equally."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Missing weights are excluded from both averages, as the ticket says. Customers 7 and 8 have no shipments and so have no average. The three qualifying customers are 2, 4 and 5.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

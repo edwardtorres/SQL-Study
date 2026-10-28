@@ -10,7 +10,7 @@ export const challenges: readonly Challenge[] = [
     id: 'dispatch', chapterId: 1, role: 'sample', title: 'The heavy-load shortlist', starterStyle: 'skeleton',
     colleague: 'Nera Vale', colleagueRole: 'Dispatch coordinator',
     summary: 'Find the five heaviest queued shipments for the next dispatch board.',
-    instructions: 'Use shipments. Return id, tracking_code, weight_kg, in that column order. Include only status = \'queued\' and weight_kg >= 500. Return at most 5 rows, ordered by weight_kg descending, then id ascending to break ties. Keep the original column names. Types: integer, text, integer. An empty result is valid when no shipments qualify.',
+    instructions: 'Use shipments. Return id, tracking_code, weight_kg, in that column order. Include only status = \'queued\' and weight_kg >= 500. Return at most 5 rows, ordered by weight_kg descending, then id ascending to break ties. Keep the original column names. Types: integer, text, integer. An empty result is valid when nothing qualifies.',
     lesson: 'SELECT chooses output columns; FROM chooses the table. WHERE keeps rows whose condition is TRUE. Combine conditions with AND. ORDER BY sets the order, DESC means largest first, and LIMIT caps the row count. Add a unique tie-breaker when a limited result needs to be predictable. The example reads a small shipment directory; edit it and run it before tackling the weight ticket.',
     exampleSql: 'SELECT id, tracking_code\nFROM shipments\nORDER BY id\nLIMIT 3;',
     guidedSql: "SELECT id, tracking_code, weight_kg\nFROM shipments\nWHERE status = '____' AND weight_kg >= ____\nORDER BY weight_kg ____, id ASC\nLIMIT ____;",
@@ -18,18 +18,28 @@ export const challenges: readonly Challenge[] = [
     referenceSql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg >= 500 ORDER BY weight_kg DESC, id ASC LIMIT 5;",
     wrongVariants: [
       {
-        id: 'boundary-excluded', mistake: 'GE_VS_GT',
+        id: 'boundary-excluded', rule: 'at-least-500', mistake: 'GE_VS_GT',
         sql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg > 500 ORDER BY weight_kg DESC, id ASC LIMIT 5;",
         explanation: 'It looks like the boundary value is excluded: check > versus >=. The ticket says exactly 500 kg still qualifies.',
       },
       {
-        id: 'lightest-first', mistake: 'ORDER_DIRECTION',
+        id: 'lightest-first', rule: 'heaviest-first', mistake: 'ORDER_DIRECTION',
         sql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg >= 500 ORDER BY weight_kg ASC, id ASC LIMIT 5;",
         explanation: 'It looks like the sort direction is reversed: ASC returns the lightest rows first. The heaviest rows come first with DESC.',
       },
+      { id: "dispatch-no-status", rule: "queued-only", mistake: "FILTER_MISSING", sql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE weight_kg >= 500 ORDER BY weight_kg DESC, id ASC LIMIT 5;", explanation: "It looks like the status test was left out. Heavy shipments in every status now qualify, not only the queued ones." },
+      { id: "dispatch-no-limit", rule: "at-most-five", mistake: "LIMIT_MISSING", sql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg >= 500 ORDER BY weight_kg DESC, id ASC;", explanation: "It looks like the LIMIT was left out. Every heavy queued shipment is returned, and the ticket asks for at most five rows." },
+      { id: "dispatch-id-desc", rule: "tie-id-ascending", mistake: "TIE_BREAK_REVERSED", sql: "SELECT id, tracking_code, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg >= 500 ORDER BY weight_kg DESC, id DESC LIMIT 5;", explanation: "It looks like equal weights were ordered by the larger id first. Two shipments at the same weight then swap places, and the ticket asks for the smaller id first." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'tracking_code', type: 25 }, { name: 'weight_kg', type: 23 }],
+    rules: [
+      { id: "at-least-500", text: "Only shipments of at least 500 kg qualify." },
+      { id: "queued-only", text: "Only queued shipments qualify." },
+      { id: "at-most-five", text: "At most five rows are returned." },
+      { id: "heaviest-first", text: "The heaviest shipments come first." },
+      { id: "tie-id-ascending", text: "Equal weights are ordered by the smaller id first." },
+    ],
     hints: [
       'Start with two filters: the shipment must be queued, and exactly 500 kg still qualifies.',
       'Use AND to combine the conditions. Sort weight descending and id ascending before applying the five-row limit.',
@@ -53,18 +63,24 @@ export const challenges: readonly Challenge[] = [
     referenceSql: 'SELECT c.id AS customer_id, c.name AS customer_name, COUNT(s.id) FILTER (WHERE i.id IS NULL)::integer AS unbilled_shipments FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id LEFT JOIN invoices i ON i.shipment_id = s.id GROUP BY c.id, c.name ORDER BY c.id;',
     wrongVariants: [
       {
-        id: 'count-placeholder', mistake: 'COUNT_STAR_VS_COL',
+        id: 'count-placeholder', rule: 'real-shipments-counted', mistake: 'COUNT_STAR_VS_COL',
         sql: 'SELECT c.id AS customer_id, c.name AS customer_name, COUNT(*) FILTER (WHERE i.id IS NULL)::integer AS unbilled_shipments FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id LEFT JOIN invoices i ON i.shipment_id = s.id GROUP BY c.id, c.name ORDER BY c.id;',
         explanation: 'It looks like COUNT(*) is counting the LEFT JOIN placeholder row. Customers with no shipments show 1 instead of 0. COUNT(s.id) counts only real shipments.',
       },
       {
-        id: 'where-turns-inner', mistake: 'LEFT_TO_INNER',
+        id: 'where-turns-inner', rule: 'every-customer', mistake: 'LEFT_TO_INNER',
         sql: 'SELECT c.id AS customer_id, c.name AS customer_name, COUNT(s.id) FILTER (WHERE i.id IS NULL)::integer AS unbilled_shipments FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id LEFT JOIN invoices i ON i.shipment_id = s.id WHERE s.customer_id IS NOT NULL GROUP BY c.id, c.name ORDER BY c.id;',
         explanation: 'It looks like a WHERE filter turned the LEFT JOIN into an inner join. Customers with no shipments disappear, but the ticket needs every customer, including those with 0.',
       },
+      { id: "unbilled-counts-billed", rule: "unbilled-means-no-invoice", mistake: "AGGREGATE_CHOICE", sql: "SELECT c.id AS customer_id, c.name AS customer_name, COUNT(s.id) FILTER (WHERE i.id IS NOT NULL)::integer AS unbilled_shipments FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id LEFT JOIN invoices i ON i.shipment_id = s.id GROUP BY c.id, c.name ORDER BY c.id;", explanation: "It looks like the filter was reversed, so the query counts billed shipments. An unbilled shipment is one that no invoice references." },
     ],
     ordered: true,
     columns: [{ name: 'customer_id', type: 23 }, { name: 'customer_name', type: 25 }, { name: 'unbilled_shipments', type: 23 }],
+    rules: [
+      { id: "every-customer", text: "Every customer has a row, including customers with no shipments." },
+      { id: "real-shipments-counted", text: "Real shipments are counted, not the placeholder row, and a customer with no shipments has 0." },
+      { id: "unbilled-means-no-invoice", text: "A shipment is unbilled when no invoices row references it." },
+    ],
     hints: [
       'Inspect a customer with no shipments. Which value on the shipment side is NULL?',
       'Keep the LEFT JOINs and the invoice filter. Change what COUNT counts so the preserved customer-only row contributes zero.',
@@ -88,19 +104,25 @@ export const challenges: readonly Challenge[] = [
     referenceSql: 'WITH ranked AS (SELECT shipment_id, id AS event_id, status, occurred_at, ROW_NUMBER() OVER (PARTITION BY shipment_id ORDER BY occurred_at DESC, id DESC) AS position FROM shipment_events) SELECT shipment_id, event_id, status, occurred_at FROM ranked WHERE position = 1 ORDER BY shipment_id;',
     wrongVariants: [
       {
-        id: 'id-tiebreak-ascending', mistake: 'TIE_NONDETERMINISTIC',
+        id: 'id-tiebreak-ascending', rule: 'tie-greatest-id', mistake: 'TIE_NONDETERMINISTIC',
         sql: 'WITH ranked AS (SELECT shipment_id, id AS event_id, status, occurred_at, ROW_NUMBER() OVER (PARTITION BY shipment_id ORDER BY occurred_at DESC, id ASC) AS position FROM shipment_events) SELECT shipment_id, event_id, status, occurred_at FROM ranked WHERE position = 1 ORDER BY shipment_id;',
         explanation: 'It looks like the tie-breaker runs the wrong way. When two scans share a timestamp, the ticket keeps the greatest event id, so id must be DESC.',
       },
       {
-        id: 'earliest-event', mistake: 'ORDER_DIRECTION',
+        id: 'earliest-event', rule: 'latest-by-time', mistake: 'ORDER_DIRECTION',
         sql: 'WITH ranked AS (SELECT shipment_id, id AS event_id, status, occurred_at, ROW_NUMBER() OVER (PARTITION BY shipment_id ORDER BY occurred_at ASC, id DESC) AS position FROM shipment_events) SELECT shipment_id, event_id, status, occurred_at FROM ranked WHERE position = 1 ORDER BY shipment_id;',
         explanation: 'It looks like the timestamp order is reversed, so the earliest scan wins. Latest means the greatest occurred_at, which needs DESC.',
       },
+      { id: "latest-no-filter", rule: "one-row-per-shipment", mistake: "FACT_GRAIN", sql: "WITH ranked AS (SELECT shipment_id, id AS event_id, status, occurred_at, ROW_NUMBER() OVER (PARTITION BY shipment_id ORDER BY occurred_at DESC, id DESC) AS position FROM shipment_events) SELECT shipment_id, event_id, status, occurred_at FROM ranked ORDER BY shipment_id;", explanation: "It looks like the position filter was dropped. Every event comes back, not one row per shipment, so a shipment with three events appears three times." },
     ],
     ordered: true,
     structure: 'window',
     columns: [{ name: 'shipment_id', type: 23 }, { name: 'event_id', type: 23 }, { name: 'status', type: 25 }, { name: 'occurred_at', type: 1184 }],
+    rules: [
+      { id: "one-row-per-shipment", text: "One row is returned for each shipment that has events, and shipments with no events are excluded." },
+      { id: "latest-by-time", text: "Latest means the greatest occurred_at." },
+      { id: "tie-greatest-id", text: "When timestamps tie, the greatest event id wins." },
+    ],
     hints: [
       'Two events can have the same occurred_at. A timestamp alone does not identify the winning event.',
       'Partition by shipment_id, sort both the timestamp and the event ID descending, then keep row number 1.',

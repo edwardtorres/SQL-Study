@@ -18,11 +18,15 @@ export const chapter7Items: readonly Challenge[] = [
     starterSql: 'SELECT status FROM shipments ____ SELECT status FROM shipment_events ORDER BY status;',
     referenceSql: 'SELECT status FROM shipments UNION SELECT status FROM shipment_events ORDER BY status;',
     wrongVariants: [
-      { id: 'g1-all', mistake: 'UNION_DEDUPES', sql: 'SELECT status FROM shipments UNION ALL SELECT status FROM shipment_events ORDER BY status;', explanation: 'It looks like UNION ALL was used. It keeps every row, so a status that appears in both feeds, such as delivered, is listed twice. UNION lists each value once.' },
-      { id: 'g1-intersect', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events ORDER BY status;', explanation: 'It looks like INTERSECT was used. INTERSECT keeps only the values that appear in both feeds. The ticket asks for values from either feed.' },
+      { id: 'g1-all', rule: 'distinct-values', mistake: 'UNION_DEDUPES', sql: 'SELECT status FROM shipments UNION ALL SELECT status FROM shipment_events ORDER BY status;', explanation: 'It looks like UNION ALL was used. It keeps every row, so a status that appears in both feeds, such as delivered, is listed twice. UNION lists each value once.' },
+      { id: 'g1-intersect', rule: 'either-feed', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events ORDER BY status;', explanation: 'It looks like INTERSECT was used. INTERSECT keeps only the values that appear in both feeds. The ticket asks for values from either feed.' },
     ],
     ordered: true,
     columns: [{ name: 'status', type: 25 }],
+    rules: [
+      { id: "distinct-values", text: "Each value appears once." },
+      { id: "either-feed", text: "A value from either feed counts." },
+    ],
     hints: [
       'A value that appears in both feeds should be listed once. Which set operation joins two results and removes repeats?',
       'UNION joins the two SELECTs. Keep the single ORDER BY at the end, so it sorts the combined list.',
@@ -60,11 +64,15 @@ export const chapter7Items: readonly Challenge[] = [
     starterSql: 'SELECT id\nFROM shipments;\n',
     referenceSql: "SELECT id FROM shipments WHERE status = 'queued' UNION SELECT shipment_id FROM invoices ORDER BY id;",
     wrongVariants: [
-      { id: 'i1-all', mistake: 'UNION_DEDUPES', sql: "SELECT id FROM shipments WHERE status = 'queued' UNION ALL SELECT shipment_id FROM invoices ORDER BY id;", explanation: 'It looks like UNION ALL was used. A queued shipment that also has an invoice is listed twice. UNION lists each id once.' },
-      { id: 'i1-except', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT id FROM shipments WHERE status = 'queued' EXCEPT SELECT shipment_id FROM invoices ORDER BY id;", explanation: 'It looks like EXCEPT was used. EXCEPT removes the billed shipments from the queued list, but the ticket also wants every billed shipment.' },
+      { id: 'i1-all', rule: 'each-id-once', mistake: 'UNION_DEDUPES', sql: "SELECT id FROM shipments WHERE status = 'queued' UNION ALL SELECT shipment_id FROM invoices ORDER BY id;", explanation: 'It looks like UNION ALL was used. A queued shipment that also has an invoice is listed twice. UNION lists each id once.' },
+      { id: 'i1-except', rule: 'queued-or-invoiced', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT id FROM shipments WHERE status = 'queued' EXCEPT SELECT shipment_id FROM invoices ORDER BY id;", explanation: 'It looks like EXCEPT was used. EXCEPT removes the billed shipments from the queued list, but the ticket also wants every billed shipment.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }],
+    rules: [
+      { id: "queued-or-invoiced", text: "A shipment qualifies when it is queued or has an invoice." },
+      { id: "each-id-once", text: "Each id appears once." },
+    ],
     hints: [
       'Two lists are combined, and a shipment in both should appear once.',
       'UNION combines the two lists and removes repeats. The queued filter belongs to the first SELECT only.',
@@ -77,15 +85,18 @@ export const chapter7Items: readonly Challenge[] = [
     id: 'c7-i2', chapterId: 7, role: 'independent', starterStyle: 'skeleton', title: 'Delivered and billed',
     ...ROUTES,
     summary: 'Find the shipments that were both scanned as delivered and billed, for the month-end check.',
-    instructions: 'Return shipment_id for every shipment that has at least one shipment_events row with status delivered and at least one invoices row. Each shipment_id appears once. Order by shipment_id. Column name and type: shipment_id (integer).',
+    instructions: 'Return shipment_id for every shipment that has at least one shipment_events row with status delivered and at least one invoices row. Order by shipment_id. Column name and type: shipment_id (integer).',
     starterSql: 'SELECT shipment_id\nFROM shipment_events;\n',
     referenceSql: "SELECT shipment_id FROM shipment_events WHERE status = 'delivered' INTERSECT SELECT shipment_id FROM invoices ORDER BY shipment_id;",
     wrongVariants: [
-      { id: 'i2-except', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT shipment_id FROM shipment_events WHERE status = 'delivered' EXCEPT SELECT shipment_id FROM invoices ORDER BY shipment_id;", explanation: 'It looks like EXCEPT was used. EXCEPT returns the delivered scans with no invoice. The ticket asks for shipments that have both.' },
-      { id: 'i2-union', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT shipment_id FROM shipment_events WHERE status = 'delivered' UNION SELECT shipment_id FROM invoices ORDER BY shipment_id;", explanation: 'It looks like UNION was used. UNION returns every delivered shipment and every billed one. INTERSECT keeps only the ids in both.' },
+      { id: 'i2-except', rule: 'delivered-and-invoiced', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT shipment_id FROM shipment_events WHERE status = 'delivered' EXCEPT SELECT shipment_id FROM invoices ORDER BY shipment_id;", explanation: 'It looks like EXCEPT was used. EXCEPT returns the delivered scans with no invoice. The ticket asks for shipments that have both.' },
+      { id: 'i2-union', rule: 'delivered-and-invoiced', mistake: 'SET_OPERATOR_CHOICE', sql: "SELECT shipment_id FROM shipment_events WHERE status = 'delivered' UNION SELECT shipment_id FROM invoices ORDER BY shipment_id;", explanation: 'It looks like UNION was used. UNION returns every delivered shipment and every billed one. INTERSECT keeps only the ids in both.' },
     ],
     ordered: true,
     columns: [{ name: 'shipment_id', type: 23 }],
+    rules: [
+      { id: "delivered-and-invoiced", text: "A shipment qualifies only when it has a delivered scan and an invoice." },
+    ],
     hints: [
       'The ticket wants ids that appear in both lists.',
       'INTERSECT keeps only the rows present in both queries, and it removes repeats.',
@@ -124,11 +135,16 @@ export const chapter7Items: readonly Challenge[] = [
     starterSql: 'SELECT status\nFROM shipment_events;\n',
     referenceSql: 'SELECT status FROM shipment_events EXCEPT SELECT status FROM shipments ORDER BY status;',
     wrongVariants: [
-      { id: 'i4-union', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipment_events UNION SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like UNION was used. UNION adds every shipment status as well, so the shared and shipment-only values appear. EXCEPT keeps only the scan-only values.' },
-      { id: 'i4-intersect', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipment_events INTERSECT SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like INTERSECT was used. INTERSECT keeps the values in both feeds, which is the opposite of the ticket. EXCEPT keeps the scan-only values.' },
+      { id: 'i4-union', rule: 'missing-from-shipments', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipment_events UNION SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like UNION was used. UNION adds every shipment status as well, so the shared and shipment-only values appear. EXCEPT keeps only the scan-only values.' },
+      { id: 'i4-intersect', rule: 'missing-from-shipments', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT status FROM shipment_events INTERSECT SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like INTERSECT was used. INTERSECT keeps the values in both feeds, which is the opposite of the ticket. EXCEPT keeps the scan-only values.' },
+      { id: "i4-except-all", rule: "each-value-once", mistake: "UNION_DEDUPES", sql: "SELECT status FROM shipment_events EXCEPT ALL SELECT status FROM shipments ORDER BY status;", explanation: "It looks like EXCEPT ALL was used. It keeps every repeated scan status, so a status such as booked appears once for each scan." },
     ],
     ordered: true,
     columns: [{ name: 'status', type: 25 }],
+    rules: [
+      { id: "missing-from-shipments", text: "A value that also appears in shipments.status is left out." },
+      { id: "each-value-once", text: "Each value appears once." },
+    ],
     hints: [
       'The ticket wants values in the first list that are missing from the second.',
       'EXCEPT keeps the rows of the first query that the second query does not have.',
@@ -141,15 +157,19 @@ export const chapter7Items: readonly Challenge[] = [
     id: 'c7-b1-p1', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: mismatched scans and invoices',
     ...DISPATCH,
     summary: 'Find the shipments that were scanned but not billed, or billed but never scanned. Part 1 of 2.',
-    instructions: 'Part 1 of 2. Return shipment_id for each shipment that has a shipment_events row but no invoices row, or has an invoices row but no shipment_events row. Each shipment_id appears once. Order by shipment_id. Column name and type: shipment_id (integer).',
+    instructions: 'Part 1 of 2. Return shipment_id for each shipment that has a shipment_events row but no invoices row, or has an invoices row but no shipment_events row. Order by shipment_id. Column name and type: shipment_id (integer).',
     starterSql: 'SELECT shipment_id\nFROM shipment_events;\n',
     referenceSql: '(SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices) UNION (SELECT shipment_id FROM invoices EXCEPT SELECT shipment_id FROM shipment_events) ORDER BY shipment_id;',
     wrongVariants: [
-      { id: 'b7p1-one-side', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like only one side was kept. The ticket asks for both kinds of mismatch, so the invoice-only shipments are missing.' },
-      { id: 'b7p1-intersect', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events INTERSECT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like INTERSECT was used. INTERSECT returns the shipments that match on both sides, which is the opposite of a mismatch.' },
+      { id: 'b7p1-one-side', rule: 'both-directions', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events EXCEPT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like only one side was kept. The ticket asks for both kinds of mismatch, so the invoice-only shipments are missing.' },
+      { id: 'b7p1-intersect', rule: 'mismatch-only', mistake: 'SET_OPERATOR_CHOICE', sql: 'SELECT shipment_id FROM shipment_events INTERSECT SELECT shipment_id FROM invoices ORDER BY shipment_id;', explanation: 'It looks like INTERSECT was used. INTERSECT returns the shipments that match on both sides, which is the opposite of a mismatch.' },
     ],
     ordered: true,
     columns: [{ name: 'shipment_id', type: 23 }],
+    rules: [
+      { id: "both-directions", text: "Both kinds of mismatch are returned." },
+      { id: "mismatch-only", text: "A shipment with both a scan and an invoice is not returned." },
+    ],
     hints: [
       'Two one-sided differences, each with EXCEPT, combined with UNION.',
       'Read the query from left to right: EXCEPT and UNION have the same precedence, so parentheses make the grouping explicit.',
@@ -162,15 +182,19 @@ export const chapter7Items: readonly Challenge[] = [
     id: 'c7-b1-p2', chapterId: 7, role: 'boss', bossGroup: 'c7-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 2: statuses in one feed only',
     ...ROUTES,
     summary: 'Find the status values that appear in exactly one of the two feeds. Part 2 of 2.',
-    instructions: 'Part 2 of 2. Return status for each value that appears in shipments.status or in shipment_events.status, but not in both. Each value appears once. Sort from A to Z. Column name and type: status (text).',
+    instructions: 'Part 2 of 2. Return status for each value that appears in shipments.status or in shipment_events.status, but not in both. Sort from A to Z. Column name and type: status (text).',
     starterSql: 'SELECT status\nFROM shipments;\n',
     referenceSql: '(SELECT status FROM shipments UNION SELECT status FROM shipment_events) EXCEPT (SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events) ORDER BY status;',
     wrongVariants: [
-      { id: 'b7p2-intersect', mistake: 'SET_OPERATOR_CHOICE', sql: '(SELECT status FROM shipments UNION SELECT status FROM shipment_events) INTERSECT (SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events) ORDER BY status;', explanation: 'It looks like INTERSECT was used for the last step. The result is the values in both feeds, which is the opposite of one feed only. EXCEPT removes them.' },
-      { id: 'b7p2-desc', mistake: 'ORDER_DIRECTION', sql: '(SELECT status FROM shipments UNION SELECT status FROM shipment_events) EXCEPT (SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events) ORDER BY status DESC;', explanation: 'It looks like the sort was reversed. The ticket sorts from A to Z, so the default ascending order is needed.' },
+      { id: 'b7p2-intersect', rule: 'not-in-both', mistake: 'SET_OPERATOR_CHOICE', sql: '(SELECT status FROM shipments UNION SELECT status FROM shipment_events) INTERSECT (SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events) ORDER BY status;', explanation: 'It looks like INTERSECT was used for the last step. The result is the values in both feeds, which is the opposite of one feed only. EXCEPT removes them.' },
+      { id: 'b7p2-desc', rule: 'sorted-a-to-z', mistake: 'ORDER_DIRECTION', sql: '(SELECT status FROM shipments UNION SELECT status FROM shipment_events) EXCEPT (SELECT status FROM shipments INTERSECT SELECT status FROM shipment_events) ORDER BY status DESC;', explanation: 'It looks like the sort was reversed. The ticket sorts from A to Z, so the default ascending order is needed.' },
     ],
     ordered: true,
     columns: [{ name: 'status', type: 25 }],
+    rules: [
+      { id: "not-in-both", text: "A value found in both feeds is not returned." },
+      { id: "sorted-a-to-z", text: "Values are sorted from A to Z." },
+    ],
     hints: [
       'Start with every status from either feed, then take away the values that both feeds share.',
       'INTERSECT binds more tightly than UNION or EXCEPT, so parentheses keep each step separate.',

@@ -1,0 +1,33 @@
+{
+  "id": "c6-b1-p3",
+  "solutionSql": "SELECT customer_id,\n       COUNT(*)::integer AS shipments,\n       ROUND(AVG(weight_kg))::integer AS avg_kg\nFROM shipments\nWHERE customer_id BETWEEN 1 AND 6\nGROUP BY customer_id\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      40,
+      1021
+    ],
+    [
+      2,
+      40,
+      1047
+    ],
+    [
+      3,
+      40,
+      993
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "avg_kg (the average weight rounded to the nearest whole kilogram; missing weights are ignored)",
+      "readingChosen": "Round half away from zero, which is PostgreSQL's numeric ROUND.",
+      "alternativeReading": "Round half to even."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The shipments count keeps rows with a missing weight, as the ticket says, while the average skips them. Results match c6-i4 for customers 1 to 6.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

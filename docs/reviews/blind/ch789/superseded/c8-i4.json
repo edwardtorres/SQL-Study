@@ -1,0 +1,45 @@
+{
+  "id": "c8-i4",
+  "solutionSql": "SELECT customer_id, id, moving_avg\nFROM (\n  SELECT s.customer_id, i.id, i.issued_at,\n         ROUND(AVG(i.amount) OVER (\n           PARTITION BY s.customer_id\n           ORDER BY i.issued_at, i.id\n           ROWS BETWEEN 2 PRECEDING AND CURRENT ROW\n         ), 2) AS moving_avg\n  FROM invoices i\n  JOIN shipments s ON s.id = i.shipment_id\n) averaged\nORDER BY customer_id, issued_at, id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      1,
+      6,
+      "150.00"
+    ],
+    [
+      1,
+      11,
+      "125.00"
+    ],
+    [
+      1,
+      16,
+      "133.33"
+    ],
+    [
+      1,
+      21,
+      "150.00"
+    ],
+    [
+      1,
+      26,
+      "166.67"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Round the average to two decimal places.",
+      "readingChosen": "ROUND on numeric, which rounds half away from zero.",
+      "alternativeReading": "Float rounding or round-half-to-even. The sample has no half-cent ties, so the output is unaffected."
+    }
+  ],
+  "confidence": "high",
+  "notes": "ROWS 2 PRECEDING frame ordered by (issued_at, id). Averages of two and three values are exact to the cent or repeat, so no tie arises on the sample.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

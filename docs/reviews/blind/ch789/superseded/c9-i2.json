@@ -1,0 +1,33 @@
+{
+  "id": "c9-i2",
+  "solutionSql": "CREATE TABLE carriers (\n  id integer PRIMARY KEY,\n  name text NOT NULL\n);\nCREATE TABLE shipment_carriers (\n  shipment_id integer NOT NULL REFERENCES shipments (id),\n  carrier_id integer NOT NULL REFERENCES carriers (id),\n  PRIMARY KEY (shipment_id, carrier_id)\n);",
+  "sampleRowCount": null,
+  "sampleFirstRows": null,
+  "sampleChecks": {
+    "Columns of shipment_carriers": "shipment_id integer NOT NULL, carrier_id integer NOT NULL.",
+    "Constraints on carriers": "PRIMARY KEY (id), NOT NULL on id and name.",
+    "Constraints on shipment_carriers": "PRIMARY KEY (shipment_id, carrier_id), FOREIGN KEY carrier_id to carriers(id), FOREIGN KEY shipment_id to shipments(id), NOT NULL on both."
+  },
+  "constraintProbes": {
+    "unknown carrier rejected": "Assignment to carrier 999 failed with 23503 (shipment_carriers_carrier_id_fkey). Matches expected 23503.",
+    "unknown shipment rejected": "Assignment to shipment 999999 failed with 23503 (shipment_carriers_shipment_id_fkey). Matches expected 23503.",
+    "valid assignment accepted": "Carrier 1 and assignment (shipment 1, carrier 1) inserted without error. Matches expected ok.",
+    "repeated pair rejected": "Second (1, 1) assignment failed with 23505 (shipment_carriers_pkey). Matches expected 23505."
+  },
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "The starter creates carriers; add shipment_carriers.",
+      "readingChosen": "The starter line CREATE TABLE carriers (); has no columns, so I replaced it with the full carriers definition (id integer primary key, name text not null) and added shipment_carriers.",
+      "alternativeReading": "Keep the starter line and add only shipment_carriers. That fails with 42703 (column \"id\" referenced in foreign key does not exist), which I confirmed."
+    },
+    {
+      "phrase": "the same shipment and carrier pair can appear only once",
+      "readingChosen": "Composite PRIMARY KEY (shipment_id, carrier_id).",
+      "alternativeReading": "UNIQUE (shipment_id, carrier_id). Both give 23505 on a repeated pair, but a structural check may expect one or the other."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "The starter line is the problem: a learner who keeps it gets a reference error at the REFERENCES clause. The ticket says the starter creates carriers, but its line defines no columns.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

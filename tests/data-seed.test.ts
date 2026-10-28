@@ -73,7 +73,7 @@ describe('fictional deterministic freight seeds', () => {
   test('step 2 edge datasets: boundary weights and dates, an empty invoice table, and missing text', () => {
     const boundary = generateSeed(181081, 'boundary');
     const queued = boundary.shipments.filter((row) => row.status === 'queued').map((row) => Number(row.weight_kg));
-    expect(queued.filter((weight) => weight > 500).sort((a, b) => b - a)).toEqual([1200, 900, 700, 501]);
+    expect(queued.filter((weight) => weight > 500).sort((a, b) => b - a)).toEqual([1800, 900, 900, 501]);
     expect(queued).toContain(500);
     expect(queued.filter((weight) => weight < 500).length).toBeGreaterThan(0);
     expect(boundary.shipments.some((row) => row.booked_at === '2026-01-31T00:00:00.000Z')).toBe(true);

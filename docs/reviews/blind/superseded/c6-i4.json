@@ -1,0 +1,30 @@
+{
+  "id": "c6-i4",
+  "solutionSql": "SELECT customer_id,\n       ROUND(AVG(weight_kg))::integer AS avg_kg\nFROM shipments\nWHERE customer_id BETWEEN 1 AND 6\nGROUP BY customer_id\nORDER BY customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      1021
+    ],
+    [
+      2,
+      1047
+    ],
+    [
+      3,
+      993
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "the average weight of their shipments rounded to the nearest whole kilogram",
+      "readingChosen": "Round half away from zero, which is PostgreSQL's numeric ROUND.",
+      "alternativeReading": "Round half to even, the banker's rule some reviewers expect."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The average is exact before rounding, and missing weights are excluded as the ticket says. I did not check whether any sample average lands exactly on a half kilogram, so the tie rule is untested by this sample.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

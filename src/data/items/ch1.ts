@@ -40,11 +40,15 @@ export const chapter1Items: readonly Challenge[] = [
     starterSql: "SELECT id, weight_kg\nFROM shipments\nWHERE status = '____' AND weight_kg ____ 500\nORDER BY id;",
     referenceSql: "SELECT id, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg >= 500 ORDER BY id;",
     wrongVariants: [
-      { id: 'g2-excludes-500', mistake: 'GE_VS_GT', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg > 500 ORDER BY id;", explanation: 'It looks like the boundary value is excluded: check > versus >=. A shipment at exactly 500 kg qualifies.' },
-      { id: 'g2-or', mistake: 'AND_OR_PRECEDENCE', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'queued' OR weight_kg >= 500 ORDER BY id;", explanation: 'It looks like AND was written as OR. Every queued shipment now matches, along with every heavy shipment in any status.' },
+      { id: 'g2-excludes-500', rule: 'at-least-500', mistake: 'GE_VS_GT', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'queued' AND weight_kg > 500 ORDER BY id;", explanation: 'It looks like the boundary value is excluded: check > versus >=. A shipment at exactly 500 kg qualifies.' },
+      { id: 'g2-or', rule: 'queued-only', mistake: 'AND_OR_PRECEDENCE', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'queued' OR weight_kg >= 500 ORDER BY id;", explanation: 'It looks like AND was written as OR. Every queued shipment now matches, along with every heavy shipment in any status.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    rules: [
+      { id: "at-least-500", text: "A shipment at exactly 500 kg qualifies." },
+      { id: "queued-only", text: "Only queued shipments qualify." },
+    ],
     hints: [
       'Two conditions must both hold: the status and the weight.',
       'Join the two conditions with AND, and remember that 500 kg itself qualifies.',
@@ -124,11 +128,15 @@ export const chapter1Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: "SELECT id, name FROM customers WHERE LEFT(name, 1) BETWEEN 'B' AND 'D' ORDER BY name;",
     wrongVariants: [
-      { id: 'i1-short-end', mistake: 'BETWEEN_END_BOUND', sql: "SELECT id, name FROM customers WHERE name BETWEEN 'B' AND 'D' ORDER BY name;", explanation: 'It looks like the end value D is shorter than the names it should include. Dovetail Lanterns sorts after the single letter D, so BETWEEN drops it. Compare the first letter instead.' },
-      { id: 'i1-high-start', mistake: 'GE_VS_GT', sql: "SELECT id, name FROM customers WHERE LEFT(name, 1) BETWEEN 'C' AND 'D' ORDER BY name;", explanation: 'It looks like the lower bound is one letter too high. B is included by the ticket, so Brindle Pantry must appear.' },
+      { id: 'i1-short-end', rule: 'end-d-included', mistake: 'BETWEEN_END_BOUND', sql: "SELECT id, name FROM customers WHERE name BETWEEN 'B' AND 'D' ORDER BY name;", explanation: 'It looks like the end value D is shorter than the names it should include. Dovetail Lanterns sorts after the single letter D, so BETWEEN drops it. Compare the first letter instead.' },
+      { id: 'i1-high-start', rule: 'start-b-included', mistake: 'GE_VS_GT', sql: "SELECT id, name FROM customers WHERE LEFT(name, 1) BETWEEN 'C' AND 'D' ORDER BY name;", explanation: 'It looks like the lower bound is one letter too high. B is included by the ticket, so Brindle Pantry must appear.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "start-b-included", text: "Names starting with B are included." },
+      { id: "end-d-included", text: "Names starting with D are included." },
+    ],
     hints: [
       'Compare only the first letter of each name. Which function returns the first character?',
       'The range runs from B to D and includes both ends. Check whether a three-letter ending is needed.',
@@ -145,11 +153,17 @@ export const chapter1Items: readonly Challenge[] = [
     starterSql: 'SELECT id, delivery_due\nFROM shipments;\n',
     referenceSql: 'SELECT id, delivery_due FROM shipments ORDER BY delivery_due DESC, id DESC LIMIT 10;',
     wrongVariants: [
-      { id: 'i2-no-tiebreak', mistake: 'TIE_NONDETERMINISTIC', sql: 'SELECT id, delivery_due FROM shipments ORDER BY delivery_due DESC LIMIT 10;', explanation: 'It looks like the tie-breaker is missing. Many shipments share the latest deadline, so which ten come back is not set. Add id DESC to choose the greater ids.' },
-      { id: 'i2-oldest-first', mistake: 'ORDER_DIRECTION', sql: 'SELECT id, delivery_due FROM shipments ORDER BY delivery_due ASC, id ASC LIMIT 10;', explanation: 'It looks like the deadlines are sorted earliest first. The ticket wants the latest deadlines.' },
+      { id: 'i2-no-tiebreak', rule: 'tie-greater-id', mistake: 'TIE_NONDETERMINISTIC', sql: 'SELECT id, delivery_due FROM shipments ORDER BY delivery_due DESC LIMIT 10;', explanation: 'It looks like the tie-breaker is missing. Many shipments share the latest deadline, so which ten come back is not set. Add id DESC to choose the greater ids.' },
+      { id: 'i2-oldest-first', rule: 'latest-deadline', mistake: 'ORDER_DIRECTION', sql: 'SELECT id, delivery_due FROM shipments ORDER BY delivery_due ASC, id ASC LIMIT 10;', explanation: 'It looks like the deadlines are sorted earliest first. The ticket wants the latest deadlines.' },
+      { id: "i2-no-limit", rule: "ten-rows", mistake: "LIMIT_MISSING", sql: "SELECT id, delivery_due FROM shipments ORDER BY delivery_due DESC, id DESC;", explanation: "It looks like the LIMIT was left out. Every shipment comes back, not the ten with the latest deadlines." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'delivery_due', type: 1082 }],
+    rules: [
+      { id: "latest-deadline", text: "The shipments returned have the latest deadlines." },
+      { id: "tie-greater-id", text: "When deadlines tie, the greater id comes first." },
+      { id: "ten-rows", text: "Ten shipments are returned." },
+    ],
     hints: [
       'Sort by the deadline first. What decides which shipments are at the top?',
       'Two columns decide the order: the deadline descending, then the id descending. LIMIT keeps ten rows.',
@@ -187,11 +201,15 @@ export const chapter1Items: readonly Challenge[] = [
     starterSql: 'SELECT status\nFROM shipments;\n',
     referenceSql: 'SELECT DISTINCT status FROM shipments ORDER BY status;',
     wrongVariants: [
-      { id: 'i4-duplicates', mistake: 'DISTINCT_MISUSE', sql: 'SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like DISTINCT was left out, so each status repeats once per shipment. Add DISTINCT to return each status once.' },
-      { id: 'i4-descending', mistake: 'ORDER_DIRECTION', sql: 'SELECT DISTINCT status FROM shipments ORDER BY status DESC;', explanation: 'It looks like the statuses are sorted in reverse. The ticket asks for alphabetical ascending order.' },
+      { id: 'i4-duplicates', rule: 'each-value-once', mistake: 'DISTINCT_MISUSE', sql: 'SELECT status FROM shipments ORDER BY status;', explanation: 'It looks like DISTINCT was left out, so each status repeats once per shipment. Add DISTINCT to return each status once.' },
+      { id: 'i4-descending', rule: 'alphabetical', mistake: 'ORDER_DIRECTION', sql: 'SELECT DISTINCT status FROM shipments ORDER BY status DESC;', explanation: 'It looks like the statuses are sorted in reverse. The ticket asks for alphabetical ascending order.' },
     ],
     ordered: true,
     columns: [{ name: 'status', type: 25 }],
+    rules: [
+      { id: "each-value-once", text: "Each status appears once." },
+      { id: "alphabetical", text: "Statuses are sorted from A to Z." },
+    ],
     hints: [
       'Two shipments can share a status. What keyword returns each value once?',
       'Put DISTINCT right after SELECT, then sort the single column.',
@@ -250,17 +268,27 @@ export const chapter1Items: readonly Challenge[] = [
     starterSql: 'SELECT id, weight_kg\nFROM shipments;\n',
     referenceSql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' AND weight_kg IS NOT NULL ORDER BY weight_kg DESC, id ASC LIMIT 3;",
     wrongVariants: [
-      { id: 'b1p3-lightest', mistake: 'ORDER_DIRECTION', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' ORDER BY weight_kg ASC, id ASC LIMIT 3;", explanation: 'It looks like the weights are sorted lightest first. The ticket wants the three heaviest.' },
-      { id: 'b1p3-capital', mistake: 'LIKE_CASE', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'In_Transit' ORDER BY weight_kg DESC, id ASC LIMIT 3;", explanation: 'It looks like the status was typed with capital letters. Text comparison is case-sensitive, so no rows match.' },
+      { id: 'b1p3-lightest', rule: 'heaviest-first', mistake: 'ORDER_DIRECTION', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' ORDER BY weight_kg ASC, id ASC LIMIT 3;", explanation: 'It looks like the weights are sorted lightest first. The ticket wants the three heaviest.' },
+      { id: 'b1p3-capital', rule: 'in-transit-only', mistake: 'LIKE_CASE', sql: "SELECT id, weight_kg FROM shipments WHERE status = 'In_Transit' ORDER BY weight_kg DESC, id ASC LIMIT 3;", explanation: 'It looks like the status was typed with capital letters. Text comparison is case-sensitive, so no rows match.' },
+      { id: "b1p3-id-desc", rule: "id-tie-ascending", mistake: "TIE_BREAK_REVERSED", sql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' AND weight_kg IS NOT NULL ORDER BY weight_kg DESC, id DESC LIMIT 3;", explanation: "It looks like equal weights were ordered by the larger id first. Two in-transit shipments at the same weight then swap places, and the ticket asks for the smaller id first." },
+      { id: "b1p3-null-first", rule: "weight-present", mistake: "NULL_AS_DEFAULT", sql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' ORDER BY weight_kg DESC, id ASC LIMIT 3;", explanation: "It looks like shipments with no weight were not left out. PostgreSQL sorts NULL first in descending order, so a missing weight takes the first place." },
+      { id: "b1p3-no-limit", rule: "three-rows", mistake: "LIMIT_MISSING", sql: "SELECT id, weight_kg FROM shipments WHERE status = 'in_transit' AND weight_kg IS NOT NULL ORDER BY weight_kg DESC, id ASC;", explanation: "It looks like the LIMIT was left out. Every in-transit shipment comes back, not the three heaviest." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'weight_kg', type: 23 }],
+    rules: [
+      { id: "in-transit-only", text: "Only in_transit shipments are returned." },
+      { id: "heaviest-first", text: "The heaviest shipment comes first." },
+      { id: "id-tie-ascending", text: "Equal weights are ordered by the smaller id first." },
+      { id: "weight-present", text: "Shipments with no recorded weight are left out." },
+      { id: "three-rows", text: "Three shipments are returned." },
+    ],
     hints: [
       'Filter to in_transit first, then sort by weight with the heaviest first.',
       'LIMIT keeps only the first rows after sorting. Put id ascending after the weight to break ties.',
       "WHERE status = 'in_transit'\nORDER BY weight_kg DESC, id ASC\nLIMIT 3;",
     ],
     docs: [{ label: 'PostgreSQL LIMIT and OFFSET', url: LIMIT }, { label: 'PostgreSQL ORDER BY', url: ORDER }],
-    datasets: datasetsFor(['ties', 'nulltext']),
+    datasets: datasetsFor(['ties', 'boundary']),
   },
 ];

@@ -58,11 +58,14 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT c.id, c.name\nFROM customers c\nLEFT JOIN shipments s ON s.customer_id = c.id\nWHERE s.____ IS NULL\nORDER BY c.id;',
     referenceSql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL ORDER BY c.id;',
     wrongVariants: [
-      { id: 'g3-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL ORDER BY c.id;', explanation: 'It looks like the LEFT JOIN became an inner join. Customers without shipments have no row to match, so they disappear before the IS NULL test.' },
-      { id: 'g3-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id = NULL ORDER BY c.id;', explanation: 'It looks like s.id = NULL was used to find the unmatched rows. That is never true. Use IS NULL.' },
+      { id: 'g3-inner', rule: 'no-shipments-only', mistake: 'LEFT_TO_INNER', sql: 'SELECT c.id, c.name FROM customers c JOIN shipments s ON s.customer_id = c.id WHERE s.id IS NULL ORDER BY c.id;', explanation: 'It looks like the LEFT JOIN became an inner join. Customers without shipments have no row to match, so they disappear before the IS NULL test.' },
+      { id: 'g3-equals-null', rule: 'no-shipments-only', mistake: 'NULL_EQUALS', sql: 'SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id WHERE s.id = NULL ORDER BY c.id;', explanation: 'It looks like s.id = NULL was used to find the unmatched rows. That is never true. Use IS NULL.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "no-shipments-only", text: "Only customers with no shipments are returned, and all of them." },
+    ],
     hints: [
       'Keep every customer, even without a shipment. Which join keeps the unmatched left rows?',
       'After a LEFT JOIN, an unmatched customer has NULL in every shipment column. Look for that NULL.',
@@ -79,11 +82,15 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT s.id, i.amount\nFROM shipments s\n____ JOIN invoices i ON i.shipment_id = s.id\nWHERE s.id <= 4\nORDER BY s.id;',
     referenceSql: 'SELECT s.id, i.amount FROM shipments s LEFT JOIN invoices i ON i.shipment_id = s.id WHERE s.id <= 4 ORDER BY s.id;',
     wrongVariants: [
-      { id: 'g4-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, i.amount FROM shipments s LEFT JOIN invoices i ON i.shipment_id = s.id WHERE s.id <= 4 AND i.amount IS NOT NULL ORDER BY s.id;', explanation: 'It looks like a WHERE test on the invoice amount turned the LEFT JOIN into an inner join. The unbilled shipments are dropped, but the ticket keeps them.' },
-      { id: 'g4-wrong-key', mistake: 'JOIN_KEY', sql: 'SELECT s.id, i.amount FROM shipments s LEFT JOIN invoices i ON i.id = s.id WHERE s.id <= 4 ORDER BY s.id;', explanation: 'It looks like the invoice id was matched to the shipment id. Invoices and shipments have separate ids, and the link is shipment_id.' },
+      { id: 'g4-inner', rule: 'kept-without-invoice', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, i.amount FROM shipments s LEFT JOIN invoices i ON i.shipment_id = s.id WHERE s.id <= 4 AND i.amount IS NOT NULL ORDER BY s.id;', explanation: 'It looks like a WHERE test on the invoice amount turned the LEFT JOIN into an inner join. The unbilled shipments are dropped, but the ticket keeps them.' },
+      { id: 'g4-wrong-key', rule: 'invoice-of-shipment', mistake: 'JOIN_KEY', sql: 'SELECT s.id, i.amount FROM shipments s LEFT JOIN invoices i ON i.id = s.id WHERE s.id <= 4 ORDER BY s.id;', explanation: 'It looks like the invoice id was matched to the shipment id. Invoices and shipments have separate ids, and the link is shipment_id.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'amount', type: 1700 }],
+    rules: [
+      { id: "kept-without-invoice", text: "A shipment with no invoice is kept, with a missing amount." },
+      { id: "invoice-of-shipment", text: "Each amount comes from the invoice of that shipment." },
+    ],
     hints: [
       'Some shipments have no invoice, and the ticket says to keep them. Which join does that?',
       'Join invoices on shipment_id. Keep the shipment side whole with a LEFT JOIN.',
@@ -100,11 +107,15 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, driver_id\nFROM shipments;\n',
     referenceSql: 'SELECT s.id, d.name AS driver_name FROM shipments s LEFT JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 10 ORDER BY s.id;',
     wrongVariants: [
-      { id: 'i1-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, d.name AS driver_name FROM shipments s JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 10 ORDER BY s.id;', explanation: 'It looks like an inner join was used. Shipments with no driver disappear, but the ticket keeps every shipment.' },
-      { id: 'i1-wrong-key', mistake: 'JOIN_KEY', sql: 'SELECT s.id, d.name AS driver_name FROM shipments s LEFT JOIN drivers d ON d.id = s.customer_id WHERE s.id <= 10 ORDER BY s.id;', explanation: 'It looks like the driver was matched on customer_id. Each shipment links to its driver through driver_id.' },
+      { id: 'i1-inner', rule: 'kept-without-driver', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, d.name AS driver_name FROM shipments s JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 10 ORDER BY s.id;', explanation: 'It looks like an inner join was used. Shipments with no driver disappear, but the ticket keeps every shipment.' },
+      { id: 'i1-wrong-key', rule: 'driver-of-shipment', mistake: 'JOIN_KEY', sql: 'SELECT s.id, d.name AS driver_name FROM shipments s LEFT JOIN drivers d ON d.id = s.customer_id WHERE s.id <= 10 ORDER BY s.id;', explanation: 'It looks like the driver was matched on customer_id. Each shipment links to its driver through driver_id.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'driver_name', type: 25 }],
+    rules: [
+      { id: "kept-without-driver", text: "A shipment with no driver is kept." },
+      { id: "driver-of-shipment", text: "Each driver_name comes from the driver of that shipment." },
+    ],
     hints: [
       'Some shipments have no driver. Which join keeps them with a missing name?',
       'The shipment side must be kept whole. Join drivers on driver_id.',
@@ -121,11 +132,17 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name, supervisor_id\nFROM drivers;\n',
     referenceSql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d LEFT JOIN drivers s ON s.id = d.supervisor_id ORDER BY d.id;',
     wrongVariants: [
-      { id: 'i2-self-match', mistake: 'JOIN_KEY', sql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d LEFT JOIN drivers s ON s.id = d.id ORDER BY d.id;', explanation: 'It looks like each driver was matched to itself. The supervisor is the row that the supervisor_id column points at.' },
-      { id: 'i2-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d JOIN drivers s ON s.id = d.supervisor_id ORDER BY d.id;', explanation: 'It looks like an inner join was used. The driver with no supervisor disappears, but the ticket keeps every driver.' },
+      { id: 'i2-self-match', rule: 'supervisor-by-id', mistake: 'JOIN_KEY', sql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d LEFT JOIN drivers s ON s.id = d.id ORDER BY d.id;', explanation: 'It looks like each driver was matched to itself. The supervisor is the row that the supervisor_id column points at.' },
+      { id: 'i2-inner', rule: 'every-driver-listed', mistake: 'LEFT_TO_INNER', sql: 'SELECT d.id, d.name, s.name AS supervisor_name FROM drivers d JOIN drivers s ON s.id = d.supervisor_id ORDER BY d.id;', explanation: 'It looks like an inner join was used. The driver with no supervisor disappears, but the ticket keeps every driver.' },
+      { id: "i2-empty-text", rule: "null-not-empty", mistake: "NULL_AS_DEFAULT", sql: "SELECT d.id, d.name, COALESCE(s.name, '') AS supervisor_name FROM drivers d LEFT JOIN drivers s ON s.id = d.supervisor_id ORDER BY d.id;", explanation: "It looks like a missing supervisor was given empty text. The ticket asks for NULL, which means missing." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }, { name: 'supervisor_name', type: 25 }],
+    rules: [
+      { id: "every-driver-listed", text: "Every driver is returned, including one with no supervisor." },
+      { id: "supervisor-by-id", text: "supervisor_name is the name of the driver that supervisor_id points to." },
+      { id: "null-not-empty", text: "A missing supervisor is NULL, not an empty string." },
+    ],
     hints: [
       'The drivers table joins to itself. Which column points at the supervisor row?',
       'Give the two copies of the table different aliases, such as d and s.',
@@ -184,11 +201,14 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, tracking_code\nFROM shipments;\n',
     referenceSql: 'SELECT s.id, s.tracking_code FROM shipments s WHERE NOT EXISTS (SELECT 1 FROM shipment_events e WHERE e.shipment_id = s.id) ORDER BY s.id;',
     wrongVariants: [
-      { id: 'i5-inner-filter', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, s.tracking_code FROM shipments s JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id IS NULL ORDER BY s.id;', explanation: 'It looks like an inner join was used before the NULL test. A shipment without events has no row to join, so it never reaches the filter.' },
-      { id: 'i5-equals-null', mistake: 'NULL_EQUALS', sql: 'SELECT s.id, s.tracking_code FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id = NULL ORDER BY s.id;', explanation: 'It looks like e.id = NULL was used. That is never true, so no shipment is returned. Use IS NULL.' },
+      { id: 'i5-inner-filter', rule: 'no-events-only', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, s.tracking_code FROM shipments s JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id IS NULL ORDER BY s.id;', explanation: 'It looks like an inner join was used before the NULL test. A shipment without events has no row to join, so it never reaches the filter.' },
+      { id: 'i5-equals-null', rule: 'no-events-only', mistake: 'NULL_EQUALS', sql: 'SELECT s.id, s.tracking_code FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id = NULL ORDER BY s.id;', explanation: 'It looks like e.id = NULL was used. That is never true, so no shipment is returned. Use IS NULL.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'tracking_code', type: 25 }],
+    rules: [
+      { id: "no-events-only", text: "Only shipments with no shipment_events rows are returned." },
+    ],
     hints: [
       'Two ways to find the missing matches: a LEFT JOIN with an IS NULL test, or NOT EXISTS.',
       'NOT EXISTS checks whether a matching row is absent. The subquery needs the same shipment key.',
@@ -205,11 +225,17 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT customer_id, id\nFROM shipments;\n',
     referenceSql: 'SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;',
     wrongVariants: [
-      { id: 'i6-fanout', mistake: 'JOIN_FANOUT', sql: 'SELECT s.customer_id, COUNT(s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;', explanation: 'It looks like COUNT(s.id) was used after the join. Each shipment repeats once per event, so the shipment count is inflated.' },
-      { id: 'i6-inner', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id IS NOT NULL GROUP BY s.customer_id ORDER BY s.customer_id;', explanation: 'It looks like a WHERE test on the event turned the LEFT JOIN into an inner join. Shipments with no events drop out of the count.' },
+      { id: 'i6-fanout', rule: 'distinct-shipments', mistake: 'JOIN_FANOUT', sql: 'SELECT s.customer_id, COUNT(s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id GROUP BY s.customer_id ORDER BY s.customer_id;', explanation: 'It looks like COUNT(s.id) was used after the join. Each shipment repeats once per event, so the shipment count is inflated.' },
+      { id: 'i6-inner', rule: 'include-no-events', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM shipments s LEFT JOIN shipment_events e ON e.shipment_id = s.id WHERE e.id IS NOT NULL GROUP BY s.customer_id ORDER BY s.customer_id;', explanation: 'It looks like a WHERE test on the event turned the LEFT JOIN into an inner join. Shipments with no events drop out of the count.' },
+      { id: "i6-all-customers", rule: "customers-with-shipments", mistake: "FILTER_MISSING", sql: "SELECT c.id AS customer_id, COUNT(DISTINCT s.id)::integer AS shipments, COUNT(e.id)::integer AS events FROM customers AS c LEFT JOIN shipments AS s ON s.customer_id = c.id LEFT JOIN shipment_events AS e ON e.shipment_id = s.id GROUP BY c.id ORDER BY c.id;", explanation: "It looks like the customers table was the starting point. Customers with no shipments now appear with zero, and the ticket lists only customers with at least one shipment." },
     ],
     ordered: true,
     columns: [{ name: 'customer_id', type: 23 }, { name: 'shipments', type: 23 }, { name: 'events', type: 23 }],
+    rules: [
+      { id: "customers-with-shipments", text: "Only customers with at least one shipment are listed." },
+      { id: "distinct-shipments", text: "shipments counts distinct shipments." },
+      { id: "include-no-events", text: "Shipments with no events are included in shipments." },
+    ],
     hints: [
       'Count shipments and events separately. Which count repeats once per joined row?',
       'COUNT(DISTINCT s.id) counts each shipment once. COUNT(e.id) counts the events.',
@@ -226,18 +252,26 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM drivers;\n',
     referenceSql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;",
     wrongVariants: [
-      { id: 'i7-no-distinct', mistake: 'JOIN_FANOUT', sql: "SELECT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;", explanation: 'It looks like DISTINCT was left out. A driver with several qualifying shipments now appears once per shipment.' },
-      { id: 'i7-wrong-key', mistake: 'JOIN_KEY', sql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.customer_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;", explanation: 'It looks like the shipment was matched to a driver through customer_id. The link to the driver is driver_id.' },
+      { id: 'i7-no-distinct', rule: 'each-driver-once', mistake: 'JOIN_FANOUT', sql: "SELECT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;", explanation: 'It looks like DISTINCT was left out. A driver with several qualifying shipments now appears once per shipment.' },
+      { id: 'i7-wrong-key', rule: 'driver-of-shipment', mistake: 'JOIN_KEY', sql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.customer_id = d.id WHERE s.status = 'delivered' AND s.route_id IN (1, 2) ORDER BY d.id;", explanation: 'It looks like the shipment was matched to a driver through customer_id. The link to the driver is driver_id.' },
+      { id: "i7-no-status", rule: "delivered-only", mistake: "FILTER_MISSING", sql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.route_id IN (1, 2) ORDER BY d.id;", explanation: "It looks like the delivered test was left out. Drivers with a shipment in any status on routes 1 or 2 now appear." },
+      { id: "i7-no-route", rule: "route-1-or-2", mistake: "FILTER_MISSING", sql: "SELECT DISTINCT d.id, d.name FROM drivers d JOIN shipments s ON s.driver_id = d.id WHERE s.status = 'delivered' ORDER BY d.id;", explanation: "It looks like the route test was left out. Drivers with a delivered shipment on any route now appear." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "delivered-only", text: "Only shipments with status delivered count." },
+      { id: "route-1-or-2", text: "Only shipments on route 1 or route 2 count." },
+      { id: "each-driver-once", text: "Each driver appears once." },
+      { id: "driver-of-shipment", text: "A shipment is matched to its own driver." },
+    ],
     hints: [
       'A driver with two deliveries would match twice. What keeps each driver once?',
       'Join drivers to shipments on driver_id, filter to delivered, then use DISTINCT on the driver columns.',
       "JOIN shipments s ON s.driver_id = d.id\nWHERE s.status = 'delivered'",
     ],
     docs: [{ label: 'PostgreSQL table expressions and joins', url: JOINS }],
-    datasets: datasetsFor(['nulls', 'ties']),
+    datasets: datasetsFor(['nulls', 'ties', 'boundary']),
   },
   {
     id: 'c4-b1-p1', chapterId: 4, role: 'boss', bossGroup: 'c4-boss', starterStyle: 'skeleton', title: 'Boss ticket, part 1: the first twelve shipments',
@@ -247,11 +281,15 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, customer_id, route_id, driver_id\nFROM shipments;\n',
     referenceSql: 'SELECT s.id, c.name AS customer_name, w.city AS origin_city, d.name AS driver_name FROM shipments s JOIN customers c ON c.id = s.customer_id JOIN routes r ON r.id = s.route_id JOIN warehouses w ON w.id = r.origin_id LEFT JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 12 ORDER BY s.id;',
     wrongVariants: [
-      { id: 'b4p1-inner-driver', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, c.name AS customer_name, w.city AS origin_city, d.name AS driver_name FROM shipments s JOIN customers c ON c.id = s.customer_id JOIN routes r ON r.id = s.route_id JOIN warehouses w ON w.id = r.origin_id JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 12 ORDER BY s.id;', explanation: 'It looks like the driver join became an inner join. Shipments with no driver drop out, but the manifest must keep them.' },
-      { id: 'b4p1-destination', mistake: 'JOIN_KEY', sql: 'SELECT s.id, c.name AS customer_name, w.city AS origin_city, d.name AS driver_name FROM shipments s JOIN customers c ON c.id = s.customer_id JOIN routes r ON r.id = s.route_id JOIN warehouses w ON w.id = r.destination_id LEFT JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 12 ORDER BY s.id;', explanation: 'It looks like the destination warehouse was joined. The manifest shows the origin city.' },
+      { id: 'b4p1-inner-driver', rule: 'driver-may-be-missing', mistake: 'LEFT_TO_INNER', sql: 'SELECT s.id, c.name AS customer_name, w.city AS origin_city, d.name AS driver_name FROM shipments s JOIN customers c ON c.id = s.customer_id JOIN routes r ON r.id = s.route_id JOIN warehouses w ON w.id = r.origin_id JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 12 ORDER BY s.id;', explanation: 'It looks like the driver join became an inner join. Shipments with no driver drop out, but the manifest must keep them.' },
+      { id: 'b4p1-destination', rule: 'origin-city', mistake: 'JOIN_KEY', sql: 'SELECT s.id, c.name AS customer_name, w.city AS origin_city, d.name AS driver_name FROM shipments s JOIN customers c ON c.id = s.customer_id JOIN routes r ON r.id = s.route_id JOIN warehouses w ON w.id = r.destination_id LEFT JOIN drivers d ON d.id = s.driver_id WHERE s.id <= 12 ORDER BY s.id;', explanation: 'It looks like the destination warehouse was joined. The manifest shows the origin city.' },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'customer_name', type: 25 }, { name: 'origin_city', type: 25 }, { name: 'driver_name', type: 25 }],
+    rules: [
+      { id: "driver-may-be-missing", text: "A shipment with no driver is kept, and its driver_name is then missing." },
+      { id: "origin-city", text: "origin_city is the city of the origin warehouse." },
+    ],
     hints: [
       'Four lookups: customer, route, origin warehouse, and driver. Only the driver may be missing.',
       'Use inner joins for the lookups that always exist, and a LEFT JOIN for the driver.',
@@ -268,11 +306,17 @@ export const chapter4Items: readonly Challenge[] = [
     starterSql: 'SELECT id, name\nFROM customers;\n',
     referenceSql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s WHERE s.customer_id = c.id AND s.status = 'delivered') ORDER BY c.id;",
     wrongVariants: [
-      { id: 'b4p2-null-equals', mistake: 'NULL_EQUALS', sql: "SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id AND s.status = 'delivered' WHERE s.id = NULL ORDER BY c.id;", explanation: 'It looks like s.id = NULL was used to find customers with no delivery. That is never true. Use IS NULL.' },
-      { id: 'b4p2-wrong-key', mistake: 'JOIN_KEY', sql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s WHERE s.id = c.id AND s.status = 'delivered') ORDER BY c.id;", explanation: 'It looks like the shipment id was compared with the customer id. The link between them is s.customer_id = c.id.' },
+      { id: 'b4p2-null-equals', rule: 'no-delivered-shipment', mistake: 'NULL_EQUALS', sql: "SELECT c.id, c.name FROM customers c LEFT JOIN shipments s ON s.customer_id = c.id AND s.status = 'delivered' WHERE s.id = NULL ORDER BY c.id;", explanation: 'It looks like s.id = NULL was used to find customers with no delivery. That is never true. Use IS NULL.' },
+      { id: 'b4p2-wrong-key', rule: 'link-by-customer', mistake: 'JOIN_KEY', sql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s WHERE s.id = c.id AND s.status = 'delivered') ORDER BY c.id;", explanation: 'It looks like the shipment id was compared with the customer id. The link between them is s.customer_id = c.id.' },
+      { id: "b4p2-events", rule: "delivered-shipments-only", mistake: "WRONG_SOURCE", sql: "SELECT c.id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM shipments s JOIN shipment_events e ON e.shipment_id = s.id WHERE s.customer_id = c.id AND e.status = 'delivered') ORDER BY c.id;", explanation: "It looks like the delivered test was made on shipment events. The ticket says shipment events do not count, and only the status column of shipments does." },
     ],
     ordered: true,
     columns: [{ name: 'id', type: 23 }, { name: 'name', type: 25 }],
+    rules: [
+      { id: "no-delivered-shipment", text: "Customers with no delivered shipment qualify, including customers with no shipments at all." },
+      { id: "delivered-shipments-only", text: "Only the shipments.status column counts; shipment events do not count." },
+      { id: "link-by-customer", text: "A shipment belongs to the customer whose id it names." },
+    ],
     hints: [
       'NOT EXISTS can carry the status condition inside the subquery.',
       'The subquery must match shipments to the customer through customer_id, and also require status = delivered.',

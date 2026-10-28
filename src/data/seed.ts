@@ -187,6 +187,50 @@ function applyEdgeCases(data: FreightData, variant: Variant): void {
     topOne.slice(0, 3).forEach((shipment) => { shipment.weight_kg = 2000; });
     topOne.slice(3, 5).forEach((shipment) => { shipment.weight_kg = 1990; });
   }
+  // A tie among in-transit shipments at the top weight: the id tie-break decides their order.
+  if (variant === 'ties' || variant === 'boundary') {
+    [43, 44, 45].forEach((index) => { data.shipments[index]!.status = 'in_transit'; data.shipments[index]!.weight_kg = 2000; });
+    // An in-transit shipment with no recorded weight, which a missing-weight filter must leave out.
+    data.shipments[49]!.status = 'in_transit';
+    data.shipments[49]!.weight_kg = null;
+  }
+  // Range boundaries: two shipments at exactly 1 January 2026 00:00 UTC and two at exactly 1 February 2026 00:00 UTC,
+  // so a day with a boundary timestamp reaches the two-booking threshold.
+  if (variant === 'nulls' || variant === 'ties' || variant === 'boundary') {
+    for (const index of [5, 11]) data.shipments[index]!.booked_at = '2026-02-01T00:00:00.000Z';
+    for (const index of [7, 13]) data.shipments[index]!.booked_at = '2026-01-01T00:00:00.000Z';
+  }
+  // Driver filters: driver 3 has no delivered shipment on routes 1 or 2 (ties, boundary); driver 4 has no shipment on routes 1 or 2 at all (nulls, ties).
+  if (variant === 'ties' || variant === 'boundary') {
+    data.shipments.forEach((shipment) => {
+      if (Number(shipment.driver_id) === 3 && [1, 2].includes(Number(shipment.route_id)) && shipment.status === 'delivered') shipment.status = 'in_transit';
+    });
+  }
+  if (variant === 'nulls' || variant === 'ties') {
+    data.shipments.forEach((shipment) => {
+      if (Number(shipment.driver_id) === 4 && [1, 2].includes(Number(shipment.route_id))) shipment.route_id = 5;
+    });
+  }
+  // Missing weights inside the first twelve ids, so a filter that keeps them is caught.
+  if (variant === 'nulls') { data.shipments[8]!.weight_kg = null; data.shipments[9]!.weight_kg = null; }
+  if (variant === 'boundary') { data.shipments[10]!.weight_kg = null; data.shipments[11]!.weight_kg = null; }
+  // A queued shipment at exactly 1800 kg, so a strict threshold is caught.
+  if (variant === 'ties' || variant === 'boundary') {
+    data.shipments[9]!.status = 'queued';
+    data.shipments[9]!.weight_kg = 1800;
+  }
+  // Customer 6 weighs 900 kg on every shipment (except the queued 500 kg in the ties dataset), so an 'at least 900' test is caught.
+  if (variant === 'nulls' || variant === 'ties') {
+    data.shipments.forEach((shipment, index) => {
+      if (Number(shipment.customer_id) === 6 && index !== 5) shipment.weight_kg = 900;
+    });
+  }
+  // Fractional seconds on some events, so a whole-second rounding rule is caught.
+  if (variant === 'ties' || variant === 'boundary') {
+    data.shipment_events.forEach((event) => {
+      if (Number(event.id) % 5 === 0) event.occurred_at = new Date(Date.parse(String(event.occurred_at)) + 600).toISOString();
+    });
+  }
   // Customer 5 has one distinct weight, so a second-highest question leaves that customer out.
   if (variant === 'nulls' || variant === 'ties') {
     data.shipments.filter((shipment) => Number(shipment.customer_id) === 5).forEach((shipment) => { shipment.weight_kg = 500; });
@@ -249,11 +293,11 @@ function addStaging(data: FreightData, variant: Variant): void {
   }
 }
 
-// Boundary dataset: the first five queued shipments weigh 1200, 900, 700, 501 and exactly 500 kg,
+// Boundary dataset: the first four queued shipments weigh 900, 900 (a tie), 501 and exactly 500 kg,
 // and every other queued shipment weighs under 500 kg. Two shipments have boundary timestamps and one
 // has the leap-day due date.
 function applyBoundary(data: FreightData): void {
-  const heavy = [1200, 900, 700, 501, 500];
+  const heavy = [900, 900, 501, 500];
   let next = 0;
   data.shipments.forEach((shipment, index) => {
     if (shipment.status !== 'queued') return;

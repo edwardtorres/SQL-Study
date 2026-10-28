@@ -1,0 +1,23 @@
+{
+  "id": "c7-i4",
+  "solutionSql": "SELECT status FROM shipment_events\nEXCEPT\nSELECT status FROM shipments\nORDER BY status;",
+  "sampleRowCount": 3,
+  "sampleFirstRows": [
+    [
+      "arrived"
+    ],
+    [
+      "booked"
+    ],
+    [
+      "loaded"
+    ]
+  ],
+  "sampleChecks": null,
+  "constraintProbes": null,
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Scan-only statuses on the sample are arrived, booked and loaded. delivered appears in both feeds, so it is excluded.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

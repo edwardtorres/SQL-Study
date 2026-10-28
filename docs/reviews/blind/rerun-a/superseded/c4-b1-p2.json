@@ -1,0 +1,26 @@
+{
+  "id": "c4-b1-p2",
+  "solutionSql": "SELECT c.id, c.name\nFROM customers AS c\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM shipments AS s\n  WHERE s.customer_id = c.id\n    AND s.status = 'delivered'\n)\nORDER BY c.id;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      7,
+      "Glimmer Clayworks"
+    ],
+    [
+      8,
+      "Hearthline Notions"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "no shipment whose status is ‘delivered’",
+      "readingChosen": "shipments.status = 'delivered'.",
+      "alternativeReading": "A shipment_events row with status 'delivered'. Measured here: returns six customers (2, 3, 5, 6, 7, 8) instead of two."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The status-based reading returns only customers 7 and 8. The ticket lists queued, in_transit and cancelled shipments, which supports reading status as shipments.status.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "c5-b1-p3",
+  "solutionSql": "WITH heavy AS (\n  SELECT driver_id,\n         COUNT(*)::integer AS heavy_queued\n  FROM shipments\n  WHERE status = 'queued'\n    AND weight_kg >= 1500\n    AND driver_id IS NOT NULL\n  GROUP BY driver_id\n)\nSELECT d.id AS driver_id,\n       COALESCE(h.heavy_queued, 0)::integer AS heavy_queued\nFROM drivers d\nLEFT JOIN heavy h ON h.driver_id = d.id\nORDER BY d.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "The heavy threshold of 1500 kg is stated as at least. Shipments with a NULL driver_id are not counted for any driver, and drivers 1 to 4 get 2, 4, 3 and 1, with zero reserved for any driver with none.",
+  "superseded": "Step 3b rule sweep: the wrong variants or instruction text changed (or hidden data changed under this ticket); re-solved blind"
+}
