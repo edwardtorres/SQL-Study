@@ -488,5 +488,35 @@
     "id": "ms-identity-insert",
     "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/set-identity-insert-transact-sql",
     "quote": "By using this statement, you can insert explicit values into the IDENTITY column of a table."
+  },
+  {
+    "id": "pg-identity-uniqueness",
+    "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+    "quote": "Uniqueness would need to be enforced using a PRIMARY KEY or UNIQUE constraint."
+  },
+  {
+    "id": "pg-identity-overriding",
+    "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+    "quote": "In an INSERT command, if ALWAYS is selected, a user-specified value is only accepted if the INSERT statement specifies OVERRIDING SYSTEM VALUE"
+  },
+  {
+    "id": "pg-insert-inference",
+    "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+    "quote": "conflict_target can perform unique index inference"
+  },
+  {
+    "id": "pg-insert-arbiter",
+    "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+    "quote": "Rows proposed for insertion should not duplicate each other in terms of attributes constrained by an arbiter index or constraint."
+  },
+  {
+    "id": "pg-distinct-on",
+    "url": "https://www.postgresql.org/docs/18/sql-select.html",
+    "quote": "is unpredictable unless ORDER BY is used to ensure that the desired row appears first."
+  },
+  {
+    "id": "pg-partial-index",
+    "url": "https://www.postgresql.org/docs/18/sql-createindex.html",
+    "quote": "A partial index is an index that contains entries for only a portion of a table, usually a portion that is more useful for indexing than the rest of the table."
   }
 ]

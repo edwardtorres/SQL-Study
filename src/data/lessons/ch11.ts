@@ -8,8 +8,8 @@ export const lesson11: Lesson = {
       id: 'c11-s1',
       title: 'Upserts: insert the new rows, update the ones that exist',
       paragraphs: [
-        'An upsert inserts a row, and when a row with the same key already exists, it updates that row instead of failing. In PostgreSQL the form is INSERT with ON CONFLICT naming the key, then DO UPDATE.',
-        'An upsert sets the values it is given, so running it again gives the same result. A plain insert adds the rows again and fails on the key, so a load that must be safe to run twice uses an upsert.',
+        'An upsert inserts a row, and when a row with the same key already exists, it updates that row instead of failing. In PostgreSQL the form is INSERT with ON CONFLICT naming the key, then DO UPDATE. The key must be a unique index or constraint, so that the database can tell which existing row a new row conflicts with.',
+        'An upsert sets the values it is given, so running it again gives the same result, provided each key appears once in the statement. A plain insert adds the rows again and fails on the key, so a load that must be safe to run twice uses an upsert.',
       ],
       example: 'SELECT customer_id, region, changed_at\nFROM staging_customer_regions\nWHERE customer_id IN (2, 4, 6)\nORDER BY customer_id, changed_at;',
       predict: {
@@ -21,13 +21,13 @@ export const lesson11: Lesson = {
         ],
         answer: 'a',
         answerRows: 4,
-        explanation: 'The feed sends two region changes for customer 2, and one each for customers 4 and 6. Customer 99 is not in the filter. An upsert that sees two rows for the same key must pick one of them.',
+        explanation: 'The feed sends two region changes for customer 2, and one each for customers 4 and 6. Customer 99 is not in the filter. Two rows with the same key cannot both be applied by one upsert, so the load first keeps one row for each customer.',
       },
       commonMistakes: [
         { mistake: 'UPSERT_DUPLICATE_ON_RERUN', text: 'A plain insert has no conflict clause. The first run works, but a second run inserts the same keys again, and the primary key rejects them. An upsert updates the row that already exists.' },
-        { mistake: 'LATEST_VS_EARLIEST', text: 'When several changes share a key, the order decides which one the upsert keeps. Sort by time descending inside each key to keep the newest change.' },
+        { mistake: 'LATEST_VS_EARLIEST', text: 'When several changes share a key, the load must keep one before the upsert runs. The sort decides which one that is, so sort by time descending inside each key to keep the newest change.' },
       ],
-      citations: ['pg-insert-upsert'],
+      citations: ['pg-insert-upsert', 'pg-insert-inference', 'pg-insert-arbiter'],
       demonstrations: [
         { claim: 'The feed sends customer 2 two changes, so one statement can see two rows for the same key.', sql: 'SELECT customer_id, COUNT(*)::integer AS changes FROM staging_customer_regions GROUP BY customer_id HAVING COUNT(*) > 1 ORDER BY customer_id;' },
       ],
@@ -37,8 +37,8 @@ export const lesson11: Lesson = {
       title: 'MERGE: match, update, insert and delete in one statement',
       paragraphs: [
         'MERGE compares a source with a target. Each source row either matches a target row or does not, and the WHEN clauses say what to do in each case: update the matched rows, insert the source rows that have no match, or delete target rows that no source row matches.',
-        'The source should be one row for each key. A DISTINCT ON subquery that keeps the newest change for each customer is a source of that shape, so the merge applies one change to each target row.',
-        'SQL Server also has MERGE. In that dialect, the actions apply to the joined rows in an unordered way, so a source with several rows for one key needs the same care as it does here.',
+        'The source should be one row for each key. A DISTINCT ON subquery keeps the first row of each customer, and that first row is unpredictable unless ORDER BY puts the desired row first. Sorting by changed_at descending gives the newest change, so the merge applies one change to each target row.',
+        'SQL Server also has MERGE. Its documentation says that, when TOP is used, the insert, update and delete actions apply to the remaining joined rows in an unordered way.',
       ],
       example: 'SELECT c.id, c.region AS current_region, l.region AS feed_region\nFROM customers AS c\nLEFT JOIN (\n  SELECT DISTINCT ON (customer_id) customer_id, region\n  FROM staging_customer_regions\n  ORDER BY customer_id, changed_at DESC\n) AS l ON l.customer_id = c.id\nORDER BY c.id;',
       predict: {
@@ -56,9 +56,9 @@ export const lesson11: Lesson = {
         { mistake: 'MERGE_NOT_MATCHED', text: 'Without a WHEN NOT MATCHED branch, feed rows that have no target row are dropped, so new customers never reach the target.' },
         { mistake: 'MERGE_NO_DELETE', text: 'A target row that the source no longer names stays in the table unless a WHEN NOT MATCHED BY SOURCE branch deletes it.' },
       ],
-      citations: ['pg-merge-join', 'ms-merge-statement', 'ms-merge-unordered'],
+      citations: ['pg-merge-join', 'ms-merge-statement', 'ms-merge-unordered', 'pg-distinct-on'],
       demonstrations: [
-        { claim: 'The feed names customer 99, which is not in customers, so a merge into customers must leave it out.', sql: 'SELECT COUNT(*)::integer AS unknown_customers FROM staging_customer_regions WHERE customer_id NOT IN (SELECT id FROM customers);' },
+        { claim: 'The feed names customer 99, which is not in customers, so a merge into customers has no target row to match for it.', sql: 'SELECT COUNT(*)::integer AS unknown_customers FROM staging_customer_regions WHERE customer_id NOT IN (SELECT id FROM customers);' },
       ],
     },
     {
@@ -79,16 +79,17 @@ export const lesson11: Lesson = {
         ],
         answer: 'a',
         answerRows: 4,
-        explanation: 'Each of these customers has an old version that ended on 1 July 2025 and a current version that has no end time. The history has two versions for each customer, so the query returns four rows.',
+        explanation: 'Each of these customers has an old version that ended on 1 July 2025 UTC and a current version that has no end time. The history has two versions for each customer, so the query returns four rows.',
       },
       commonMistakes: [
         { mistake: 'WATERMARK_BOUNDARY', text: 'A comparison with >= loads the scan at the watermark time again. The watermark is the last time already loaded, so only rows strictly later are new.' },
-        { mistake: 'SCD2_MULTIPLE_CURRENT', text: 'Adding a new version without closing the old one leaves two current rows for the customer, and the history cannot say which region applies now.' },
+        { mistake: 'SCD2_MULTIPLE_CURRENT', text: 'Adding a new version without closing the old one leaves two current rows for the customer, and the history cannot say which region applies now. A unique partial index covering only the current rows is one way to make the database refuse the second one.' },
       ],
-      citations: ['pg-view-query', 'pg-view-runs-each-time'],
+      citations: ['pg-view-query', 'pg-view-runs-each-time', 'pg-partial-index'],
       demonstrations: [
         { claim: 'One scan sits at exactly the watermark time, the boundary row that a >= comparison would load again.', sql: 'SELECT COUNT(*)::integer AS at_watermark FROM staging_scans WHERE occurred_at = (SELECT last_loaded_at FROM load_watermark WHERE id = 1);' },
-        { claim: 'Customer 4 has no region now, and a comparison with = never matches a NULL.', sql: 'SELECT COUNT(*)::integer AS matches FROM customers WHERE region = NULL;' },
+        { claim: 'A comparison with = never matches a NULL, so this query finds no customer, although customers 1, 4 and 7 have no region.', sql: 'SELECT COUNT(*)::integer AS matches FROM customers WHERE region = NULL;' },
+        { claim: 'Customers 1, 4 and 7 have no region, and IS NULL finds them.', sql: 'SELECT COUNT(*)::integer AS no_region FROM customers WHERE region IS NULL;' },
       ],
     },
   ],

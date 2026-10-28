@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-28T04:21:29.124Z",
-  "total": 98,
-  "verified": 98,
+  "checkedAt": "2026-10-28T04:33:35.532Z",
+  "total": 104,
+  "verified": 104,
   "results": [
     {
       "id": "pg-select-where",
@@ -588,6 +588,42 @@
     {
       "id": "ms-identity-insert",
       "url": "https://learn.microsoft.com/en-us/sql/t-sql/statements/set-identity-insert-transact-sql",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-identity-uniqueness",
+      "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-identity-overriding",
+      "url": "https://www.postgresql.org/docs/18/ddl-identity-columns.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-insert-inference",
+      "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-insert-arbiter",
+      "url": "https://www.postgresql.org/docs/18/sql-insert.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-distinct-on",
+      "url": "https://www.postgresql.org/docs/18/sql-select.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-partial-index",
+      "url": "https://www.postgresql.org/docs/18/sql-createindex.html",
       "status": "verified",
       "httpStatus": 200
     }
