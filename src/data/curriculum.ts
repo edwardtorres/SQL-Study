@@ -116,7 +116,7 @@ const dialectNotes: Readonly<Record<number, Chapter['dialectNotes']>> = {
     { dialect: 'Spark SQL', note: 'Spark CREATE TABLE ... USING specifies the input format of the table. This reference does not define star-schema design, which this chapter teaches separately.', source: 'https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html' },
   ],
   11: [
-    { dialect: 'T-SQL', note: 'T-SQL offers MERGE; PostgreSQL also offers INSERT ON CONFLICT. Each engine documents its own syntax, so check the reference for the engine you target.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql' },
+    { dialect: 'T-SQL', note: 'T-SQL offers MERGE. PostgreSQL 18 also offers MERGE, alongside INSERT ON CONFLICT. Each engine documents its own syntax, so check the reference for the engine you target.', source: 'https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql' },
     { dialect: 'Spark SQL', note: 'Databricks documents MERGE for Delta Lake tables.', source: 'https://learn.microsoft.com/en-us/azure/databricks/delta/merge' },
   ],
   12: [

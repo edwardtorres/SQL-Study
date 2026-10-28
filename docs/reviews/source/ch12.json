@@ -1,0 +1,220 @@
+{
+  "chapterId": 12,
+  "reviewer": "source-pass agent (independent; did not write these lessons)",
+  "findings": [
+    {
+      "where": "c12-s1",
+      "claim": "paragraph 1: 'An index keeps the values of one or more columns in an order the database can search. With an index on the column a condition names, the database can find the matching rows directly instead of reading every row.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/indexes-intro.html (11.1): 'it can use a more efficient method for locating matching rows. For instance, it might only have to walk a few levels deep into a search tree.' The page describes a search tree, which is the default B-tree. 'Directly' is the same claim as a more efficient method. The page scans every row only when no index is used.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s1",
+      "claim": "paragraph 2: 'The planner chooses between reading the table and using an index. Its choice depends on the condition and on its statistics about the table, and it can decide not to use an index when reading the table is cheaper.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/indexes-intro.html: the planner 'will use the index in queries when it thinks doing so would be more efficient than a sequential table scan'; ANALYZE 'to update statistics to allow the query planner to make educated decisions'; Chapter 14 covers 'when and why the planner might choose not to use an index'. https://www.postgresql.org/docs/18/planner-stats.html: the planner estimates row counts and WHERE selectivity from statistics. The choice is a cost comparison that also uses the planner cost settings: https://www.postgresql.org/docs/18/runtime-config-query.html (19.7.2): random_page_cost defaults to 4.0, and 'Reducing this value relative to seq_page_cost will cause the system to prefer index scans'. https://www.postgresql.org/docs/18/using-explain.html: a small table is planned as a sequential scan because 'the planner thinks (quite correctly) that this sample table is too small to bother with an index scan'. Condition, statistics and the decision not to use an index are supported. 'Depends on its statistics' leaves out the cost settings. Statistics are an input to the choice, not its only basis.",
+      "suggestedFix": "The planner chooses between reading the table and using an index by comparing estimated costs. The estimates come from statistics about the table and from the condition, together with the planner's cost settings, and the planner can decide not to use an index when reading the table is cheaper."
+    },
+    {
+      "where": "c12-s1",
+      "claim": "demonstration: 'The engine plans a lookup on the primary key of the large table with an index scan. The plan is the engine’s own output.'",
+      "verdict": "supported",
+      "evidence": "Local check on the engine version (PGlite 0.5.12, PostgreSQL 18.6), sample seed 104729, in a scratch script outside the repo: EXPLAIN SELECT id, status FROM shipment_scans_large WHERE id = 42 gives 'Index Scan using shipment_scans_large_pkey' with 'Index Cond: (id = 42)'. Index scan nodes are described at https://www.postgresql.org/docs/18/using-explain.html. The content check remains the authority for the stored plan.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s1",
+      "claim": "demonstration: 'Wrapping id in an expression changes the plan the engine chooses for the same lookup.'",
+      "verdict": "supported",
+      "evidence": "Local check (same engine and seed): EXPLAIN ... WHERE id + 0 = 42 gives 'Seq Scan on shipment_scans_large' with 'Filter: ((id + 0) = 42)'. https://www.postgresql.org/docs/18/indexes-expressional.html: a query can use an index on an expression only 'if one has been defined on the result' of that expression, so the plain primary-key index does not match id + 0.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s1",
+      "claim": "predict explanation: 'The table has a scan with id 42, and the primary key is unique, so the lookup returns that one row. On a table this large, a lookup by a key with an index is the case the index serves.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/ddl-constraints.html: 'A primary key constraint indicates that a column, or group of columns, can be used as a unique identifier for rows in the table' and 'Adding a primary key will automatically create a unique B-tree index'. https://www.postgresql.org/docs/18/indexes-intro.html (11.1): without an index the system 'would have to scan the entire test1 table'. The seed defines id as PRIMARY KEY, with ids 1 to 20000 (src/data/seed.ts, LARGE_SCANS_SQL). The count is the engine's (answerRows 1) and was not recomputed.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s1",
+      "claim": "predict options: a 'One row, scan 42' (answer, id a); b 'Twenty thousand rows, one for each scan'; c 'Zero rows, because the primary key has gaps'.",
+      "verdict": "supported",
+      "evidence": "Answer id a and its wording match the explanation. The explanation does not address option c. The seed's ids run 1 to 20000 with no gaps, so an optional sentence would close it. https://www.postgresql.org/docs/18/ddl-constraints.html supports the unique primary key used in the explanation.",
+      "suggestedFix": "Optional: 'The ids run from 1 to 20000 with no gaps, so a lookup of 42 finds one scan.'"
+    },
+    {
+      "where": "c12-s1",
+      "claim": "commonMistakes INDEX_WRONG_COLUMN: 'An index on a different column does not help a condition on another column. A lookup by shipment_id needs an index on shipment_id, and an index on id, which already has one, does not help it.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/indexes-intro.html: an index serves a clause on 'the indexed column'. https://www.postgresql.org/docs/18/indexes-multicolumn.html: 'A multicolumn B-tree index can be used with query conditions that involve any subset of the index's columns', so an index is unhelpful for a condition only when it does not include that column. For a single-column index the sentence is right. The pg_indexes check on the engine lists only shipment_scans_large_pkey, and shipment_id has no index. The phrase 'which already has one' is garbled.",
+      "suggestedFix": "A single-column index does not help a condition on another column. A lookup by shipment_id needs an index that starts with shipment_id. The primary-key index on id already exists, and it does not help a lookup by shipment_id."
+    },
+    {
+      "where": "c12-s1",
+      "claim": "commonMistakes FUNCTION_ON_INDEXED_COLUMN: 'A function or a cast around the indexed column means the condition no longer compares the column itself, so the planner may not use the index and reads the table instead.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/indexes-intro.html: the indexable form is 'indexed-column indexable-operator comparison-value'. https://www.postgresql.org/docs/18/indexes-expressional.html: an expression needs an index on that expression. Local engine check: the expression plan is a Seq Scan (see demonstration 2). The 'may not' hedge fits the docs.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s2",
+      "claim": "paragraph 1: 'EXPLAIN shows the execution plan the planner chose. The plan shows how the table is read, by a sequential scan, an index scan and so on, and it lists each grouping or sort that follows.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-explain.html: 'The execution plan shows how the table(s) referenced by the statement will be scanned — by plain sequential scan, index scan, etc.' The first two sentences are supported. https://www.postgresql.org/docs/18/using-explain.html shows Sort nodes ('Sort Key: unique1', 'Incremental Sort'). Grouping nodes are not described on either checked page. The local engine plan shows a HashAggregate, but no checked page documents it.",
+      "suggestedFix": "EXPLAIN shows the execution plan the planner chose. The plan shows how the table is read, by a sequential scan, an index scan and so on, and it lists the sort steps and other nodes that follow."
+    },
+    {
+      "where": "c12-s2",
+      "claim": "paragraph 2: 'EXPLAIN without ANALYZE plans the statement and does not run it. The ANALYZE option runs the statement, so no ticket uses it.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-explain.html: 'The ANALYZE option causes the statement to be actually executed, not only planned.' and 'Keep in mind that the statement is actually executed when the ANALYZE option is used.' The grader rejects EXPLAIN ANALYZE (src/grader/structure.ts, around line 74), so 'no ticket uses it' matches the repository.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s2",
+      "claim": "paragraph 2: 'The seed runs ANALYZE on the large table, so the planner has statistics for it and its plans are stable.'",
+      "verdict": "partly supported",
+      "evidence": "The seed runs the ANALYZE command: src/data/seed.ts LARGE_SCANS_SQL ends with 'ANALYZE;', and the local engine shows last_analyze set for shipment_scans_large. That is the ANALYZE command, not the EXPLAIN option named in the sentence before it, so one paragraph uses the word for two different things. Stability is not supported in general. https://www.postgresql.org/docs/18/using-explain.html: the statistics 'are taken from a randomized sample of the table', and an estimate 'can change after each ANALYZE command'. https://www.postgresql.org/docs/18/sql-explain.html: statistics should be up to date. Not tested here: whether repeated runs of the same seed give identical plans.",
+      "suggestedFix": "The seed runs the ANALYZE command (a statistics command, not the EXPLAIN option) on the large table, so the planner has statistics for it. Those statistics are estimates from a sample, and a later ANALYZE can change them, which can change a plan."
+    },
+    {
+      "where": "c12-s2",
+      "claim": "predict explanation: 'Four statuses appear in the scans table, and the grouping returns one row for each. The plan for this query shows how the table is read to produce those four counts.'",
+      "verdict": "supported",
+      "evidence": "Sample: shipment_scans_large status takes four values, booked, loaded, arrived and delivered (src/data/seed.ts, and the local DISTINCT check). The plan sentence matches https://www.postgresql.org/docs/18/sql-explain.html ('the table(s) referenced by the statement will be scanned'). The count is the engine's (answerRows 4) and was not recomputed.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s2",
+      "claim": "predict options: a 'Four rows, one for each status' (answer, id a); b 'Twenty thousand rows, one for each scan'; c 'One row, the total'.",
+      "verdict": "supported",
+      "evidence": "Answer id a matches the explanation and the four statuses in the seed. Options b and c describe groupings the query does not make, as the explanation implies. The count is the engine's (answerRows 4).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s2",
+      "claim": "commonMistakes INDEX_MISSING: 'A plan that reads the whole table, with a sequential scan, means every row was read. When the condition uses a column with no index, an index on that column is the fix.'",
+      "verdict": "partly supported",
+      "evidence": "First sentence supported: https://www.postgresql.org/docs/18/using-explain.html says a query with no WHERE clause 'must scan all the rows of the table', and that a filtered Seq Scan 'will still have to visit all 10000 rows'. Second sentence overstates. https://www.postgresql.org/docs/18/indexes-intro.html: the planner uses an index 'when it thinks doing so would be more efficient than a sequential table scan'. https://www.postgresql.org/docs/18/indexes-multicolumn.html: where the leading column has many distinct values, 'in most cases the planner will prefer a sequential table scan over using the index'. An index can help a selective condition; it is not always the fix.",
+      "suggestedFix": "A plan that reads the whole table, with a sequential scan, means every row was read. When the condition uses a column with no index, the planner cannot narrow the read with an index. An index on that column can help when the condition matches few rows, and the planner may still choose a sequential scan when it matches many."
+    },
+    {
+      "where": "c12-s2",
+      "claim": "demonstration: 'Grouping by status reads every scan, because no index covers status. The plan is the engine’s own output.'",
+      "verdict": "partly supported",
+      "evidence": "Local engine plan: 'HashAggregate, Group Key: status, -> Seq Scan on shipment_scans_large', with rows=20000. The sample has an index only on the primary key (src/data/seed.ts schema description; pg_indexes check). 'Reads every scan' is supported. The causal 'because no index covers status' is not. https://www.postgresql.org/docs/18/using-explain.html: 'Since this query has no WHERE clause, it must scan all the rows of the table, so the planner has chosen to use a simple sequential scan plan.' The docs give the missing WHERE clause as the reason. An index covering status could still be considered (https://www.postgresql.org/docs/18/indexes-index-only-scans.html), so the sample does not show the 'because'.",
+      "suggestedFix": "Grouping by status has no WHERE clause, so the plan reads every scan. The plan is the engine’s own output."
+    },
+    {
+      "where": "c12-s2",
+      "claim": "demonstration: 'A range on the primary key reads only the scans in the range.'",
+      "verdict": "supported",
+      "evidence": "Local engine plan for EXPLAIN ... WHERE id BETWEEN 100 AND 110: 'Index Scan using shipment_scans_large_pkey' with 'Index Cond: ((id >= 100) AND (id <= 110))'. https://www.postgresql.org/docs/18/using-explain.html: an index scan visits the index entries that match the index condition.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s3",
+      "claim": "paragraph 1: 'SELECT * asks for every column. The query returns columns that the report does not need, and a column added later changes what the report receives.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html (7.3.2): 'The simplest kind of select list is * which emits all columns that the table expression produces.' A column added to the table therefore appears in the output. The section is not in c12-s3's citations; adding it would cover this sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s3",
+      "claim": "paragraph 2: 'A LIKE pattern that begins with a wildcard matches the end of a value, so a search cannot start from a known prefix. A pattern that begins with fixed text can start its search from that text.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html: 'LIKE pattern matching always covers the entire string. Therefore, if it's desired to match a sequence anywhere within a string, the pattern must start and end with a percent sign.' The matching semantics are supported. The index claim is not stated. https://www.postgresql.org/docs/18/indexes-opclass.html: text_pattern_ops is 'suitable for use by queries involving pattern matching expressions (LIKE ...) when the database does not use the standard C locale', and in the C locale the default operator class is usable. So a prefix search uses a B-tree index only with a pattern operator class or the C collation. The anchored-prefix condition is implied, not stated. The sample has no index on status, so no demonstration covers this.",
+      "suggestedFix": "A LIKE pattern that begins with a wildcard matches the end of a value, so no fixed prefix is known for a search to start from. A pattern that begins with fixed text can use a B-tree index for LIKE only when the index has a pattern operator class such as text_pattern_ops or the database uses the C locale. The default operator class is not suitable for LIKE in other locales (https://www.postgresql.org/docs/18/indexes-opclass.html)."
+    },
+    {
+      "where": "c12-s3",
+      "claim": "predict explanation: 'A scan is delivered when its id leaves remainder 3 on division by 4, so scans 3, 7, 11 and onward are delivered. Up to id 50 there are twelve of them.'",
+      "verdict": "supported",
+      "evidence": "The rule matches the seed: src/data/seed.ts LARGE_SCANS_SQL maps status to ARRAY[...][1 + g % 4], so delivered is g % 4 = 3. The local engine check found no delivered scan with a remainder other than 3, and no remainder-3 scan that is not delivered. The first delivered ids up to 50 follow the stated rule. The count of twelve is the engine's (answerRows 12) and was not recomputed as a check.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s3",
+      "claim": "predict options: a 'Twelve rows, the delivered scans among the first fifty' (answer, id a); b 'Fifty rows, one for each scan'; c 'Thirteen rows, including scan 51'.",
+      "verdict": "supported",
+      "evidence": "Answer id a and its wording match the explanation. Option c (scan 51) is excluded by the query's id <= 50 bound, which the explanation's 'up to id 50' covers. The count is the engine's (answerRows 12).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c12-s3",
+      "claim": "commonMistakes SELECT_STAR_COST: 'SELECT * reads and returns every column. A report that needs two columns gets more work and a wider result, and a later change to the table changes the report.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-select-lists.html: '*' emits all columns the table expression produces. This supports 'returns every column', the wider result, and the effect of a later change. 'Reads' and 'more work' are not stated on any checked page. The related documented cost is in https://www.postgresql.org/docs/18/indexes-index-only-scans.html: an index-only scan needs the query to reference only columns stored in the index, which SELECT * usually prevents. That point is not in the text.",
+      "suggestedFix": "SELECT * returns every column (https://www.postgresql.org/docs/18/queries-select-lists.html). A report that needs two columns gets a wider result, and a later change to the table changes the report."
+    },
+    {
+      "where": "c12-s3",
+      "claim": "commonMistakes LEADING_WILDCARD: 'A leading wildcard matches any value that ends the same way, so the rows it returns change as well as its speed. Put the wildcard at the end when the ticket asks for a prefix.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-matching.html: the pattern covers the entire string, so a leading % matches values that end the same way, and the rows returned change. The speed claim is not in the docs. The index behaviour is in https://www.postgresql.org/docs/18/indexes-opclass.html (see c12-s3 paragraph 2). The sentence attributes the row change to the wildcard position in a way that reads as cause, when the difference is the pattern itself.",
+      "suggestedFix": "A leading wildcard matches any value that ends the same way, so '%ed' returns different rows from 'ed%'. Put the wildcard at the end when the ticket asks for a prefix, because a prefix pattern can use a suitable B-tree index (https://www.postgresql.org/docs/18/indexes-opclass.html)."
+    },
+    {
+      "where": "c12-s3",
+      "claim": "demonstration: 'Every status in the scans table ends in ed, so a pattern that starts with a wildcard and ends in ed matches every scan.'",
+      "verdict": "supported",
+      "evidence": "Local engine check: the scans table has four distinct statuses, arrived, booked, delivered and loaded, and no row has a status NOT LIKE '%ed'. https://www.postgresql.org/docs/18/functions-matching.html: % matches any sequence, including the empty one.",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": { "supported": 14, "partly supported": 9, "unsupported": 0, "contradicted": 0, "unverified": 0 },
+  "curriculum": [
+    {
+      "where": "curriculum ch12 T-SQL",
+      "claim": "dialect note: 'SQL Server documents its own execution plan operators and displays.' and 'PostgreSQL EXPLAIN is documented on postgresql.org.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans: its contents include 'Logical and physical showplan operator reference' and 'Display and save execution plans'. The PostgreSQL side is https://www.postgresql.org/docs/18/sql-explain.html, which was checked.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch12 Spark SQL",
+      "claim": "dialect note: 'Spark EXPLAIN displays logical and physical plans for a query.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://spark.apache.org/docs/latest/sql-ref-syntax-qry-explain.html: 'The EXPLAIN statement is used to provide logical/physical plans for an input statement.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch12 Spark SQL",
+      "claim": "dialect note: 'Read Spark plan output against its own reference, not PostgreSQL EXPLAIN.'",
+      "verdict": "unverified",
+      "evidence": "Advice about how to read a different engine's output. No page states it. The Spark page documents its own EXPLAIN modes (EXTENDED, CODEGEN, COST, FORMATTED), which supports the instruction to use Spark's own reference.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch13 T-SQL",
+      "claim": "dialect note: 'State the target dialect in an interview before using dialect-specific syntax such as TOP.' (factual part: TOP is dialect-specific syntax)",
+      "verdict": "supported",
+      "evidence": "Listed source https://learn.microsoft.com/en-us/sql/t-sql/queries/select-transact-sql documents 'TOP ( expression ) [ PERCENT ] [ WITH TIES ]' as T-SQL SELECT syntax. PostgreSQL uses LIMIT instead, which the chapter-13 lessons and the curriculum note already use.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch13 T-SQL",
+      "claim": "dialect note: 'State the target dialect in an interview before using dialect-specific syntax such as TOP.' (advice part)",
+      "verdict": "unverified",
+      "evidence": "Interview advice. No checked page states it. The sentence is a convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch13 Spark SQL",
+      "claim": "dialect note: 'The Spark SELECT reference describes the statement and states that it conforms to the ANSI SQL standard.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select.html, section 'ANSI Compliance': 'Spark supports a SELECT statement and conforms to the ANSI SQL standard.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch13 Spark SQL",
+      "claim": "dialect note: 'When an interview names Spark SQL, say which Spark behavior your answer depends on.'",
+      "verdict": "unverified",
+      "evidence": "Interview advice. No checked page states it.",
+      "suggestedFix": ""
+    }
+  ],
+  "curriculumSummary": { "supported": 4, "partly supported": 0, "unsupported": 0, "contradicted": 0, "unverified": 3 }
+}

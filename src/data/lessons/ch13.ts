@@ -8,8 +8,8 @@ export const lesson13: Lesson = {
       id: 'c13-s1',
       title: 'Top-N per group and the second-highest value',
       paragraphs: [
-        'A top-N question ranks rows inside each group and keeps the first N. ROW_NUMBER gives every row its own number, so exactly N rows survive when the order is unique. RANK and DENSE_RANK give equal values the same number, so a filter on the number can keep more rows than the question asks for.',
-        'The second-highest distinct value is the value with DENSE_RANK equal to 2, because DENSE_RANK does not skip numbers after a tie. A second sort column makes the choice of rows reproducible when values tie.',
+        'A top-N question ranks rows inside each group, in descending order, and keeps the rows numbered 1 to N. ROW_NUMBER gives every row its own number, so exactly N rows survive for each group that has at least N rows, when the order is unique. RANK and DENSE_RANK give equal values the same number, so a filter on the number can keep more rows than the question asks for.',
+        'The second-highest distinct value is the value with DENSE_RANK equal to 2 in descending order, because DENSE_RANK does not skip numbers after a tie. A second sort column makes the choice of rows reproducible when values tie.',
       ],
       example: 'SELECT customer_id, COUNT(*)::integer AS shipments\nFROM shipments\nGROUP BY customer_id\nORDER BY customer_id;',
       predict: {
@@ -36,7 +36,7 @@ export const lesson13: Lesson = {
       id: 'c13-s2',
       title: 'Islands, gaps and running totals',
       paragraphs: [
-        'Gaps-and-islands groups consecutive values. Within a run of consecutive ids, the id minus its row number stays the same, so that difference labels each island. A missing value breaks the run, and a repeated row shifts the row numbers, so remove repeats and gaps before numbering.',
+        'Gaps-and-islands groups consecutive values. Within a run of consecutive ids, the id minus its row number stays the same, so that difference labels each island. A scan with no status breaks the run, and a repeated row shifts the row numbers, so remove the repeats and the scans with no status before numbering.',
         'A running total is a window that sums from the first row of its partition to the current row. Its frame is ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW. The default frame is RANGE, which takes in every row that ties with the current row.',
       ],
       example: 'SELECT DISTINCT id\nFROM staging_scans\nWHERE status IS NOT NULL AND id BETWEEN 1000 AND 1010\nORDER BY id;',
@@ -52,7 +52,7 @@ export const lesson13: Lesson = {
         explanation: 'Scan 1008 is not in the staging table, and scan 1005 has no status. Scan 1007 appears twice, so DISTINCT counts it once. That leaves nine ids.',
       },
       commonMistakes: [
-        { mistake: 'STREAK_GAP_MISSED', text: 'A scan with no status is a gap in the feed. Keeping it joins the islands on either side, so one long streak looks like two runs, and the gap that the ticket asks for is missed.' },
+        { mistake: 'STREAK_GAP_MISSED', text: 'A scan with no status is a gap in the feed. Keeping it joins the islands on either side, so two separate runs look like one long streak, and the gap that the ticket asks for is missed.' },
         { mistake: 'FRAME_DEFAULT', text: 'The default frame is RANGE, so rows that tie on the ORDER BY share one running total. Naming ROWS gives each row its own total, which is what a running total needs.' },
       ],
       citations: ['pg-rows-mode', 'pg-frame-default-meaning'],
@@ -65,8 +65,8 @@ export const lesson13: Lesson = {
       id: 'c13-s3',
       title: 'Month-over-month, cohorts and pivots',
       paragraphs: [
-        'Calendar months depend on the time zone. Cutting a timestamp to a month uses the session time zone unless the timestamp is converted first, so AT TIME ZONE ‘UTC’ gives a plain timestamp in UTC and the month boundaries are UTC boundaries.',
-        'A cohort is measured against the customers who started in that month, so each customer counts once, in the month of the first booking. A pivot turns one row per status into one column per status, and each SUM over a CASE needs an ELSE 0, or a status with no shipments shows an empty cell instead of zero.',
+        'Calendar months depend on the time zone. Cutting a timestamp with time zone to a month uses the session time zone unless the value is converted first, so AT TIME ZONE ‘UTC’ gives a plain timestamp in UTC and the month boundaries are UTC boundaries.',
+        'A cohort is measured against the customers who started in that month, so each customer counts once, in the month of the first booking. A pivot turns one row per status into one column per status, and each SUM over a CASE needs an ELSE 0 (or a COALESCE around the sum), or a status with no shipments shows an empty cell instead of zero.',
       ],
       example: "SELECT to_char(date_trunc('month', booked_at AT TIME ZONE 'UTC'), 'YYYY-MM') AS month, COUNT(*)::integer AS shipments\nFROM shipments\nGROUP BY 1\nORDER BY 1;",
       predict: {

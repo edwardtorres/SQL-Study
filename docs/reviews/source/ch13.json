@@ -1,0 +1,230 @@
+{
+  "chapterId": 13,
+  "reviewer": "source-pass agent (independent; did not write these lessons)",
+  "findings": [
+    {
+      "where": "c13-s1",
+      "claim": "paragraph 1: 'ROW_NUMBER gives every row its own number, so exactly N rows survive when the order is unique.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: row_number 'Returns the number of the current row within its partition, counting from 1.' https://www.postgresql.org/docs/18/tutorial-window.html: 'row_number window function assigns sequential numbers to the rows within each partition ... (with tied rows numbered in an unspecified order)', and its top-N example keeps 'row_number less than 3 (that is, the first two rows for each department)'. Exactly N survive only in each group that has at least N rows. The sentence leaves that out.",
+      "suggestedFix": "A top-N question ranks rows inside each group and keeps the first N. ROW_NUMBER gives every row its own number, so when the order is unique, exactly N rows survive in each group that has at least N rows."
+    },
+    {
+      "where": "c13-s1",
+      "claim": "paragraph 1: 'RANK and DENSE_RANK give equal values the same number, so a filter on the number can keep more rows than the question asks for.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: rank 'Returns the rank of the current row, with gaps; that is, the row_number of the first row in its peer group'; dense_rank 'without gaps; this function effectively counts peer groups'; and 'Rows that are not distinct when considering only the ORDER BY columns are said to be peers. The four ranking functions ... give the same answer for all rows of a peer group.' A filter on the number therefore keeps every peer.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s1",
+      "claim": "paragraph 2: 'The second-highest distinct value is the value with DENSE_RANK equal to 2, because DENSE_RANK does not skip numbers after a tie.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: dense_rank has no gaps, so the second distinct value gets rank 2 (supported). The value is second-highest only when the ORDER BY is descending. The paragraph does not say so; the common-mistake text does.",
+      "suggestedFix": "Sorted from highest to lowest, the second-highest distinct value is the value with DENSE_RANK equal to 2, because DENSE_RANK does not skip numbers after a tie."
+    },
+    {
+      "where": "c13-s1",
+      "claim": "paragraph 2: 'A second sort column makes the choice of rows reproducible when values tie.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/queries-order.html: 'When more than one expression is specified, the later values are used to sort rows that are equal according to the earlier values.' https://www.postgresql.org/docs/18/tutorial-window.html: tied rows are 'numbered in an unspecified order', and its top-N example adds 'empno' as a second key. A second key makes the choice reproducible only when the combined keys are unique within the group.",
+      "suggestedFix": "A second sort column that is unique within the group, such as the id, breaks the ties, so the choice of rows is the same on every run."
+    },
+    {
+      "where": "c13-s1",
+      "claim": "predict explanation: 'Customers 7 and 8 have no shipments, so grouping shipments leaves them out. Six customers remain, and each group becomes one row.'",
+      "verdict": "supported",
+      "evidence": "Sample: src/data/seed.ts gives customer_id = index % 6 + 1 with the comment 'IDs 7 and 8 deliberately have no shipments'. Local engine check: 8 customers, 6 distinct customer_id values in shipments, no NULL customer_id. https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3): GROUP BY 'combine[s] each set of rows having common values into one group row'. The count is the engine's (answerRows 6) and was not recomputed.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s1",
+      "claim": "predict options: a 'Six, one for each customer with shipments' (answer, id a); b 'Eight, one for each customer in the table'; c 'Two hundred and forty, one for each shipment'.",
+      "verdict": "supported",
+      "evidence": "Answer id a matches the explanation. Options b and c are not addressed by the explanation. Option b describes the customer table and option c the shipment table, and a GROUP BY on shipments returns neither. The count is the engine's (answerRows 6).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s1",
+      "claim": "commonMistakes RANK_VS_ROW_NUMBER: 'RANK gives tied rows the same number and skips the next one. A filter on that number keeps every tied row, so it can return more rows than the top N asked for.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: rank 'with gaps; that is, the row_number of the first row in its peer group', so tied rows share a number and the next number is skipped. A filter on rank <= N keeps every peer of the cut-off row.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s1",
+      "claim": "commonMistakes SECOND_HIGHEST_RANK: 'The second-highest distinct value is rank 2 under DENSE_RANK, sorted from highest to lowest. Sorting from lowest to highest gives the second-lowest value instead.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: dense_rank 'without gaps; this function effectively counts peer groups'. With an ascending ORDER BY, rank 2 is the second-lowest distinct value, as the text says.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s1",
+      "claim": "demonstration: 'Customers 7 and 8 have no shipments, so a group-by on shipments leaves them out.'",
+      "verdict": "supported",
+      "evidence": "Local engine check: SELECT ... FROM customers WHERE id NOT IN (SELECT customer_id FROM shipments) returns customers 7 and 8. shipments.customer_id has no NULLs, so NOT IN is safe here. The group-by rule is at https://www.postgresql.org/docs/18/queries-table-expressions.html (7.2.3).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "paragraph 1: 'Gaps-and-islands groups consecutive values. Within a run of consecutive ids, the id minus its row number stays the same, so that difference labels each island.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-window.html: row_number 'counting from 1'. For consecutive ids in ORDER BY order, id minus row number is constant, which is arithmetic from that definition. The pattern itself has no PostgreSQL page. The repository's own item reference (src/data/items/ch13.ts) uses this pattern.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "paragraph 1: 'A missing value breaks the run, and a repeated row shifts the row numbers, so remove repeats and gaps before numbering.'",
+      "verdict": "partly supported",
+      "evidence": "The method is right, but 'gaps' is used for two things. A missing id ends an island by itself, and must not be closed. The lesson's 'gap' is a no-status scan, which the query removes before numbering, so the missing id shows as a break. Local engine check: the item reference (WHERE status IS NOT NULL, then DISTINCT and numbering) gives islands 1000-1004, 1006-1007, 1009-1015, 1017-1026, 1028-1037, 1039. Keeping the no-status row merges the runs. https://www.postgresql.org/docs/18/functions-window.html gives the row_number definition behind the repeat point. Read literally, 'remove ... gaps' suggests closing gaps, which would merge the islands.",
+      "suggestedFix": "A missing id breaks the run, and a repeated row shifts the row numbers. Before numbering, remove the repeated rows and the rows with no status, so the id that is left out shows as a break in the run."
+    },
+    {
+      "where": "c13-s2",
+      "claim": "paragraph 2: 'A running total is a window that sums from the first row of its partition to the current row. Its frame is ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html (4.2.8): 'A frame_start of UNBOUNDED PRECEDING means that the frame starts with the first row of the partition'; 'In ROWS mode, CURRENT ROW simply means the current row.' The frame syntax is at the same page, '{ RANGE | ROWS | GROUPS } BETWEEN frame_start AND frame_end'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "paragraph 2: 'The default frame is RANGE, which takes in every row that ties with the current row.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html: 'The default framing option is RANGE UNBOUNDED PRECEDING ... With ORDER BY, this sets the frame to be all rows from the partition start up through the current row's last ORDER BY peer. Without ORDER BY, ... all rows of the partition are included.' The paragraph omits that the tie rule applies when there is an ORDER BY. The rule is documented; the omission is minor.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "predict explanation: 'Scan 1008 is not in the staging table, and scan 1005 has no status. Scan 1007 appears twice, so DISTINCT counts it once. That leaves nine ids.'",
+      "verdict": "supported",
+      "evidence": "Sample: src/data/seed.ts addStaging gives staging_scans ids 1000 to 1039, with index 8 repeating 1007 so 1008 is absent, and index % 11 === 5 giving NULL status (1005 among them). Local engine check of the named ids 1000 to 1010: 1005 has no status, 1007 appears twice, 1008 is absent. The count of nine is the engine's (answerRows 9) and was not recomputed. The DISTINCT rule is https://www.postgresql.org/docs/18/queries-select-lists.html (7.3.3).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "predict options: a 'Nine, the distinct ids with a status' (answer, id a); b 'Ten, every id in the range that has a status'; c 'Eleven, one for each staged row in the range'.",
+      "verdict": "supported",
+      "evidence": "Answer id a matches the explanation. Option c is not addressed by the explanation. Option c counts staged rows, which include the repeated 1007 and the no-status 1005; the query returns distinct ids that have a status, so option c is wrong for this query. The count of nine is the engine's (answerRows 9) and was not recomputed.",
+      "suggestedFix": "Optional: 'Option c counts staged rows, but the query keeps only distinct ids that have a status.'"
+    },
+    {
+      "where": "c13-s2",
+      "claim": "commonMistakes STREAK_GAP_MISSED (first sentence): 'A scan with no status is a gap in the feed.'",
+      "verdict": "unverified",
+      "evidence": "A labelled convention. src/data/seed.ts describes the staging feed as holding 'duplicates, orphaned shipment ids and NULLs on purpose'. The NULL status is a data-quality defect in the feed, and the word 'gap' is the lesson's term. No checked page covers it.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "commonMistakes STREAK_GAP_MISSED (second sentence): 'Keeping it joins the islands on either side, so one long streak looks like two runs, and the gap that the ticket asks for is missed.'",
+      "verdict": "contradicted",
+      "evidence": "The mechanism is right and the direction is reversed. Local engine check: keeping the no-status row gives islands 1000-1007 and 1009-1039, so two runs (1000-1004 and 1006-1007) look like one long streak. The sentence says the reverse. Source: the same engine check; https://www.postgresql.org/docs/18/functions-window.html for the numbering.",
+      "suggestedFix": "Keeping the row joins the islands on either side, so two runs look like one long streak, and the gap that the ticket asks for is missed."
+    },
+    {
+      "where": "c13-s2",
+      "claim": "commonMistakes FRAME_DEFAULT: 'The default frame is RANGE, so rows that tie on the ORDER BY share one running total. Naming ROWS gives each row its own total, which is what a running total needs.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/sql-expressions.html: the default frame is RANGE through the current row's last ORDER BY peer, so tied rows get the same total; 'In ROWS mode, CURRENT ROW simply means the current row', so ROWS gives each row its own total. The 'what a running total needs' part is a design statement.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "demonstration: 'Without DISTINCT the same range counts scan 1007 twice, so the count of rows with a status is larger than the count of ids.'",
+      "verdict": "supported",
+      "evidence": "Local engine check of the demonstration SQL: rows with a status in 1000 to 1010 = 10, while the distinct ids in the same range = 9. The comparison uses the example's DISTINCT count; the demonstration query itself returns only the row count.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s2",
+      "claim": "demonstration: 'The engine plans a window over customer partitions with a sort first. The plan is the engine’s own output.'",
+      "verdict": "supported",
+      "evidence": "Local engine plan: 'WindowAgg, Window: w1 AS (PARTITION BY customer_id ORDER BY booked_at, id), -> Sort, Sort Key: customer_id, booked_at, id, -> Seq Scan on shipments'. https://www.postgresql.org/docs/18/using-explain.html shows Sort nodes below the plan node that needs sorted input.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 1 (first sentence): 'Calendar months depend on the time zone.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html (9.9.2 date_trunc): 'When the input value is of type timestamp with time zone, the truncation is performed with respect to a particular time zone ... By default, truncation is done with respect to the current TimeZone setting.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 1 (second sentence): 'Cutting a timestamp to a month uses the session time zone unless the timestamp is converted first'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html (9.9.2): the session time zone applies to a timestamp with time zone. A plain timestamp has no zone to apply. Local engine check: with the session set to America/Los_Angeles, date_trunc('month', timestamptz '2026-01-01 04:00:00+00') gives 2025-12-01 00:00-08, and after AT TIME ZONE 'UTC' it gives 2026-01-01 00:00. The sample column booked_at is timestamp with time zone (information_schema). The sample's session is UTC, so the sample cannot show the session effect.",
+      "suggestedFix": "Cutting a timestamp with time zone to a month uses the session time zone unless it is converted first."
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 1 (third sentence): 'so AT TIME ZONE ‘UTC’ gives a plain timestamp in UTC and the month boundaries are UTC boundaries.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-datetime.html (9.9.4): 'timestamp with time zone AT TIME ZONE zone → timestamp without time zone', and 'Converts given time stamp with time zone to time stamp without time zone, as the time would appear in that zone.' Local engine check: the converted month boundary is 2026-01-01 00:00. The paragraph's ‘UTC’ uses typographic quotes, while the SQL uses straight quotes. That is cosmetic.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 2: 'A cohort is measured against the customers who started in that month, so each customer counts once, in the month of the first booking.'",
+      "verdict": "unverified",
+      "evidence": "A design convention. No PostgreSQL page defines a cohort. The chapter has no cohort demonstration.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 2: 'A pivot turns one row per status into one column per status,'",
+      "verdict": "unverified",
+      "evidence": "A design term for a CASE-based crosstab. https://www.postgresql.org/docs/18/functions-conditional.html covers CASE, and no page defines pivot. Keep as a labelled convention.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "paragraph 2: 'and each SUM over a CASE needs an ELSE 0, or a status with no shipments shows an empty cell instead of zero.'",
+      "verdict": "partly supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-aggregate.html: 'except for count, these functions return a null value when no rows are selected. In particular, sum of no rows returns null, not zero ... The coalesce function can be used to substitute zero ... for null when necessary.' ELSE 0 does work, but 'needs' is too strong: COALESCE(SUM(...), 0) also works. The empty-cell result is supported.",
+      "suggestedFix": "Each SUM over a CASE needs an ELSE 0, or the SUM needs COALESCE(..., 0), or a status with no shipments shows an empty cell instead of zero (https://www.postgresql.org/docs/18/functions-aggregate.html)."
+    },
+    {
+      "where": "c13-s3",
+      "claim": "predict explanation: 'The shipments are booked in late December 2025 and in January 2026, both in UTC, so grouping by UTC month gives two rows.'",
+      "verdict": "supported",
+      "evidence": "Local engine check of the distinct UTC months in shipments: 2025-12 and 2026-01. Sample: src/data/seed.ts gives booked_at = 2025-12-28 plus 2 hours per index, and two shipments are overridden to 2026-01-31. The count of two is the engine's (answerRows 2) and was not recomputed.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "predict options: a 'Two, December 2025 and January 2026' (answer, id a); b 'Twelve, one for each month of the year'; c 'Two hundred and forty, one for each shipment'.",
+      "verdict": "supported",
+      "evidence": "Answer id a matches the explanation and the two UTC months found in the sample. Options b and c are not addressed by the explanation. Option b describes twelve months and option c one row per shipment, but the query returns one row per UTC month. The count is the engine's (answerRows 2).",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "commonMistakes MONTH_BOUNDARY_TZ: 'A timestamp moved by a fixed offset before the month is cut lands in the wrong month near midnight. The shipment booked at midnight UTC on 1 January counts in December after an eight-hour shift.'",
+      "verdict": "supported",
+      "evidence": "Local engine check: shipment id 49 is booked at 2026-01-01 00:00 UTC (the only one at that instant). utc_month is 2026-01, and the shifted month, booked_at - INTERVAL '8 hours', is 2025-12. https://www.postgresql.org/docs/18/functions-datetime.html: interval arithmetic on a timestamp with time zone. Also supports the 'fixed offset' point.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "commonMistakes PIVOT_CASE_ELSE: 'A CASE without an ELSE gives NULL for the other rows, and a SUM over only NULL values is NULL. A status with no shipments then shows an empty cell instead of 0.'",
+      "verdict": "supported",
+      "evidence": "https://www.postgresql.org/docs/18/functions-conditional.html: 'If the ELSE clause is omitted and no condition is true, the result is null.' https://www.postgresql.org/docs/18/functions-aggregate.html: sum 'Computes the sum of the non-null input values', and 'sum of no rows returns null'. An all-NULL input has no non-null values, so the sum is NULL. The all-NULL case is implied, not stated. The functions-aggregate page is not in c13-s3's citations; adding it would cover this sentence.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "c13-s3",
+      "claim": "demonstration: 'The shipment booked at midnight UTC on 1 January 2026 is in January in UTC. After an eight-hour shift it falls in December.'",
+      "verdict": "supported",
+      "evidence": "Local engine check of the demonstration SQL: id 49, booked_at 2026-01-01T00:00:00Z, utc_month 2026-01, shifted_month 2025-12. Session TimeZone is UTC in the engine (SHOW timezone).",
+      "suggestedFix": ""
+    }
+  ],
+  "summary": {
+    "supported": 21,
+    "partly supported": 6,
+    "unsupported": 0,
+    "contradicted": 1,
+    "unverified": 3
+  }
+}

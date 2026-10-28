@@ -538,5 +538,10 @@
     "id": "pg-index-not-used",
     "url": "https://www.postgresql.org/docs/18/indexes-intro.html",
     "quote": "when and why the planner might choose not to use an index"
+  },
+  {
+    "id": "pg-pattern-ops",
+    "url": "https://www.postgresql.org/docs/18/indexes-opclass.html",
+    "quote": "This makes these operator classes suitable for use by queries involving pattern matching expressions"
   }
 ]

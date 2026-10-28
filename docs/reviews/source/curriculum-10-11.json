@@ -1,0 +1,42 @@
+{
+  "chapterIds": [10, 11],
+  "reviewer": "source-pass agent (independent; did not write these lessons)",
+  "curriculum": [
+    {
+      "where": "curriculum ch10 T-SQL",
+      "claim": "dialect note: 'SQL Server primary and foreign keys enforce referential integrity, as the PostgreSQL constraints in this game do.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://learn.microsoft.com/en-us/sql/relational-databases/tables/primary-and-foreign-key-constraints: the primary key 'enforces the entity integrity of the table' and 'enforces data uniqueness by automatically creating a unique index'; the foreign key is used 'to establish and enforce a link between the data in two tables', and 'a value for SalesPersonID can't be inserted ... if it doesn't already exist' in the referenced table. The game's constraints are REFERENCES clauses in src/data/seed.ts, and https://www.postgresql.org/docs/18/ddl-constraints.html covers the PostgreSQL side.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch10 Spark SQL",
+      "claim": "dialect note: 'Spark CREATE TABLE ... USING specifies the input format of the table.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html: 'USING data_source' and 'Data Source is the input format used to create the table.'",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch10 Spark SQL",
+      "claim": "dialect note: 'This reference does not define star-schema design, which this chapter teaches separately.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-datasource.html contains no star-schema material. The only match for 'star' is the heading 'Getting Started'.",
+      "suggestedFix": ""
+    },
+    {
+      "where": "curriculum ch11 T-SQL",
+      "claim": "dialect note: 'T-SQL offers MERGE; PostgreSQL also offers INSERT ON CONFLICT. Each engine documents its own syntax, so check the reference for the engine you target.'",
+      "verdict": "partly supported",
+      "evidence": "MERGE: the listed source https://learn.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql documents MERGE with WHEN MATCHED and WHEN NOT MATCHED clauses. The PostgreSQL side, INSERT ... ON CONFLICT, is true (https://www.postgresql.org/docs/18/sql-insert.html: '[ ON CONFLICT [ conflict_target ] conflict_action ]'), but the listed source is the T-SQL page, which does not discuss PostgreSQL. The note also leaves out that PostgreSQL 18 offers MERGE too: https://www.postgresql.org/docs/18/sql-merge.html, 'MERGE provides a single SQL statement that can conditionally INSERT, UPDATE or DELETE rows'. Read as written, the note implies PostgreSQL's upsert is only ON CONFLICT.",
+      "suggestedFix": "T-SQL offers MERGE. PostgreSQL 18 offers MERGE as well as INSERT ... ON CONFLICT for upserts, so check the reference for the engine you target."
+    },
+    {
+      "where": "curriculum ch11 Spark SQL (Databricks)",
+      "claim": "dialect note: 'Databricks documents MERGE for Delta Lake tables.'",
+      "verdict": "supported",
+      "evidence": "Listed source https://learn.microsoft.com/en-us/azure/databricks/delta/merge is titled 'Upsert into a Delta Lake table using merge' and says 'you can upsert data ... into a target Delta Lake table by using the MERGE SQL operation'.",
+      "suggestedFix": ""
+    }
+  ],
+  "curriculumSummary": { "supported": 4, "partly supported": 1, "unsupported": 0, "contradicted": 0, "unverified": 0 }
+}

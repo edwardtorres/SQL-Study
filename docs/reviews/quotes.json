@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-28T04:33:35.532Z",
-  "total": 104,
-  "verified": 104,
+  "checkedAt": "2026-10-28T05:00:51.984Z",
+  "total": 109,
+  "verified": 109,
   "results": [
     {
       "id": "pg-select-where",
@@ -624,6 +624,36 @@
     {
       "id": "pg-partial-index",
       "url": "https://www.postgresql.org/docs/18/sql-createindex.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-explain-plan",
+      "url": "https://www.postgresql.org/docs/18/sql-explain.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-explain-analyze",
+      "url": "https://www.postgresql.org/docs/18/sql-explain.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-index-planner",
+      "url": "https://www.postgresql.org/docs/18/indexes-intro.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-index-not-used",
+      "url": "https://www.postgresql.org/docs/18/indexes-intro.html",
+      "status": "verified",
+      "httpStatus": 200
+    },
+    {
+      "id": "pg-pattern-ops",
+      "url": "https://www.postgresql.org/docs/18/indexes-opclass.html",
       "status": "verified",
       "httpStatus": 200
     }

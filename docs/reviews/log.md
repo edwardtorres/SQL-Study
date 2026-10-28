@@ -126,3 +126,34 @@ Source pass. A fresh agent checked 35 chapter 10 claims and 37 chapter 11 claims
 Not changed, and reported as unverified: design conventions with no official source (normalization, star schema, watermark and SCD2 definitions). They are stated as conventions in the lessons. Quote check: 104 of 104 citations verbatim on their live pages.
 
 Checks after these edits: `npm run check` (lint, 234 unit tests including the blind comparison of all 17 records, build, production scan of 54 assets) passed; Chromium e2e 31 of 31.
+
+## Part B, chapters 12 and 13 (blind solve, source pass, e2e)
+
+Blind solve. Two fresh agents solved the 14 independent and boss tickets of chapters 12 and 13 from ticket text, the seed schema and the sample, without references or wrong variants. Each ran its solution on every dataset the ticket names; plan requirements were checked with EXPLAIN (no ANALYZE). Records: `docs/reviews/blind/ch1213/`. Ticket wording was then tightened where the records showed an ambiguity, and the affected records were re-solved on the revised text:
+- `c12-i2`: "delivered" now means a shipment whose status is delivered; both output columns named and typed as text.
+- `c12-i4`: statuses are lowercase, so the match is exact in case.
+- `c12-b1-p2`: the ordering must be one the primary key index can supply, returned as one row.
+- `c12-b1-p3`: `scans` is an integer count. The solver's bigint column was re-solved with a cast.
+- `c13-i1`: consecutive means one id after the previous one; a scan with no id is not counted; output columns named and typed as integer.
+- `c13-i2`: every shipment counts whatever its status; a month with no bookings is left out; columns typed.
+- `c13-i3`: every shipment counts; the following month is the calendar month after the cohort month; columns typed.
+- `c13-i4`: routes are those that have shipments; the count columns are typed as integer.
+- `c13-b1-p2`, `c13-b1-p3`: types stated; the running total is an integer.
+Count columns returned bigint from the solvers in several tickets; the same cast fix as `c11-i6`. Re-solve results: solutions unchanged except the casts. Coverage notes kept in the records: chapter 13 `i3` gives the same answer under a same-month rule, so the next-month rule is not separated by the data.
+
+Source pass. A fresh agent checked 23 chapter 12 and 31 chapter 13 lesson claims, seven chapter 12–13 dialect notes and five chapter 10–11 dialect notes (`docs/reviews/source/ch12.json`, `ch13.json`, `curriculum-10-11.json`). Corrections applied:
+- Planner: cost settings also shape the plan; the ANALYZE option of EXPLAIN is separate from the ANALYZE command that collects statistics (`pg-explain-analyze`, `pg-index-planner`).
+- A multicolumn index can help a lookup on its first column; a lookup by `shipment_id` needs an index that begins with it.
+- Grouping steps are no longer claimed for the EXPLAIN page, which does not list them.
+- Prefix search needs a pattern operator class or the C locale for a B-tree index (`pg-pattern-ops`).
+- `SELECT *` returns every column; the "reads more" and "more work" claims are removed.
+- Top-N: exactly N rows survive for each group with at least N rows, in descending order and with a unique order.
+- Islands: the gap is a scan with no status; keeping it joins two runs into one streak (the reverse was wrong).
+- Time zones: a timestamp with time zone is cut to a month in the session zone unless converted with AT TIME ZONE.
+- Pivots: a SUM over a CASE needs ELSE 0 or a COALESCE around the sum.
+- Curriculum, chapter 11 T-SQL note: PostgreSQL 18 also offers MERGE.
+Unverified and kept as conventions: cohort, pivot and gap wording, and the plan stability of the large table across runs (not tested beyond repeated runs in this environment). Quote check after the edits: 109 of 109 citations verbatim on their live pages.
+
+End to end. The chapter 10–13 spec (`e2e/chapters-10-13.spec.ts`) has six journeys at 390 and 1280 px: a star-schema design ticket, an SCD2 ticket, an upsert graded after a second run, an index ticket, an EXPLAIN plan ticket and an interview ticket. Each uses taps, runs axe, and checks for sideways scroll. The first run failed on colour contrast in the editor's line-number gutter (4.42:1 against the 4.5:1 minimum). The gutter colour is now `#5a6a63` (5.22:1). Full Chromium suite after this change: 43 of 43.
+
+Checks: `npm run check` (lint, 235 unit tests including the blind comparison of every chapter 10–13 record, build, production scan of 58 assets) passed; the full Chromium suite passed 43 of 43.
