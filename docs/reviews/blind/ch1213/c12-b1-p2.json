@@ -13,9 +13,8 @@
   "columnsMatchTicket": true,
   "planNodes": "Limit, Index Scan (Backward) [shipment_scans_large_pkey]",
   "ambiguities": [
-    "The instructions do not mention the order or plan requirement. 'An order the index can supply' appears only in the summary, and the plan check forbids a Sort node. A learner reading only the instructions would not know that a Sort fails.",
     "'Below 5000' is read as id < 5000, strict."
   ],
   "confidence": "high",
-  "notes": "Result is id 4999 (delivered), the largest delivered id below 5000. Plan is Limit over Index Scan (Backward) with no Sort on all three datasets."
+  "notes": "Unchanged SQL. Revised text asks for one row and an ordering the primary key index can supply. Plan on all three datasets is Limit over Index Scan (Backward), with no Sort or Seq Scan. Result is id 4999 (delivered). The ticket states no column types, so columnsMatchTicket compares names only."
 }

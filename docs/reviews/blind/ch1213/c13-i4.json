@@ -1,6 +1,6 @@
 {
   "id": "c13-i4",
-  "solutionSql": "SELECT route_id,\n       COUNT(*) FILTER (WHERE status = 'queued') AS queued,\n       COUNT(*) FILTER (WHERE status = 'in_transit') AS in_transit,\n       COUNT(*) FILTER (WHERE status = 'delivered') AS delivered,\n       COUNT(*) FILTER (WHERE status = 'cancelled') AS cancelled,\n       COUNT(*) FILTER (WHERE status = 'returned') AS returned\nFROM shipments\nGROUP BY route_id\nORDER BY route_id;",
+  "solutionSql": "SELECT route_id,\n       CAST(COUNT(*) FILTER (WHERE status = 'queued') AS integer) AS queued,\n       CAST(COUNT(*) FILTER (WHERE status = 'in_transit') AS integer) AS in_transit,\n       CAST(COUNT(*) FILTER (WHERE status = 'delivered') AS integer) AS delivered,\n       CAST(COUNT(*) FILTER (WHERE status = 'cancelled') AS integer) AS cancelled,\n       CAST(COUNT(*) FILTER (WHERE status = 'returned') AS integer) AS returned\nFROM shipments\nGROUP BY route_id\nORDER BY route_id;",
   "sampleRowCount": 6,
   "sampleFirstRows": [
     [
@@ -48,12 +48,8 @@
   "constraintProbes": null,
   "columnsMatchTicket": true,
   "planNodes": null,
-  "solveMinutes": 4,
-  "ambiguities": [
-    "'For each route' could mean every row of the routes table, with zeros for routes that have no shipments. The starter starts FROM shipments, so I built from shipments and a route with no shipments would not appear. The sample has no such route, so this is not exercised.",
-    "returned can never hold a value, because the CHECK on shipments.status excludes it, so that column is always 0. The ticket says so, so this is only a note.",
-    "The count columns are bigint, and the ticket names no types."
-  ],
+  "solveMinutes": 2,
+  "ambiguities": [],
   "confidence": "high",
-  "notes": "Sample route 1: queued 14, in_transit 8, delivered 8, cancelled 10, returned 0, total 40. Queued and delivered were checked by hand against the seed. The nulls dataset returned every shipment as delivered (20 per route, 0 elsewhere), so that dataset does not separate the status columns."
+  "notes": "Revised text: routes are those that have shipments, which is how the query already worked. Casts: all five count columns cast to integer (were bigint). Sample route 1: queued 14, in_transit 8, delivered 8, cancelled 10, returned 0. The nulls dataset returned every shipment as delivered (20 per route, 0 elsewhere), so that dataset does not separate the status columns."
 }

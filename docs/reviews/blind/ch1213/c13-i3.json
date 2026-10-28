@@ -1,6 +1,6 @@
 {
   "id": "c13-i3",
-  "solutionSql": "WITH firsts AS (\n  SELECT customer_id,\n         date_trunc('month', MIN(booked_at) AT TIME ZONE 'UTC') AS cohort_start\n  FROM shipments\n  GROUP BY customer_id\n),\nactivity AS (\n  SELECT DISTINCT customer_id,\n         date_trunc('month', booked_at AT TIME ZONE 'UTC') AS month_start\n  FROM shipments\n)\nSELECT to_char(f.cohort_start, 'YYYY-MM') AS cohort,\n       COUNT(*) AS cohort_size,\n       COUNT(a.customer_id) AS retained\nFROM firsts AS f\nLEFT JOIN activity AS a\n  ON a.customer_id = f.customer_id\n AND a.month_start = f.cohort_start + interval '1 month'\nGROUP BY f.cohort_start\nORDER BY f.cohort_start;",
+  "solutionSql": "WITH firsts AS (\n  SELECT customer_id,\n         date_trunc('month', MIN(booked_at) AT TIME ZONE 'UTC') AS cohort_start\n  FROM shipments\n  GROUP BY customer_id\n),\nactivity AS (\n  SELECT DISTINCT customer_id,\n         date_trunc('month', booked_at AT TIME ZONE 'UTC') AS month_start\n  FROM shipments\n)\nSELECT to_char(f.cohort_start, 'YYYY-MM') AS cohort,\n       CAST(COUNT(*) AS integer) AS cohort_size,\n       CAST(COUNT(a.customer_id) AS integer) AS retained\nFROM firsts AS f\nLEFT JOIN activity AS a\n  ON a.customer_id = f.customer_id\n AND a.month_start = f.cohort_start + interval '1 month'\nGROUP BY f.cohort_start\nORDER BY f.cohort_start;",
   "sampleRowCount": 1,
   "sampleFirstRows": [
     [
@@ -13,13 +13,10 @@
   "constraintProbes": null,
   "columnsMatchTicket": true,
   "planNodes": null,
-  "solveMinutes": 7,
+  "solveMinutes": 3,
   "ambiguities": [
-    "The ticket does not say whether cancelled shipments count as a booking for retention. I counted all statuses.",
-    "'Following month' is read as exactly the cohort month plus one calendar month. A customer who booked two months later but not in the next month is not retained.",
-    "Customers with no shipments have no cohort and are excluded. The ticket implies this without saying it.",
-    "The cohort_size and retained columns are bigint, and the ticket names no types."
+    "Customers with no shipments have no first shipment, so they are in no cohort. The revised text implies this but does not state it."
   ],
-  "confidence": "medium",
-  "notes": "Each named dataset returned one cohort (2025-12) with retained equal to cohort_size (6 in the sample). Every cohort member also booked in January, so the outputs do not separate the next-month rule from a same-month rule (which would also return 6) or an any-later-month rule. The retention rule itself is not exercised by these datasets."
+  "confidence": "high",
+  "notes": "Revised text: the following month is the calendar month after the cohort month, counting every status, which is how the query already worked. Casts: cohort_size and retained cast to integer (were bigint). Coverage: each named dataset returned one cohort (2025-12) with retained equal to cohort_size (6 in the sample). Every cohort member also booked in January, so the outputs cannot separate the next-month rule from a same-month rule (which would also return 6). The rule itself is not exercised by these datasets."
 }

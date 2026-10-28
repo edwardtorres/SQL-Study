@@ -29,9 +29,8 @@
   "columnsMatchTicket": true,
   "planNodes": null,
   "ambiguities": [
-    "\"Delivered\" is not tied to a column in the text. I used shipments.status = 'delivered'. shipment_events also has 'delivered' rows, which would give a different answer if the author meant an event.",
     "The starter selects customer_id, which is not in resultColumns. I replaced the select list with tracking_code and customers.name AS customer_name, which needs the join."
   ],
   "confidence": "high",
-  "notes": "Inner join on the non-null customer foreign key to the unique customers.id, so no fan-out. Row counts differ by dataset (66 sample, 120 nulls, 43 boundary) because the shipments seeds differ. tracking_code is unique, so the order has no ties."
+  "notes": "Unchanged SQL. Revised text says 'each shipment whose status is delivered', which settles the earlier question of shipment_events versus shipments.status. Both output columns are text (OID 25), as the ticket states. Row counts unchanged: 66 sample, 120 nulls, 43 boundary."
 }

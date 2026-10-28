@@ -41,5 +41,5 @@
   "solveMinutes": 5,
   "ambiguities": [],
   "confidence": "high",
-  "notes": "DISTINCT ON (shipment_id) with ORDER BY shipment_id, occurred_at DESC, id DESC, so the larger id wins a timestamp tie. Sample rows checked by hand: shipment 2 gives event 2 (arrived, 10:00), shipment 3 gives event 5 (arrived, 12:00), shipment 4 gives event 8 (arrived, 14:00). The ties dataset returned 163 rows; I did not inspect its tied events."
+  "notes": "Ticket not in this revision; SQL and record unchanged. DISTINCT ON with ORDER BY shipment_id, occurred_at DESC, id DESC, so the larger id wins a timestamp tie. Sample rows checked by hand: shipment 2 gives event 2, shipment 3 event 5, shipment 4 event 8. The ties dataset returned 163 rows; I did not inspect its tied events."
 }

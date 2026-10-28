@@ -1,6 +1,6 @@
 {
   "id": "c13-b1-p3",
-  "solutionSql": "SELECT customer_id,\n       id,\n       SUM(weight_kg) OVER (\n         PARTITION BY customer_id\n         ORDER BY booked_at, id\n         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS running_kg\nFROM shipments\nWHERE weight_kg IS NOT NULL\nORDER BY customer_id, booked_at, id;",
+  "solutionSql": "SELECT customer_id,\n       id,\n       CAST(SUM(weight_kg) OVER (\n         PARTITION BY customer_id\n         ORDER BY booked_at, id\n         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n       ) AS integer) AS running_kg\nFROM shipments\nWHERE weight_kg IS NOT NULL\nORDER BY customer_id, booked_at, id;",
   "sampleRowCount": 228,
   "sampleFirstRows": [
     [
@@ -33,10 +33,8 @@
   "constraintProbes": null,
   "columnsMatchTicket": true,
   "planNodes": null,
-  "solveMinutes": 5,
-  "ambiguities": [
-    "running_kg is a SUM of integers, so it is bigint, and the ticket names no type."
-  ],
+  "solveMinutes": 3,
+  "ambiguities": [],
   "confidence": "high",
-  "notes": "SUM(weight_kg) OVER (PARTITION BY customer_id ORDER BY booked_at, id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) after WHERE weight_kg IS NOT NULL. Sample customer 1: id 7 at 1412, id 13 at 3398 (1412 + 1986), id 19 at 4825 (3398 + 1427). The ROWS frame and the unique id tiebreak keep the running total unambiguous."
+  "notes": "Revised text states integer for running_kg. The window SUM of integers is bigint, so it is cast to integer; values unchanged (sample customer 1: 1412, 3398, 4825). Frame is ROWS UNBOUNDED PRECEDING to CURRENT ROW, ordered by booked_at, id; the unique id makes the order total. Shipments with NULL weight are excluded before the window."
 }

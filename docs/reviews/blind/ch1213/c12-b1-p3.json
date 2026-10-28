@@ -1,6 +1,6 @@
 {
   "id": "c12-b1-p3",
-  "solutionSql": "SELECT status, COUNT(*) AS scans\nFROM shipment_scans_large\nWHERE id BETWEEN 1 AND 200\nGROUP BY status\nORDER BY status;",
+  "solutionSql": "SELECT status, COUNT(*)::integer AS scans\nFROM shipment_scans_large\nWHERE id BETWEEN 1 AND 200\nGROUP BY status\nORDER BY status;",
   "sampleRowCount": 4,
   "sampleFirstRows": [
     [
@@ -25,9 +25,8 @@
   "columnsMatchTicket": true,
   "planNodes": null,
   "ambiguities": [
-    "The instructions say 'the count', but resultColumns requires the name scans. I aliased COUNT(*) AS scans.",
-    "The starter selects status, id, and id is not in resultColumns, so I replaced it with COUNT(*). resultColumns gives no types; COUNT(*) returns bigint."
+    "The starter selects status, id, and id is not in resultColumns, so I replaced it with the aggregate query."
   ],
   "confidence": "high",
-  "notes": "Each of the four statuses has 50 scans in ids 1 to 200, so the counts are 50 each on all three datasets. The scans column is bigint (OID 20)."
+  "notes": "Changed: the revised ticket asks for scans as an integer, so COUNT(*) is cast with ::integer. It was bigint (OID 20) before. The result is now status text (OID 25) and scans integer (OID 23). Each status has 50 scans on all three datasets."
 }

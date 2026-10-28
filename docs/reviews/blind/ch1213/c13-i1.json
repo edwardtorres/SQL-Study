@@ -1,6 +1,6 @@
 {
   "id": "c13-i1",
-  "solutionSql": "WITH scanned AS (\n  SELECT DISTINCT id\n  FROM staging_scans\n  WHERE id IS NOT NULL AND status IS NOT NULL\n),\nislands AS (\n  SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS island\n  FROM scanned\n)\nSELECT MIN(id) AS start_id,\n       MAX(id) AS end_id,\n       COUNT(*) AS scans\nFROM islands\nGROUP BY island\nORDER BY start_id;",
+  "solutionSql": "WITH scanned AS (\n  SELECT DISTINCT id\n  FROM staging_scans\n  WHERE id IS NOT NULL AND status IS NOT NULL\n),\nislands AS (\n  SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS island\n  FROM scanned\n)\nSELECT CAST(MIN(id) AS integer) AS start_id,\n       CAST(MAX(id) AS integer) AS end_id,\n       CAST(COUNT(*) AS integer) AS scans\nFROM islands\nGROUP BY island\nORDER BY start_id;",
   "sampleRowCount": 6,
   "sampleFirstRows": [
     [
@@ -33,13 +33,10 @@
   "constraintProbes": null,
   "columnsMatchTicket": true,
   "planNodes": null,
-  "solveMinutes": 6,
+  "solveMinutes": 3,
   "ambiguities": [
-    "NULL scan ids are not ids, so they are excluded from the islands. The ticket does not say how to treat them.",
-    "An id sent twice with one copy carrying a status and one copy NULL: I counted it as carrying a status (WHERE status IS NOT NULL before DISTINCT). Another reading would require every copy to carry a status.",
-    "'Consecutive' is read as the id rising by exactly 1, so a missing id breaks an island. The ticket implies this but does not state it.",
-    "The count column is bigint, and the ticket names no types."
+    "An id sent twice with one copy carrying a status and one copy NULL: I counted it as carrying a status (WHERE status IS NOT NULL before DISTINCT). The revised text says an id sent twice counts once and a run needs every id to carry a status, but it does not say whether a NULL copy breaks the id. Another reading requires every copy to carry a status."
   ],
   "confidence": "high",
-  "notes": "Sample islands checked by hand: 1000-1004 (5), 1006-1007 (2, duplicate 1007 counted once), 1009-1015 (7), 1017-1026 (10), 1028-1037 (10), 1039 (1). All three named datasets returned identical output, so I cannot say from my runs whether hidden rows hold NULL ids or conflicting duplicates."
+  "notes": "Revised text: NULL ids are not counted and consecutive means one id after the previous one, both now stated, so the NULL-id ambiguity is gone. Casts: start_id and end_id were already integer; scans cast to integer (was bigint). Sample islands unchanged: 1000-1004 (5), 1006-1007 (2), 1009-1015 (7), 1017-1026 (10), 1028-1037 (10), 1039 (1). Hidden datasets gave identical output, so I did not inspect their rows for NULL ids or conflicting duplicates."
 }

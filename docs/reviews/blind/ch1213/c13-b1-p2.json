@@ -28,8 +28,8 @@
   "constraintProbes": null,
   "columnsMatchTicket": true,
   "planNodes": null,
-  "solveMinutes": 5,
+  "solveMinutes": 2,
   "ambiguities": [],
   "confidence": "high",
-  "notes": "DENSE_RANK() over distinct (customer_id, weight_kg) pairs with NULL weights removed first, keeping rank 2. Sample customer 1 gives 1986 (maximum 1999, then 1986); customer 2 gives 1828 (maximum 1894). Both checked by hand against the seed. Customers with one distinct weight drop out, as the ticket says."
+  "notes": "Revised text states integer types. The SQL was unchanged and already returns integer for customer_id and second_weight (OID 23), so no cast was needed. DENSE_RANK() over distinct (customer_id, weight_kg) pairs, NULL weights removed first, keeping rank 2. Sample customer 1 gives 1986 (maximum 1999); customer 2 gives 1828 (maximum 1894)."
 }
