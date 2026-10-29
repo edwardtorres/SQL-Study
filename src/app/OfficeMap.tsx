@@ -1,7 +1,8 @@
 import { useRef, type ReactNode } from 'react';
-import { ArrowRight, Database, Download, Sparkles, Table2, Upload } from 'lucide-react';
+import { ArrowRight, Database, Download, RefreshCw, Sparkles, Table2, Upload } from 'lucide-react';
 import type { Chapter } from '../data/curriculum';
 import type { ItemMeta } from '../data/itemIndex';
+import { needsReview } from '../game/review';
 import { BADGES, currentStreak, DESK_LABEL, deskStatus, entryLevelReady, levelOf, rankOf, readinessAll, totalXp } from '../game/rules';
 import type { SaveV4 } from '../save/progress';
 import './office.css';
@@ -16,9 +17,10 @@ const DESK_NOTE: Record<string, string> = {
 // The first part of a chapter's boss, which a test-out opens directly.
 const firstBossPart = (items: readonly ItemMeta[], chapterId: number): ItemMeta | undefined => items.find((item) => item.chapterId === chapterId && item.bossGroup !== undefined);
 
-export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onExport, onImport }: {
+export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onDaily, onWeak, onNeeds, onExport, onImport }: {
   items: readonly ItemMeta[]; save: SaveV4; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
-  onChapter: (chapterId: number) => void; onBossTestOut: (item: ItemMeta) => void; onScratch: () => void; onExport: () => void; onImport: (file: File) => void;
+  onChapter: (chapterId: number) => void; onBossTestOut: (item: ItemMeta) => void; onScratch: () => void;
+  onDaily: () => void; onWeak: () => void; onNeeds: (chapterId: number) => void; onExport: () => void; onImport: (file: File) => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const xp = totalXp(save);
@@ -27,6 +29,7 @@ export default function OfficeMap({ items, save, today, chapters, notice, canImp
   const readiness = readinessAll(save, chapters.map((chapter) => chapter.id));
   const readyCount = readiness.filter((row) => row.ready).length;
   const rank = rankOf(save);
+  const dailyCount = save.dailyReview?.day === today ? save.dailyReview.itemIds.length : null;
   return <>
     <section className="office-intro" aria-labelledby="office-title">
       <p className="eyebrow"><span className="status-dot" /> LARKSPUR FREIGHT · OFFICE</p>
@@ -45,18 +48,36 @@ export default function OfficeMap({ items, save, today, chapters, notice, canImp
       const locked = status === 'locked';
       const boss = firstBossPart(items, chapter.id);
       const note = locked ? `Master chapter ${chapter.id - 1} to open this desk.` : DESK_NOTE[status];
+      const needs = !locked && needsReview(save, chapter.id);
       return <li key={chapter.id} className={`desk is-${status}`}>
         <div className="desk-title"><p className="ticket-code">DESK {chapter.id}</p><h3>{chapter.title}</h3></div>
         <span className={`desk-status status-${status}`}>{DESK_LABEL[status]}</span>
         <p id={`desk-note-${chapter.id}`}>{note}</p>
+        {needs && <p className="needs-mark"><span className="desk-status status-needs">Needs review</span> Fewer than 60% of your last five reviews here passed.</p>}
         <div className="desk-actions">
           {locked
             ? <button className="secondary-button" disabled aria-describedby={`desk-note-${chapter.id}`}>Locked</button>
             : <button className="primary-button" onClick={() => { onChapter(chapter.id); }}>Open chapter {chapter.id}<ArrowRight size={15} /></button>}
           {status === 'open' && boss && <button className="secondary-button" onClick={() => { onBossTestOut(boss); }}>Boss test-out</button>}
+          {needs && <button className="secondary-button" onClick={() => { onNeeds(chapter.id); }}>Review this desk<ArrowRight size={15} /></button>}
         </div>
       </li>;
     })}</ol>
+    <section className="review-panel" aria-labelledby="review-title">
+      <div className="section-heading"><div><p className="eyebrow">REVIEW</p><h2 id="review-title">Mistakes come back</h2></div></div>
+      <ul className="review-list">
+        <li className="review-entry">
+          <div><strong>Daily Review</strong><p>Up to five tickets a day, chosen from the mistakes you have logged. Each one runs on a fresh review sample.</p></div>
+          <span className="section-meta">{dailyCount === null ? 'Up to 5 today' : `${dailyCount} today`}</span>
+          <button className="secondary-button" onClick={onDaily}><RefreshCw size={15} />Open Daily Review</button>
+        </li>
+        <li className="review-entry">
+          <div><strong>Weak Spots</strong><p>Competencies by readiness, the mistakes you make most, and the tickets to look at again.</p></div>
+          <span className="section-meta">Ranked by readiness</span>
+          <button className="secondary-button" onClick={onWeak}><ArrowRight size={15} />Open Weak Spots</button>
+        </li>
+      </ul>
+    </section>
     <section className="badge-panel" aria-labelledby="badges-title">
       <div className="section-heading"><div><p className="eyebrow">BADGES</p><h2 id="badges-title">Milestones</h2></div><span className="section-meta">{Object.keys(save.badges).length} of {BADGES.length} earned</span></div>
       <ul className="badge-list">{BADGES.map((badge) => {
@@ -65,7 +86,7 @@ export default function OfficeMap({ items, save, today, chapters, notice, canImp
       })}</ul>
     </section>
     <section className="readiness-panel" aria-labelledby="readiness-title">
-      <div className="section-heading"><div><p className="eyebrow">READINESS</p><h2 id="readiness-title">Thirteen competencies</h2></div><span className="section-meta">From first passes on independent tickets and boss parts</span></div>
+      <div className="section-heading"><div><p className="eyebrow">READINESS</p><h2 id="readiness-title">Thirteen competencies</h2></div><span className="section-meta">From scored attempts on independent tickets and boss parts</span></div>
       <ul className="readiness-list">{readiness.map((row) => {
         const title = chapters.find((chapter) => chapter.id === row.chapterId)?.title ?? `Chapter ${row.chapterId}`;
         return <li key={row.chapterId} className="readiness-row">
@@ -75,7 +96,7 @@ export default function OfficeMap({ items, save, today, chapters, notice, canImp
             : <span className={row.ready ? 'readiness-ready' : ''}>{Math.round(row.score * 100)}% {row.ready ? '· ready' : ''}</span>}
         </li>;
       })}</ul>
-      <p className="table-caption">Ready means a score of 80% or more over your last 10 scored first passes. Hinted passes count half. Reveals count nothing.</p>
+      <p className="table-caption">Ready means a score of 80% or more over your last 10 scored attempts. A first try counts in full, a hint or a pass after a failure counts half, and a reveal or a failed review counts nothing. Reviews count too.</p>
     </section>
     <section className="office-footer" aria-label="Progress file">
       <div className="footer-actions">

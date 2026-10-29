@@ -55,3 +55,20 @@
 .badge.is-earned { background: #fffefa; border-color: #c2d5b1; color: #1d3834; }
 .badge.is-earned small { color: #3f6030; font-weight: 650; }
 .readiness-row .muted { color: #56685e; }
+/* Review: the Daily Review entries, the needs-review mark on a desk, and the banner on a review ticket. */
+.review-panel { margin-top: 34px; }
+.review-panel .section-heading { margin-top: 0; }
+.review-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.review-entry { background: #fffefa; border: 1px solid #dce1d6; border-radius: 9px; padding: 14px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; min-width: 0; }
+.review-entry strong { font-size: 13px; font-weight: 650; color: #1d3834; }
+.review-entry p { font-size: 11px; line-height: 1.7; color: #5b7066; margin-top: 4px; }
+.review-entry .secondary-button { grid-column: 1 / -1; justify-self: start; }
+.needs-mark { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 11px; line-height: 1.7; color: #8a4a27; }
+.desk-status.status-needs { background: #f8e9dc; border-color: #e2bfa6; color: #8a4a27; }
+.review-banner { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #c2d5b1; background: #f1f6ea; border-radius: 8px; padding: 12px 14px; font-size: 11px; line-height: 1.7; color: #3f6030; }
+.review-banner svg { flex: 0 0 auto; margin-top: 2px; }
+.practice-meta { color: #5b7066; font-weight: 400; }
+.weak-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid #e5e8df; }
+.weak-tag { border: 1px solid #dce1d6; background: #fffefa; border-radius: 9px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; font-size: 12px; line-height: 1.7; color: #33463d; }
+.weak-tag-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 10px; color: #5b7066; }
+.weak-tag-head code { font-size: 11px; color: #1d3834; overflow-wrap: anywhere; }

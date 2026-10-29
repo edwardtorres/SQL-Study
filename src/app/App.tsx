@@ -1,10 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { ChevronRight, Leaf, LoaderCircle, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
-import { curriculum } from '../data';
+import { curriculum, reviewSampleIdFor } from '../data';
 import { itemIndex, itemMetaById, type ItemMeta } from '../data/itemIndex';
 import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
-import { applySubmission, deskStatus, localDay, rankOf, revealSolution, takeHint, totalXp, type GradeResult } from '../game/rules';
+import { applySubmission, deskStatus, isOpen, localDay, rankOf, readinessAll, revealSolution, takeHint, totalXp, type GradeResult } from '../game/rules';
+import { dailyReviewSet, needsReviewSet, weakSpots, type ReviewPool } from '../game/review';
 import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV4, type TicketProgress } from '../save/progress';
 import { exportSave, importSave } from '../save/transfer';
 import { ChapterView, lessonSectionIds } from './Chapters';
@@ -15,12 +16,18 @@ import { partLabel, summarizeChapter } from './model';
 const Workspace = lazy(() => import('./Workspace'));
 const LessonView = lazy(() => import('./LessonView'));
 const Scratchpad = lazy(() => import('./Scratchpad'));
+const Review = lazy(() => import('./Review'));
+const WeakSpots = lazy(() => import('./WeakSpots'));
 
 type View =
   | { name: 'home' }
   | { name: 'chapter'; chapterId: number }
   | { name: 'lesson'; chapterId: number }
-  | { name: 'item'; itemId: string }
+  // review is set when the ticket is opened from a review page: its re-solve runs on that review sample.
+  | { name: 'item'; itemId: string; review: { sampleId: string } | null }
+  | { name: 'daily' }
+  | { name: 'needs'; chapterId: number }
+  | { name: 'weak' }
   | { name: 'scratch' };
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -30,11 +37,14 @@ function initialState() {
   catch { return { ...restoreSave(null, itemIndex), writable: false }; }
 }
 const chapterOf = (id: number) => curriculum.find((chapter) => chapter.id === id);
+const chapterIds = curriculum.map((chapter) => chapter.id);
+const poolOf = (save: SaveV4): ReviewPool => ({ items: itemIndex, isOpen: (chapterId) => isOpen(save, chapterId) });
 
 export default function App() {
   const [restored] = useState(initialState);
   const [save, setSave] = useState<SaveV4>(restored.save);
   const [view, setView] = useState<View>({ name: 'home' });
+  const review = view.name === 'item' ? view.review : null;
   const [saveFailed, setSaveFailed] = useState(!restored.writable);
   const [promotion, setPromotion] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<SaveV4 | null>(null);
@@ -65,10 +75,11 @@ export default function App() {
     });
   }, [persist]);
   const closePromotion = useCallback(() => { setPromotion(null); }, []);
-  const openItem = (item: ItemMeta) => {
+  const openItem = (item: ItemMeta, reviewing = false) => {
     const next = { ...save, activeTicket: item.id };
     commit(next);
-    setView({ name: 'item', itemId: item.id });
+    // A review re-solve names its sample now, so the sample stays the same for the whole visit.
+    setView({ name: 'item', itemId: item.id, review: reviewing ? { sampleId: reviewSampleIdFor(save.tickets[item.id]?.attempts ?? 0) } : null });
     window.scrollTo({ top: 0 });
   };
   const go = (next: View) => {
@@ -76,9 +87,14 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
   // Grading applies the rules to the save as it is now. The result carries the XP, the badges and any promotion.
-  const grade = (item: ItemMeta, referenceSql: string, passed: boolean, sql: string, tag: string | null): GradeResult => {
+  // A review attempt is graded as a review, and a reveal counts only when the ticket's solution was revealed.
+  const grade = (item: ItemMeta, referenceSql: string, submission: { passed: boolean; sql: string; tag: string | null; hinted: boolean }): GradeResult => {
     const at = Date.now();
-    const result = applySubmission(save, itemIndex, item, referenceSql, { passed, sql, at, day: localDay(at, zone()), tag });
+    const reviewing = review !== null;
+    const result = applySubmission(save, itemIndex, item, referenceSql, {
+      passed: submission.passed, sql: submission.sql, at, day: localDay(at, zone()), tag: submission.tag,
+      reviewing, hinted: submission.hinted, revealed: reviewing && (save.tickets[item.id]?.solutionRevealed ?? false),
+    });
     commit(result.save);
     if (result.promoted) setPromotion(result.promoted);
     return result;
@@ -109,6 +125,12 @@ export default function App() {
     setNotice({ tone: 'status', text: 'Progress replaced from the file.' });
   };
   const today = localDay(Date.now(), zone());
+  // The Daily Review set is saved the first time its page shows each day, so a reload does not reshuffle it.
+  useEffect(() => {
+    if (view.name !== 'daily' || save.dailyReview?.day === today) return;
+    const weakest = weakSpots(save, readinessAll(save, chapterIds)).competencies.map((row) => row.chapterId);
+    commit({ ...save, dailyReview: { day: today, itemIds: dailyReviewSet(save, today, weakest, poolOf(save)) } });
+  }, [commit, save, today, view.name]);
   const xp = totalXp(save);
   const rank = rankOf(save);
   const current = view.name === 'chapter' || view.name === 'lesson' ? chapterOf(view.chapterId) : undefined;
@@ -125,6 +147,9 @@ export default function App() {
   const item = itemId !== undefined && loaded?.id === itemId ? loaded : undefined;
   const crumb = view.name === 'home' ? 'Office'
     : view.name === 'scratch' ? 'Scratchpad'
+      : view.name === 'daily' ? 'Daily Review'
+        : view.name === 'weak' ? 'Weak Spots'
+          : view.name === 'needs' ? `Needs review · Chapter ${view.chapterId}`
       : view.name === 'item' && meta ? `Chapter ${meta.chapterId} · ${meta.title}`
         : current ? `Chapter ${current.id}${view.name === 'lesson' ? ' · Lesson' : ''}` : 'Office';
   return (
@@ -164,6 +189,7 @@ export default function App() {
           <Suspense fallback={<div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the desk…</div>}>
             {view.name === 'home' && <OfficeMap
               items={itemIndex} save={save} today={today} chapters={curriculum} canImport={restored.writable} onScratch={() => { go({ name: 'scratch' }); }}
+              onDaily={() => { go({ name: 'daily' }); }} onWeak={() => { go({ name: 'weak' }); }} onNeeds={(chapterId) => { go({ name: 'needs', chapterId }); }}
               onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onBossTestOut={openItem} onExport={exportProgress} onImport={(file) => { void importProgress(file); }}
               notice={<>
                 {pendingImport && <section className="import-confirm" aria-labelledby="import-title">
@@ -177,6 +203,9 @@ export default function App() {
             {view.name === 'chapter' && current && <ChapterView chapter={current} items={itemIndex} save={save} onLesson={() => { go({ name: 'lesson', chapterId: current.id }); }} onItem={openItem} onScratch={() => { go({ name: 'scratch' }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'lesson' && current && <LessonView chapter={current} lessonProgress={save.lessons} onAnswer={answerLesson} onBack={() => { go({ name: 'chapter', chapterId: current.id }); }} onPractice={() => { go({ name: 'chapter', chapterId: current.id }); }} />}
             {view.name === 'scratch' && <Scratchpad onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'daily' && <Review mode="daily" items={itemIndex} save={save} ids={save.dailyReview?.day === today ? save.dailyReview.itemIds : []} chapterTitle={undefined} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'needs' && <Review mode="needs" items={itemIndex} save={save} ids={needsReviewSet(save, view.chapterId, poolOf(save))} chapterTitle={chapterOf(view.chapterId)?.title} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'weak' && <WeakSpots items={itemIndex} save={save} scores={readinessAll(save, chapterIds)} chapterTitle={(chapterId) => chapterOf(chapterId)?.title ?? `Chapter ${chapterId}`} onOpen={(item) => { openItem(item); }} onLesson={(chapterId) => { go({ name: 'lesson', chapterId }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'item' && meta && !item && <div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the ticket…</div>}
             {view.name === 'item' && meta && item && <Workspace
               key={item.id}
@@ -186,7 +215,8 @@ export default function App() {
               backLabel={chapterOf(meta.chapterId) ? `Chapter ${meta.chapterId}` : 'Office'}
               progress={save.tickets[item.id] ?? emptyProgress(item.starterSql)}
               setDraft={(draft) => { updateTicket(item.id, (previous) => ({ ...previous, draft })); }}
-              grade={(passed, sql, tag) => grade(meta, item.referenceSql, passed, sql, tag)}
+              review={review}
+              grade={(passed, sql, tag, hinted) => grade(meta, item.referenceSql, { passed, sql, tag, hinted })}
               onHint={() => { commit(takeHint(save, item.id)); }}
               onReveal={() => { const at = Date.now(); commit(revealSolution(save, meta, at, localDay(at, zone()))); }}
               onBack={() => { go(chapterOf(meta.chapterId) ? { name: 'chapter', chapterId: meta.chapterId } : { name: 'home' }); }}

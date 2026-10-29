@@ -1,4 +1,4 @@
-import { datasetCatalog, hiddenDatasets, sampleDataset, schema, seedSql } from '../data';
+import { datasetCatalog, hiddenDatasets, reviewSampleFor, sampleDataset, schema, seedSql } from '../data';
 import type { DatasetSpec } from '../core/types';
 import { loadItem } from '../data/items/loader';
 import { planProblemFor } from '../grader/plan';
@@ -59,13 +59,32 @@ async function challengeOf(id: string): Promise<Challenge> {
   catch { throw new Error('Unknown ticket.'); }
 }
 
-async function grade(challengeId: string, sql: string): Promise<GradedSubmission> {
+// The visible sample, or the review sample a re-solve names. Each review sample loads on first use, so the warm start does not pay for it.
+async function sampleOf(runtime: WarmEngine, reviewSeed: string | undefined): Promise<DatasetSpec> {
+  if (reviewSeed === undefined) return sampleDataset;
+  const pool = reviewSampleFor(reviewSeed);
+  if (!pool) throw new Error('Unknown review sample.');
+  const spec = { ...pool, seed: seedFor(pool) };
+  await runtime.prepare(spec, seedSql(spec.seed, spec.variant));
+  return spec;
+}
+
+// A re-solve grades against a review sample in place of the visible sample. The other datasets are unchanged.
+async function gradeDatasets(runtime: WarmEngine, challenge: Challenge, reviewSeed: string | undefined): Promise<readonly DatasetSpec[]> {
+  if (reviewSeed === undefined) return challenge.datasets;
+  const sample = await sampleOf(runtime, reviewSeed);
+  return challenge.datasets.map((dataset) => (dataset.id === sampleDataset.id ? sample : dataset));
+}
+
+
+async function grade(challengeId: string, sql: string, reviewSeed?: string): Promise<GradedSubmission> {
   const runtime = await engine();
   const challenge = await challengeOf(challengeId);
   const start = performance.now();
   // A Submit waits for the hidden datasets (background-loaded after the editor is ready) on every grading path.
   await loadHidden(runtime);
-  if (challenge.checks) return gradeState(runtime, challenge, sql, start);
+  const datasets = await gradeDatasets(runtime, challenge, reviewSeed);
+  if (challenge.checks) return gradeState(runtime, challenge, datasets, sql, start);
   const outcomes: DatasetOutcome[] = [];
   const actualResults = new Map<string, QueryResult>();
   let preview: QueryResult | null = null;
@@ -74,7 +93,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   } catch (error) {
     return { preview, report: { passed: false, outcomes, elapsedMs: performance.now() - start, error: safeError(error) } };
   }
-  for (const dataset of challenge.datasets) {
+  for (const dataset of datasets) {
     try {
       const actual = await runtime.run(dataset.id, sql);
       actualResults.set(dataset.id, actual);
@@ -93,7 +112,7 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
   const passed = outcomes.every((outcome) => outcome.passed);
   const report: GradeReport = { passed, outcomes, elapsedMs: performance.now() - start };
   if (!passed) {
-    const mistake = await matchMistake(runtime, challenge, actualResults);
+    const mistake = await matchMistake(runtime, challenge, datasets, actualResults);
     if (mistake) report.mistake = mistake;
   }
   return { report, preview };
@@ -101,16 +120,17 @@ async function grade(challengeId: string, sql: string): Promise<GradedSubmission
 
 // Write tickets: learner statements, then trusted checks and constraint tests, inside one rolled-back transaction per dataset.
 // A write ticket's sample view: the learner's statements, then the same checks and constraint tests a submission uses.
-async function statePreview(runtime: WarmEngine, challengeId: string, sql: string): Promise<StatePreview> {
+async function statePreview(runtime: WarmEngine, challengeId: string, sql: string, reviewSeed: string | undefined): Promise<StatePreview> {
   const challenge = await loadItem(challengeId).catch(() => undefined);
   if (!challenge?.checks) throw new Error('This ticket is graded by its query result, not by database state.');
   const policy = challenge.policy ?? readPolicy;
-  return runtime.runState(sampleDataset.id, sql, {
+  const sample = await sampleOf(runtime, reviewSeed);
+  return runtime.runState(sample.id, sql, {
     allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks, tests: challenge.constraintTests ?? [], ...(challenge.runs === 2 ? { runs: 2 as const } : {}),
   });
 }
 
-async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string, start: number): Promise<GradedSubmission> {
+async function gradeState(runtime: WarmEngine, challenge: Challenge, datasets: readonly DatasetSpec[], sql: string, start: number): Promise<GradedSubmission> {
   const policy = challenge.policy ?? readPolicy;
   const options: StateOptions = { allow: policy.allow, transactions: policy.transactions ?? false, checks: challenge.checks ?? [], tests: challenge.constraintTests ?? [], ...(challenge.runs === 2 ? { runs: 2 as const } : {}) };
   const outcomes: DatasetOutcome[] = [];
@@ -121,7 +141,7 @@ async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string
   } catch (error) {
     return { preview, report: { passed: false, outcomes, elapsedMs: performance.now() - start, error: safeError(error) } };
   }
-  for (const dataset of challenge.datasets) {
+  for (const dataset of datasets) {
     try {
       const actual = await runtime.runState(dataset.id, sql, options);
       actualStates.set(dataset.id, actual);
@@ -137,18 +157,18 @@ async function gradeState(runtime: WarmEngine, challenge: Challenge, sql: string
   const passed = outcomes.every((outcome) => outcome.passed);
   const report: GradeReport = { passed, outcomes, elapsedMs: performance.now() - start };
   if (!passed) {
-    const mistake = await matchStateMistake(runtime, challenge, options, actualStates);
+    const mistake = await matchStateMistake(runtime, challenge, datasets, options, actualStates);
     if (mistake) report.mistake = mistake;
   }
   return { report, preview };
 }
 
 // A wrong variant that leaves exactly the learner's state, on every dataset, gets that mistake's explanation.
-async function matchStateMistake(runtime: WarmEngine, challenge: Challenge, options: StateOptions, actual: ReadonlyMap<string, StateResult>): Promise<MistakeFeedback | undefined> {
-  if (actual.size !== challenge.datasets.length) return undefined;
+async function matchStateMistake(runtime: WarmEngine, challenge: Challenge, datasets: readonly DatasetSpec[], options: StateOptions, actual: ReadonlyMap<string, StateResult>): Promise<MistakeFeedback | undefined> {
+  if (actual.size !== datasets.length) return undefined;
   for (const variant of challenge.wrongVariants) {
     let matches = true;
-    for (const dataset of challenge.datasets) {
+    for (const dataset of datasets) {
       try {
         const wrong = await runtime.runState(dataset.id, variant.sql, options);
         if (!sameState(actual.get(dataset.id)!, wrong)) { matches = false; break; }
@@ -165,11 +185,11 @@ async function matchStateMistake(runtime: WarmEngine, challenge: Challenge, opti
 
 // A failing submission that returns exactly a known wrong variant's rows on every dataset gets that
 // mistake's targeted explanation. Any error while running a variant means it does not match.
-async function matchMistake(runtime: WarmEngine, challenge: Challenge, actual: ReadonlyMap<string, QueryResult>): Promise<MistakeFeedback | undefined> {
-  if (actual.size !== challenge.datasets.length) return undefined;
+async function matchMistake(runtime: WarmEngine, challenge: Challenge, datasets: readonly DatasetSpec[], actual: ReadonlyMap<string, QueryResult>): Promise<MistakeFeedback | undefined> {
+  if (actual.size !== datasets.length) return undefined;
   for (const variant of challenge.wrongVariants) {
     let matches = true;
-    for (const dataset of challenge.datasets) {
+    for (const dataset of datasets) {
       try {
         const wrong = await runtime.run(dataset.id, variant.sql);
         if (!sameRows(actual.get(dataset.id)!, wrong, challenge.ordered)) { matches = false; break; }
@@ -192,14 +212,14 @@ async function handle(request: EngineRequest): Promise<EngineValue> {
     return info;
   }
   const runtime = await engine();
-  if (request.type === 'preview') return runtime.run('sample', request.sql);
+  if (request.type === 'preview') return runtime.run((await sampleOf(runtime, request.reviewSeed)).id, request.sql);
   if (request.type === 'demonstrate') return runtime.demonstratePlan('sample', request.sql);
-  if (request.type === 'state') return statePreview(runtime, request.challengeId, request.sql);
+  if (request.type === 'state') return statePreview(runtime, request.challengeId, request.sql, request.reviewSeed);
   if (request.type === 'schema') {
     if (!schema.some((table) => table.name === request.table)) throw new Error('Unknown table.');
     return runtime.run('sample', `SELECT * FROM "${request.table}" ORDER BY 1 LIMIT 5;`);
   }
-  if (request.type === 'grade') return grade(request.challengeId, request.sql);
+  if (request.type === 'grade') return grade(request.challengeId, request.sql, request.reviewSeed);
   const challenge = await challengeOf(request.challengeId);
   await grade(challenge.id, challenge.referenceSql);
   const samplesMs: number[] = [];

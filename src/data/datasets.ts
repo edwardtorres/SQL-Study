@@ -20,3 +20,21 @@ export function datasetsFor(hiddenIds: readonly string[]): readonly DatasetSpec[
   if (selected.length !== hiddenIds.length) throw new Error(`Unknown hidden dataset in: ${hiddenIds.join(', ')}`);
   return [sampleDataset, ...selected];
 }
+
+// Review samples stand in for the visible sample on a re-solve, so a learner cannot rely on remembered output. They are
+// not in datasetCatalog: the warm start never builds them. Every item is checked against each one by tests/review-pool.test.ts.
+export const reviewSamples: readonly DatasetSpec[] = [
+  { id: 'pool_a', label: 'Review sample A', hidden: false, seed: 271441, variant: 'sample' },
+  { id: 'pool_b', label: 'Review sample B', hidden: false, seed: 318593, variant: 'sample' },
+  { id: 'pool_c', label: 'Review sample C', hidden: false, seed: 402731, variant: 'sample' },
+  { id: 'pool_d', label: 'Review sample D', hidden: false, seed: 473019, variant: 'sample' },
+];
+
+export function reviewSampleFor(id: string): DatasetSpec | undefined {
+  return reviewSamples.find((dataset) => dataset.id === id);
+}
+
+// The review sample for a re-solve: the four samples rotate by attempt, so the same ticket is not seen twice in a row.
+export function reviewSampleIdFor(attempts: number): string {
+  return reviewSamples[attempts % reviewSamples.length]!.id;
+}

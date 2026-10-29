@@ -349,6 +349,47 @@ describe('readiness', () => {
   });
 });
 
+describe('review attempts', () => {
+  // A review pass through applySubmission. The reviewing flag and the hinted flag are the only inputs the review path reads.
+  function review(save: SaveV4, id: string, options: { passed?: boolean; hinted?: boolean; revealed?: boolean; at?: string } = {}) {
+    const at = Date.parse(options.at ?? NOON);
+    return applySubmission(save, itemIndex, item(id), REFERENCE, {
+      passed: options.passed ?? true, sql: 'SELECT other FROM shipments', at, day: localDay(at, 'UTC'), reviewing: true,
+      hinted: options.hinted ?? false, revealed: options.revealed ?? false,
+    }).save;
+  }
+
+  test('a review pass adds its credit once; a repeat pass the same day adds nothing, so a reload cannot add credit', () => {
+    const id = 'c1-i1';
+    const once = review(emptySave(), id);
+    expect(once.readiness['1']).toEqual([{ at: Date.parse(NOON), credit: 1 }]);
+    expect(once.reviews.items[id]?.lastOutcome).toBe('pass');
+    const again = review(once, id, { at: '2026-03-02T18:00:00Z' });
+    expect(again.readiness).toEqual(once.readiness);
+    expect(again.reviews).toEqual(once.reviews);
+    expect(again.reviewRecent).toEqual(once.reviewRecent);
+  });
+
+  test('a review pass on the next day adds credit and advances the schedule', () => {
+    const id = 'c1-i1';
+    const first = review(emptySave(), id);
+    const next = review(first, id, { at: '2026-03-03T12:00:00Z' });
+    expect(next.readiness['1']).toHaveLength(2);
+    expect(next.reviews.items[id]?.step).toBe(1);
+  });
+
+  test('a hinted review pass earns half credit, and a revealed one earns none', () => {
+    expect(review(emptySave(), 'c1-i1', { hinted: true }).readiness['1']?.[0]?.credit).toBe(0.5);
+    expect(review(emptySave(), 'c1-i2', { revealed: true }).readiness['1']?.[0]?.credit).toBe(0);
+  });
+
+  test('a failed review counts as a scored attempt with no credit and resets the schedule', () => {
+    const failed = review(emptySave(), 'c1-i1', { passed: false });
+    expect(failed.readiness['1']).toEqual([{ at: Date.parse(NOON), credit: 0 }]);
+    expect(failed.reviews.items['c1-i1']).toMatchObject({ step: 0, lastOutcome: 'miss' });
+  });
+});
+
 describe('XP totals', () => {
   test('total XP is the sum of the tickets', () => {
     expect(totalXp({ ...emptySave(), tickets: { a: ticket({ xp: 15 }), b: ticket({ xp: 35 }) } })).toBe(50);

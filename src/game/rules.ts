@@ -259,9 +259,12 @@ export function applySubmission(save: SaveV4, items: readonly ItemMeta[], item: 
 }
 
 // A review attempt: its outcome joins the competency's review window, its schedule advances or resets, and a scored
-// ticket adds its credit to the readiness window. A pass is any credit above zero.
+// ticket adds its credit to the readiness window. A pass is any credit above zero. A ticket passes one review a day:
+// a repeat pass after a review pass that day changes nothing, so a reload cannot add credit again.
 function recordReviewAttempt(save: SaveV4, item: ItemMeta, credit: number, day: string, at: number): SaveV4 {
   const pass = credit > 0;
+  const schedule = save.reviews.items[item.id];
+  if (pass && schedule?.lastDay === day && schedule.lastOutcome === 'pass') return save;
   const next: SaveV4 = { ...save, reviewRecent: appendReviewOutcome(save.reviewRecent, item.chapterId, pass), reviews: withReview(save.reviews, item.id, pass, day) };
   return isScored(item) ? recordScored(next, item.chapterId, at, credit) : next;
 }

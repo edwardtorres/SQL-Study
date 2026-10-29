@@ -253,8 +253,18 @@ weakest competency. A ticket never seen is not offered.
 **Weak Spots.** Competencies ranked by readiness, weakest first, with the attempts each rests on. The five most frequent
 mistake tags. Revealed tickets, most recent first, and tickets that have failed without a pass.
 
-**Re-solves (built in S2).** A re-solve of a ticket the learner has seen will use a visible sample from a verified seed
-pool, so the sample cannot be remembered. The content check will run every item against every pool seed.
+**Review samples.** A review opens a ticket on one of four review samples (`reviewSamples` in `src/data/datasets.ts`,
+labelled Review sample A to D). The sample is chosen by the ticket's attempt count, so it rotates after each attempt and
+cannot be remembered. A review never runs on the visible sample. `tests/review-pool.test.ts` runs every item on every
+review sample: the reference passes, and at least one wrong variant changes the result there.
+
+**Review attempts.** A review pass adds one readiness attempt at its credit: a first try 1, a hint or a pass after a
+failure 0.5, a reveal 0. A failed review adds an attempt at 0. A review pass that follows another review pass of the same
+ticket on the same local day, with no miss between, changes nothing, so a reload cannot add credit. A review pass earns the usual award under the
+Game loop table: a first pass earns its award, and any later pass earns the repeat XP. Mastery is never changed by a review.
+
+**Pages.** Daily Review and Weak Spots are on the office map. A desk with a *Needs review* mark has a *Review this desk*
+button, which lists the three seen tickets in that desk passed longest ago.
 
 ## Execution findings and cross-browser checks
 

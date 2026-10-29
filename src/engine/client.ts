@@ -94,18 +94,18 @@ export class EngineClient {
     this.operations = operation.then(() => undefined, () => undefined);
     return operation;
   }
-  preview(sql: string): Promise<QueryResult> {
-    return this.operate({ type: 'preview', sql }, 3500);
+  preview(sql: string, reviewSeed?: string): Promise<QueryResult> {
+    return this.operate({ type: 'preview', sql, ...(reviewSeed === undefined ? {} : { reviewSeed }) }, 3500);
   }
 
   demonstrate(sql: string): Promise<QueryResult> {
     return this.operate({ type: 'demonstrate', sql }, 3500);
   }
-  previewState(challengeId: string, sql: string): Promise<StatePreview> {
-    return this.operate({ type: 'state', challengeId, sql }, 3500);
+  previewState(challengeId: string, sql: string, reviewSeed?: string): Promise<StatePreview> {
+    return this.operate({ type: 'state', challengeId, sql, ...(reviewSeed === undefined ? {} : { reviewSeed }) }, 3500);
   }
-  grade(challengeId: string, sql: string): Promise<GradedSubmission> {
-    return this.operate({ type: 'grade', challengeId, sql }, 6000);
+  grade(challengeId: string, sql: string, reviewSeed?: string): Promise<GradedSubmission> {
+    return this.operate({ type: 'grade', challengeId, sql, ...(reviewSeed === undefined ? {} : { reviewSeed }) }, 6000);
   }
   table(table: string): Promise<QueryResult> {
     return this.operate({ type: 'schema', table }, 3500);

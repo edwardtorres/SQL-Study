@@ -7,10 +7,11 @@ export type StatePreview = StateResult;
 export interface WarmBenchmark { samplesMs: number[]; medianMs: number; maxMs: number; memoryBytes: number }
 export type EngineRequest =
   | { type: 'init'; devSeed?: number }
-  | { type: 'preview'; sql: string }
+  | { type: 'preview'; sql: string; reviewSeed?: string }
   | { type: 'demonstrate'; sql: string }
-  | { type: 'state'; challengeId: string; sql: string }
-  | { type: 'grade'; challengeId: string; sql: string }
+  | { type: 'state'; challengeId: string; sql: string; reviewSeed?: string }
+  // reviewSeed names a review sample (see reviewSamples in src/data/datasets.ts) that stands in for the visible sample.
+  | { type: 'grade'; challengeId: string; sql: string; reviewSeed?: string }
   | { type: 'schema'; table: string }
   | { type: 'benchmark'; challengeId: string };
 export type EngineValue = EngineInfo | QueryResult | GradedSubmission | WarmBenchmark | StatePreview;

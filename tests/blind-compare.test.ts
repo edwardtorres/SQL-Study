@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { items } from '../src/data/catalog';
-import { datasetCatalog, seedSql } from '../src/data';
+import { datasetCatalog, seedSql, reviewSamples } from '../src/data';
 import { sameRows } from '../src/grader/compare';
 import { readPolicy } from '../src/grader/policy';
 import { validateSql } from '../src/grader/structure';
@@ -42,7 +42,7 @@ describe('blind-solve agreement', () => {
     const db = await PGlite.create();
     const failures: string[] = [];
     try {
-      for (const dataset of datasetCatalog) {
+      for (const dataset of [...datasetCatalog, ...reviewSamples]) {
         await engine.prepare(dataset, seedSql(dataset.seed, dataset.variant));
         await db.exec(`CREATE SCHEMA blind_${dataset.id}; SET search_path TO blind_${dataset.id};`);
         await db.exec(seedSql(dataset.seed, dataset.variant));
@@ -55,13 +55,13 @@ describe('blind-solve agreement', () => {
           const options: StateOptions = { allow: policy.allow, transactions, checks: item.checks, tests: item.constraintTests ?? [] };
           try { await validateSql(record.solutionSql, { mode: 'write', allow: policy.allow, transactions }); }
           catch (error) { failures.push(`${record.id}: breaks the policy: ${String(error)}`); continue; }
-          for (const dataset of item.datasets) {
+          for (const dataset of [...item.datasets, ...reviewSamples]) {
             const expected = await engine.runState(dataset.id, item.referenceSql, options);
             const actual = await engine.runState(dataset.id, record.solutionSql, options);
             if (!sameState(expected, actual)) failures.push(`${record.id}: state differs from the reference on ${dataset.id}`);
           }
         } else {
-          for (const dataset of item.datasets) {
+          for (const dataset of [...item.datasets, ...reviewSamples]) {
             await db.exec(`SET search_path TO blind_${dataset.id};`);
             try {
               const expected = await db.query(item.referenceSql, [], { rowMode: 'array' });
