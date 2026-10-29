@@ -1,0 +1,148 @@
+# Checks a commit, then publishes the exact bytes that passed to the private S3 bucket behind CloudFront.
+#
+# Rollback: run this workflow from main with `sha` set to an earlier commit. It runs the same checks on that commit and
+# publishes its build. Deploys are serialised by the concurrency group below.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to build and deploy, for a rollback. Leave empty to deploy the head of main.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-deploy
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check, build and end-to-end tests in Chromium and WebKit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # Lint, unit and integration tests, the production build (without the engine lab) and its scan.
+      - name: Lint, tests, build and production scan
+        run: npm run check
+      - name: Infrastructure templates pass cfn-lint
+        run: pipx run cfn-lint==1.37.1 infra/sql-cert.yaml infra/sql-site.yaml
+      - name: Install both browsers with their system libraries
+        run: |
+          # Apt mirrors can stall mid-download; retry before failing the job.
+          for attempt in 1 2 3; do
+            if npx playwright install --with-deps chromium webkit; then exit 0; fi
+            echo "playwright install attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 15))
+          done
+          exit 1
+      # The shipped build, served with the deploy headers. The engine-lab spec is skipped here, because the shipped build has no lab.
+      - name: End-to-end tests on the shipped build in both browsers
+        run: npx playwright test --project=chromium --project=webkit
+      - name: Keep the failure evidence
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-dist
+          path: dist
+          retention-days: 7
+          if-no-files-found: error
+
+  deploy:
+    name: Publish to S3 and invalidate CloudFront
+    needs: check
+    # Skipped (not failed) until the owner has set the repository variables in DEPLOY.md.
+    if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: site-dist
+          path: dist
+      - name: Mask deployment values before any step can print them
+        env:
+          ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          SITE_BUCKET: ${{ vars.SITE_BUCKET }}
+          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          for value in "$ROLE_ARN" "$SITE_BUCKET" "$DISTRIBUTION_ID"; do
+            echo "::add-mask::$value"
+          done
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: sql-study-deploy
+      # Each object gets its content type, cache policy and Content-Encoding from scripts/deploy/plan.mjs. Assets go first, then the
+      # pages and worker, then the unreferenced assets are removed, and the paths that are not hashed are invalidated.
+      - name: Publish the build
+        env:
+          SITE_BUCKET: ${{ vars.SITE_BUCKET }}
+          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: node scripts/deploy/publish.mjs dist
+
+  smoke:
+    name: Live checks (reports only)
+    needs: deploy
+    if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # The site is already live when this runs, so a failure is shown on the run but cannot undo or block the deploy.
+    continue-on-error: true
+    permissions:
+      contents: read
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: site-dist
+          path: dist
+      - name: Headers, encodings and the 404 page on the live site
+        run: node scripts/check-live.mjs dist
+      - name: Install Chromium with its system libraries
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests against the live site at 390 and 1280 px
+        run: npx playwright test --project=live

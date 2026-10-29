@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  The Larkspur SQL Desk: the TLS certificate for the study site, requested with DNS validation. Deploy this stack in us-east-1,
+  the only Region CloudFront reads certificates from. It is a separate stack so the site stack does not wait on the DNS record
+  that the owner adds while this stack is validating.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: sql.edwardtorres.dev
+    Description: The host name the site is served from.
+    AllowedPattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$'
+
+Resources:
+  SiteCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+      Tags:
+        - Key: Project
+          Value: sql-study
+
+Outputs:
+  CertificateArn:
+    Description: Pass this to infra/sql-site.yaml as CertificateArn.
+    Value: !Ref SiteCertificate
