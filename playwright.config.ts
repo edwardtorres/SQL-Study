@@ -24,10 +24,10 @@ export default defineConfig({
     hasTouch: true,
   },
   projects: [
-    // The production build. The development-only short interview set is covered by its own project.
-    { name: 'chromium', testIgnore: [/interview-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'chromium', launchOptions: executablePath ? { executablePath } : {} } },
-    { name: 'webkit', testIgnore: [/interview-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'webkit' } },
-    { name: 'dev-interview', testMatch: /interview-dev\.spec\.ts$/, use: { browserName: 'chromium', baseURL: 'http://127.0.0.1:5173', launchOptions: executablePath ? { executablePath } : {} } },
+    // The production build. Development-only specs (the short interview set, the crash trigger) run in the dev-interview project.
+    { name: 'chromium', testIgnore: [/-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'chromium', launchOptions: executablePath ? { executablePath } : {} } },
+    { name: 'webkit', testIgnore: [/-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'webkit' } },
+    { name: 'dev-interview', testMatch: /(interview|error-boundary)-dev\.spec\.ts$/, use: { browserName: 'chromium', baseURL: 'http://127.0.0.1:5173', launchOptions: executablePath ? { executablePath } : {} } },
   ],
   webServer: [
     {

@@ -86,3 +86,5 @@
 .backup-banner p { margin: 0; max-width: 60ch; }
 .save-warning-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 16px; }
 .save-warning-actions p { margin: 0; max-width: 60ch; }
+.crash-page { max-width: 640px; margin: 15vh auto 0; padding: 24px 16px; display: grid; gap: 14px; }
+.crash-page h1 { margin: 0; }

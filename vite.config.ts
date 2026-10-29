@@ -80,8 +80,18 @@ function browserAssets(): Plugin {
         }
         const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
         const file = resolve(output, relative);
-        if (!file.startsWith(`${output}${sep}`) || !(extname(file) in mime)) return next();
-        if (!existsSync(file)) return next();
+        if (!file.startsWith(`${output}${sep}`)) return next();
+        // Documents and the files the desk loads are served here. A missing one gets the 404 page with status 404, so an unknown
+        // address never falls back to the office page with a 200.
+        const kind = extname(file);
+        if (kind !== '' && !(kind in mime)) return next();
+        if (!existsSync(file) || statSync(file).isDirectory()) {
+          response.statusCode = 404;
+          response.setHeader('Content-Type', mime['.html']!);
+          response.setHeader('Content-Security-Policy', policy);
+          response.setHeader('Cache-Control', 'no-cache');
+          return response.end(readFileSync(resolve(output, '404.html')));
+        }
         const compressed = selected ? `${file}.${selected === 'gzip' ? 'gz' : 'br'}` : undefined;
         const body = compressed && existsSync(compressed) ? compressed : file;
         response.setHeader('Content-Type', mime[extname(file)]!);

@@ -11,6 +11,7 @@ type Stored = Persistence | 'checking';
 export default function Settings({ onBack }: Props) {
   const [offline, setOffline] = useState<Offline>('checking');
   const [stored, setStored] = useState<Stored>('checking');
+  const [crash, setCrash] = useState(false);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -42,6 +43,9 @@ export default function Settings({ onBack }: Props) {
         ? 'This browser cannot save the desk for offline use.'
         : 'Checking offline use…';
 
+  // A development-only crash, so the error boundary can be tested. The production build has no trigger.
+  if (crash) throw new Error('Development crash trigger.');
+
   return <div className="chapter-main">
     <button className="text-button" onClick={onBack}><ArrowLeft size={15} />All desks</button>
     <header className="chapter-header">
@@ -66,5 +70,6 @@ export default function Settings({ onBack }: Props) {
       </ol>
       <p>The Home Screen app opens full screen. Open a SQL screen once in it before you go offline, so the app saves its engine.</p>
     </section>
+    {import.meta.env.DEV && <button className="secondary-button" data-dev-marker="__SQL_DESK_CRASH_TRIGGER__" onClick={() => { setCrash(true); }}>Crash this page (dev)</button>}
   </div>;
 }

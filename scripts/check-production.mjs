@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const forbidden = ['__SQL_DESK_DEV_ONLY__', '?seed=', 'debugSeedOverride', '__SQL_DESK_SHORT_SET__'];
+const forbidden = ['__SQL_DESK_DEV_ONLY__', '?seed=', 'debugSeedOverride', '__SQL_DESK_SHORT_SET__', '__SQL_DESK_CRASH_TRIGGER__'];
 const assets = await readdir('dist/assets');
 let checked = 0;
 for (const name of assets) {
