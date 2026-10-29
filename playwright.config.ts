@@ -10,6 +10,10 @@ if (!executablePath) {
   }
 }
 
+// The engine lab is a test page. Only a build made with ENGINE_LAB=1 contains it, so its spec runs only against that build.
+const labBuild = process.env.ENGINE_LAB === '1';
+const labIgnored = labBuild ? [] : [/engine-lab\.spec\.ts$/];
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -21,8 +25,8 @@ export default defineConfig({
   },
   projects: [
     // The production build. The development-only short interview set is covered by its own project.
-    { name: 'chromium', testIgnore: /interview-dev\.spec\.ts$/, use: { browserName: 'chromium', launchOptions: executablePath ? { executablePath } : {} } },
-    { name: 'webkit', testIgnore: /interview-dev\.spec\.ts$/, use: { browserName: 'webkit' } },
+    { name: 'chromium', testIgnore: [/interview-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'chromium', launchOptions: executablePath ? { executablePath } : {} } },
+    { name: 'webkit', testIgnore: [/interview-dev\.spec\.ts$/, ...labIgnored], use: { browserName: 'webkit' } },
     { name: 'dev-interview', testMatch: /interview-dev\.spec\.ts$/, use: { browserName: 'chromium', baseURL: 'http://127.0.0.1:5173', launchOptions: executablePath ? { executablePath } : {} } },
   ],
   webServer: [

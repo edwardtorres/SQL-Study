@@ -76,3 +76,9 @@
 .interview-clock { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: #fffefa; border: 1px solid #dce1d6; border-radius: 9px; padding: 14px 16px; font-size: 12px; color: #1d3834; }
 .interview-clock strong { font-size: 16px; font-weight: 650; }
 .interview-clock.is-expired { border-color: #e2bfa6; color: #8a4a27; }
+
+.update-banner { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 8px; background: #fffefa; }
+.update-banner p { margin: 0; max-width: 60ch; }
+.install-steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+/* On phones the rail is one row; the Settings label is hidden there. The button keeps its name through aria-label. */
+@media (max-width: 680px) { .settings-nav .nav-label { display: none; } }

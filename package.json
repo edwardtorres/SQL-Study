@@ -8,16 +8,17 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "spike:chromium": "npm run build && node scripts/engine-spike.mjs chromium",
-    "spike:webkit": "npm run build && node scripts/engine-spike.mjs webkit",
+    "spike:chromium": "ENGINE_LAB=1 npm run build && node scripts/engine-spike.mjs chromium",
+    "spike:webkit": "ENGINE_LAB=1 npm run build && node scripts/engine-spike.mjs webkit",
     "browsers:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium webkit",
-    "test:e2e": "npm run build && PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
+    "test:e2e": "ENGINE_LAB=1 npm run build && PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
     "test:e2e:chromium": "npm run test:e2e -- --project=chromium",
     "lint": "eslint src",
     "check:production": "node scripts/check-production.mjs",
     "check:quotes": "node scripts/verify-quotes.mjs",
     "check": "npm run lint && npm test && npm run build && npm run check:production",
-    "benchmark:warm": "node scripts/warm-benchmark.mjs"
+    "benchmark:warm": "node scripts/warm-benchmark.mjs",
+    "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.4",

@@ -27,6 +27,8 @@ jobs:
         browser: [chromium, webkit]
     env:
       PLAYWRIGHT_BROWSERS_PATH: '0'
+      # This is the test build. It keeps the engine lab page that the spike and its spec use; the shipped build does not.
+      ENGINE_LAB: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

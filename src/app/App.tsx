@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Leaf, LoaderCircle, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
+import { ChevronRight, Leaf, LoaderCircle, Settings as SettingsIcon, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
 import { curriculum, reviewSampleIdFor } from '../data';
 import { itemIndex, itemMetaById, type ItemMeta } from '../data/itemIndex';
 import { loadItem } from '../data/items/loader';
@@ -12,6 +12,7 @@ import { ChapterView, lessonSectionIds } from './Chapters';
 import OfficeMap from './OfficeMap';
 import Promotion from './Promotion';
 import { partLabel, summarizeChapter } from './model';
+import { registerOfflineWorker, type ApplyUpdate } from '../pwa/register';
 
 const Workspace = lazy(() => import('./Workspace'));
 const LessonView = lazy(() => import('./LessonView'));
@@ -19,6 +20,7 @@ const Scratchpad = lazy(() => import('./Scratchpad'));
 const Review = lazy(() => import('./Review'));
 const WeakSpots = lazy(() => import('./WeakSpots'));
 const Interview = lazy(() => import('./Interview'));
+const Settings = lazy(() => import('./Settings'));
 
 type View =
   | { name: 'home' }
@@ -30,7 +32,8 @@ type View =
   | { name: 'needs'; chapterId: number }
   | { name: 'weak' }
   | { name: 'interview' }
-  | { name: 'scratch' };
+  | { name: 'scratch' }
+  | { name: 'settings' };
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -51,6 +54,12 @@ export default function App() {
   const [promotion, setPromotion] = useState<string | null>(null);
   const [pendingImport, setPendingImport] = useState<SaveV5 | null>(null);
   const [notice, setNotice] = useState<{ tone: 'status' | 'alert'; text: string } | null>(null);
+  // A waiting offline worker offers a reload. The learner decides when, so a deploy never interrupts a query.
+  const [applyUpdate, setApplyUpdate] = useState<ApplyUpdate | null>(null);
+
+  useEffect(() => {
+    return registerOfflineWorker((apply) => { setApplyUpdate(() => apply); });
+  }, []);
   const persist = useCallback((next: SaveV5) => {
     if (!restored.writable) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); }
@@ -152,6 +161,7 @@ export default function App() {
       : view.name === 'daily' ? 'Daily Review'
         : view.name === 'weak' ? 'Weak Spots'
           : view.name === 'interview' ? 'Interview'
+          : view.name === 'settings' ? 'Settings'
           : view.name === 'needs' ? `Needs review · Chapter ${view.chapterId}`
       : view.name === 'item' && meta ? `Chapter ${meta.chapterId} · ${meta.title}`
         : current ? `Chapter ${current.id}${view.name === 'lesson' ? ' · Lesson' : ''}` : 'Office';
@@ -175,6 +185,7 @@ export default function App() {
           })}
         </nav>
         <button className={`nav-button ${view.name === 'scratch' ? 'is-current' : ''}`} onClick={() => { go({ name: 'scratch' }); }}><Table2 size={18} /> Scratchpad</button>
+        <button className={`nav-button settings-nav ${view.name === 'settings' ? 'is-current' : ''}`} aria-label="Settings" onClick={() => { go({ name: 'settings' }); }}><SettingsIcon size={18} /><span className="nav-label"> Settings</span></button>
         <div className="rail-shift">
           <span className="rail-eyebrow">YOUR SHIFT</span>
           <div className="shift-heading"><span>Make yourself useful.</span><Sparkles size={18} /></div>
@@ -189,6 +200,10 @@ export default function App() {
         </header>
         <main id="main" className={view.name === 'item' || view.name === 'scratch' ? 'workspace-main' : 'board-main'}>
           {saveFailed && <p role="alert" className="save-warning">{restored.status === 'future' ? 'Your save belongs to a newer app version. This session will not overwrite it.' : restored.status === 'corrupt' ? 'Your saved progress could not be read. The original is preserved; this session continues without saving.' : 'Progress could not be saved on this browser. Keep this tab open to retain this session.'}</p>}
+          {applyUpdate && <section className="update-banner" aria-label="Update available">
+            <p>A new version of the desk is ready. Your progress is saved, so reloading is safe.</p>
+            <button className="primary-button" onClick={applyUpdate}>Reload to update</button>
+          </section>}
           <Suspense fallback={<div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the desk…</div>}>
             {view.name === 'home' && <OfficeMap
               items={itemIndex} save={save} today={today} chapters={curriculum} canImport={restored.writable} onScratch={() => { go({ name: 'scratch' }); }}
@@ -207,6 +222,7 @@ export default function App() {
             {view.name === 'chapter' && current && <ChapterView chapter={current} items={itemIndex} save={save} onLesson={() => { go({ name: 'lesson', chapterId: current.id }); }} onItem={openItem} onScratch={() => { go({ name: 'scratch' }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'lesson' && current && <LessonView chapter={current} lessonProgress={save.lessons} onAnswer={answerLesson} onBack={() => { go({ name: 'chapter', chapterId: current.id }); }} onPractice={() => { go({ name: 'chapter', chapterId: current.id }); }} />}
             {view.name === 'scratch' && <Scratchpad onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'settings' && <Settings onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'daily' && <Review mode="daily" items={itemIndex} save={save} ids={save.dailyReview?.day === today ? save.dailyReview.itemIds : []} chapterTitle={undefined} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'needs' && <Review mode="needs" items={itemIndex} save={save} ids={needsReviewSet(save, view.chapterId, poolOf(save))} chapterTitle={chapterOf(view.chapterId)?.title} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'interview' && <Interview save={save} items={itemIndex} today={today} commit={commit} setDraft={(id, draft) => { updateTicket(id, (previous) => ({ ...previous, draft })); }} onBack={() => { go({ name: 'home' }); }} />}

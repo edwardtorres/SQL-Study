@@ -1,4 +1,5 @@
-import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
@@ -96,15 +97,48 @@ function browserAssets(): Plugin {
   };
 }
 
+// Routes the offline worker precaches besides the built entry, its CSS and the icons. Lazy chunks and the engine are not listed.
+const SHELL_ROUTES = ['/', '/index.html', '/manifest.webmanifest'];
+
+// Writes dist/sw.js from scripts/pwa/sw.template.js. The shell is the entry chunk and its static imports, its CSS, and the
+// public icons. The build id is a hash of the shell list and the template, so any change to either starts a new cache.
+function serviceWorker(): Plugin {
+  const template = readFileSync(resolve('scripts/pwa/sw.template.js'), 'utf8');
+  return {
+    name: 'offline-service-worker',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const files = Object.values(bundle);
+      const chunks = new Map(files.flatMap((file) => (file.type === 'chunk' ? [[file.fileName, file] as const] : [])));
+      const entry = files.find((file) => file.type === 'chunk' && file.isEntry && file.name === 'main');
+      if (!entry) throw new Error('The service worker needs the main entry chunk');
+      const shell = new Set<string>(SHELL_ROUTES);
+      const visit = (fileName: string): void => {
+        if (shell.has(`/${fileName}`)) return;
+        shell.add(`/${fileName}`);
+        for (const imported of chunks.get(fileName)?.imports ?? []) visit(imported);
+      };
+      visit(entry.fileName);
+      for (const file of files) if (file.type === 'asset' && file.fileName.endsWith('.css')) shell.add(`/${file.fileName}`);
+      for (const icon of readdirSync('public/icons')) shell.add(`/icons/${icon}`);
+      const list = [...shell].sort();
+      const buildId = createHash('sha256').update(template).update(JSON.stringify(list)).digest('hex').slice(0, 12);
+      const source = template.replace("'__BUILD_ID__'", `'${buildId}'`).replace('__SHELL__', JSON.stringify(list));
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), browserAssets()],
+  plugins: [react(), tailwindcss(), browserAssets(), serviceWorker()],
   worker: { format: 'es' },
   // Prebundle lazy worker dependencies before the first SQL screen; discovering
   // them on first use otherwise triggers a development-page reload.
   optimizeDeps: { include: ['@electric-sql/pglite', 'libpg-query'] },
   build: {
     target: 'es2022',
-    rolldownOptions: { input: { main: resolve('index.html'), lab: resolve('engine-lab.html') } },
+    // The engine lab is a development and test page. The shipped build leaves it out unless ENGINE_LAB=1 (the test and spike scripts set it).
+    rolldownOptions: { input: { main: resolve('index.html'), ...(process.env.ENGINE_LAB === '1' ? { lab: resolve('engine-lab.html') } : {}) } },
   },
   preview: { headers: { 'Content-Security-Policy': policy } },
 });
