@@ -1,9 +1,13 @@
 name: Lesson quote check
 
+# Checks every citation quote against its live page each week, and on pushes that change the citations, lessons or this check.
+# A quote that is not on its page, or a page that answers 404 or 410, fails this run and opens or updates one issue labelled
+# quote-check. A page that cannot be reached after retries is a warning only, and it never closes the issue. Nothing in the deploy
+# depends on this workflow.
 on:
   push:
     branches: [main]
-    paths: ['src/data/citations.json', 'src/data/lessons/**', 'scripts/verify-quotes.mjs']
+    paths: ['src/data/citations.json', 'src/data/lessons/**', 'src/data/itemIndex.ts', 'scripts/verify-quotes.mjs', '.github/workflows/quote-check.yml']
   schedule:
     # Weekly, so a changed PostgreSQL page is noticed even when no lesson changes.
     - cron: '17 6 * * 1'
@@ -11,17 +15,65 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   quotes:
     name: Every lesson quote appears verbatim on its live page
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
       # The script uses only Node built-ins (fetch), so no install step is needed.
       - name: Verify quotes against live pages
+        id: verify
+        env:
+          QUOTE_ISSUE_BODY: ${{ runner.temp }}/quote-issue.md
         run: node scripts/verify-quotes.mjs
+      # Runs even when the check failed, so a mismatch is reported as an issue. It reads docs/reviews/quotes.json, which the check
+      # writes in this workspace, and it uses only the workflow's own GITHUB_TOKEN.
+      - name: Open, update or close the quote-check issue
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          QUOTE_ISSUE_BODY: ${{ runner.temp }}/quote-issue.md
+        with:
+          script: |
+            const fs = require('node:fs');
+            const label = 'quote-check';
+            const { owner, repo } = context.repo;
+            const report = JSON.parse(fs.readFileSync('docs/reviews/quotes.json', 'utf8'));
+            const failing = report.results.filter((result) => result.status === 'missing' || result.status === 'not-found');
+
+            const { data: listed } = await github.rest.issues.listForRepo({ owner, repo, state: 'open', labels: label, per_page: 20 });
+            const open = listed.find((issue) => !issue.pull_request);
+
+            if (failing.length > 0) {
+              const body = fs.readFileSync(process.env.QUOTE_ISSUE_BODY, 'utf8');
+              const title = `Quote check: ${failing.length} citation${failing.length === 1 ? '' : 's'} need review`;
+              if (open) {
+                await github.rest.issues.update({ owner, repo, issue_number: open.number, title, body });
+                core.info(`Updated issue #${open.number}.`);
+              } else {
+                try {
+                  await github.rest.issues.getLabel({ owner, repo, name: label });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                  await github.rest.issues.createLabel({ owner, repo, name: label, color: 'b60205', description: 'The weekly lesson quote check' });
+                }
+                const { data: created } = await github.rest.issues.create({ owner, repo, title, body, labels: [label] });
+                core.info(`Opened issue #${created.number}.`);
+              }
+            } else if (report.unreachable === 0 && open) {
+              // Closed only when every quote was checked and verified. An unreachable page leaves the issue as it is.
+              await github.rest.issues.createComment({ owner, repo, issue_number: open.number, body: 'Every quote was verified on its page in this run. Closing.' });
+              await github.rest.issues.update({ owner, repo, issue_number: open.number, state: 'closed', state_reason: 'completed' });
+              core.info(`Closed issue #${open.number}.`);
+            } else {
+              core.info(`No failing quotes. ${report.unreachable} page(s) could not be checked, so no issue was changed.`);
+            }
