@@ -59,6 +59,10 @@ Provide the audit directly in chat as Markdown. Do not commit or push an audit
 file unless the user explicitly requests it. Technical evidence and ordinary
 project documentation remain part of the repository.
 
+Every audit includes every section the step prompt requests, under the heading the prompt gives.
+If a section cannot be filled, keep its heading and say exactly why it is empty. An audit that
+omits a requested section is incomplete, even when its other sections are accurate.
+
 ## Apply lessons from previous study apps
 
 - Shuffle multiple-choice options at render time, preserving stable option IDs.
@@ -276,8 +280,15 @@ toward its primary competency (`chapterId`) and carries an estimate in whole min
 does the draw take chapter 13 independent tickets, then independent tickets from mastered chapters 4 to 12 (the multi-concept
 group). A problem is seen once it has an attempt or sat in a finished set.
 
-**Time limit.** The sum of the problems' estimates, rounded up to a whole minute. A chapter ticket with no estimate of its
-own is timed at the independent default, 6 minutes.
+**Time limit.** The sum of the problems' estimates, rounded up to a whole minute. A reserve problem declares its own estimate,
+and so does a chapter 13 ticket (its `estimatedMinutes`, copied into the item index and pinned by tests/item-index.test.ts).
+Any other chapter ticket is timed at the independent default, 6 minutes. Each problem keeps the estimate it started with.
+
+**Solve time.** Each problem records `spentMs`: the time its workspace was open inside the set, before it passed. Time is counted
+when the workspace closes, when the problem passes, and at a checkpoint every 30 seconds while it is open. A reload clears the
+open marker without counting, so it loses at most 30 seconds. Results show each problem's estimate and time. "Estimates vs your
+times" on the interview page gives each timed problem's median over the finished sets, and marks it off when the median is more
+than half away from the estimate. Results from a version 4 save show the time as not recorded.
 
 **Timer.** The deadline is the saved start time plus the limit, so a reload keeps the time left. When the deadline passes,
 the set ends on its own. The page grades each unpassed problem's saved draft once the engine is ready, and a draft that
@@ -299,7 +310,7 @@ marker, `__SQL_DESK_SHORT_SET__`. `e2e/interview-dev.spec.ts` covers it through 
 against the dev server.
 
 **Deviations from the Step 5 plan.** The multi-concept group uses the chapter number (4 and later) instead of a generated
-structural index. Chapter 13 estimates are not read, so those tickets use the default. The distinct-scan ticket (int-07)
+structural index. Chapter 13 estimates were not read until Step 5 Part A, which now reads them. The distinct-scan ticket (int-07)
 replaced the planned DISTINCT ON latest-scan ticket, because the staging feed in the seed has no multi-scan ordering to test,
 and chapter 8 already covers latest-per-group.
 

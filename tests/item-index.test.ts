@@ -14,8 +14,8 @@ describe('item index and chapter loading', () => {
     expect([...indexed.keys()].sort()).toEqual(items.map((item) => item.id).sort());
     for (const item of items) {
       const entry = indexed.get(item.id)!;
-      expect({ chapterId: entry.chapterId, role: entry.role, bossGroup: entry.bossGroup, title: entry.title, summary: entry.summary, colleague: entry.colleague, colleagueRole: entry.colleagueRole, starterStyle: entry.starterStyle, starterSql: entry.starterSql }, item.id)
-        .toEqual({ chapterId: item.chapterId, role: item.role, bossGroup: item.bossGroup, title: item.title, summary: item.summary, colleague: item.colleague, colleagueRole: item.colleagueRole, starterStyle: item.starterStyle, starterSql: item.starterSql });
+      expect({ chapterId: entry.chapterId, role: entry.role, bossGroup: entry.bossGroup, title: entry.title, summary: entry.summary, colleague: entry.colleague, colleagueRole: entry.colleagueRole, starterStyle: entry.starterStyle, starterSql: entry.starterSql, estimatedMinutes: entry.estimatedMinutes }, item.id)
+        .toEqual({ chapterId: item.chapterId, role: item.role, bossGroup: item.bossGroup, title: item.title, summary: item.summary, colleague: item.colleague, colleagueRole: item.colleagueRole, starterStyle: item.starterStyle, starterSql: item.starterSql, estimatedMinutes: item.estimatedMinutes });
     }
   });
 

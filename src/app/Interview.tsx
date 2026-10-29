@@ -3,28 +3,41 @@ import { ArrowLeft, ArrowRight, Check, Clock3, Play, Send, Timer } from 'lucide-
 import { interviewItems } from '../data/interview';
 import type { Challenge } from '../core/types';
 import type { ItemMeta } from '../data/itemIndex';
+import { loadItem } from '../data/items/loader';
 import { sqlEngine } from '../engine/client';
 import {
-  deadlineOf, drawInterview, finishInterview, INTERVIEW_PROBLEMS, interviewReady, isExpired, recordInterviewFailure, recordInterviewPass,
-  remainingMs, settleExpiredPass, SHORT_SET_MINUTES, SHORT_SET_PROBLEMS, startInterview,
+  checkpointProblem, closeProblem, deadlineOf, drawInterview, estimateComparison, finishInterview, forgetOpen, INTERVIEW_PROBLEMS, interviewReady,
+  isExpired, isOffEstimate, OFF_ESTIMATE_SHARE, openProblem, recordInterviewFailure, recordInterviewPass, remainingMs, settleExpiredPass,
+  SHORT_SET_MINUTES, SHORT_SET_PROBLEMS, startInterview,
 } from '../game/interview';
-import { emptyProgress, type InterviewResult, type SaveV4 } from '../save/format';
+import { emptyProgress, type InterviewProblem, type InterviewResult, type SaveV5 } from '../save/format';
 import Workspace from './Workspace';
 
 // A timed interview set. The page owns the clock and the grading; the rules are in src/game/interview.ts.
 interface Props {
-  save: SaveV4; items: readonly ItemMeta[]; today: string;
-  commit: (next: SaveV4) => void;
+  save: SaveV5; items: readonly ItemMeta[]; today: string;
+  commit: (next: SaveV5) => void;
   setDraft: (id: string, draft: string) => void;
   onBack: () => void;
 }
+
+// While a workspace is open, its time is counted at this interval, so a reload loses at most this much.
+const CHECKPOINT_MS = 30_000;
 
 const mmss = (ms: number): string => {
   const total = Math.ceil(ms / 1000);
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 const reserveChallenge = (id: string): Challenge | undefined => interviewItems.find((item) => item.id === id);
-const titleOf = (id: string): string => reserveChallenge(id)?.title ?? id;
+
+// The estimate and the time on one problem. A migrated result has no estimate, so its time is not shown.
+function timeLine(problem: InterviewProblem): string {
+  if (problem.estimateMinutes === null) return 'Time on this problem not recorded for this set.';
+  const estimate = problem.estimateMinutes * 60_000;
+  const note = problem.spentMs > estimate * (1 + OFF_ESTIMATE_SHARE) ? ' · over the estimate'
+    : problem.spentMs < estimate * (1 - OFF_ESTIMATE_SHARE) ? ' · under the estimate' : '';
+  return `Estimate ${problem.estimateMinutes} min · your time on it ${mmss(problem.spentMs)}${note}`;
+}
 
 export default function Interview({ save, items, today, commit, setDraft, onBack }: Props) {
   const set = save.interview;
@@ -35,6 +48,23 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
   const [explanations, setExplanations] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const settling = useRef(false);
+  // The checkpoint timer reads the latest save here, so a checkpoint never writes back an older save.
+  const latest = useRef({ save, set });
+  // A chapter 13 problem is not a reserve problem, so its definition loads when it is opened.
+  const [loaded, setLoaded] = useState<{ id: string; challenge: Challenge } | null>(null);
+
+  useEffect(() => {
+    latest.current = { save, set };
+  });
+
+  useEffect(() => {
+    if (open === null || reserveChallenge(open) || loaded?.id === open) return;
+    let cancelled = false;
+    void loadItem(open).then((challenge) => { if (!cancelled) setLoaded({ id: open, challenge }); });
+    return () => { cancelled = true; };
+  }, [open, loaded]);
+
+  const titleOf = (id: string): string => reserveChallenge(id)?.title ?? items.find((item) => item.id === id)?.title ?? id;
 
   // The clock ticks while a set runs. A reload restarts the tick, and the deadline comes from the saved start time.
   useEffect(() => {
@@ -42,6 +72,22 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
     const timer = window.setInterval(() => { setNow(Date.now()); }, 1000);
     return () => { window.clearInterval(timer); };
   }, [running]);
+
+  // A workspace that is open counts its time at each checkpoint, and the open interval restarts at each one.
+  useEffect(() => {
+    if (open === null) return;
+    const timer = window.setInterval(() => {
+      const current = latest.current;
+      if (current.set) commit({ ...current.save, interview: checkpointProblem(current.set, open, Date.now()) });
+    }, CHECKPOINT_MS);
+    return () => { window.clearInterval(timer); };
+  }, [open, commit]);
+
+  // A page that closed while a workspace was open leaves an open marker. It is cleared here without counting its time.
+  useEffect(() => {
+    if (open !== null || !set) return;
+    if (set.problems.some((problem) => problem.openedAt !== null)) commit({ ...save, interview: forgetOpen(set) });
+  }, [open, set, save, commit]);
 
   const expired = set !== null && isExpired(set, now);
   // When the timer ends the set, each unpassed problem is graded from its saved draft, once the engine is ready.
@@ -51,7 +97,8 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
     settling.current = true;
     const deadline = deadlineOf(set);
     void (async () => {
-      let checked = set;
+      // A workspace open at the deadline is counted up to the deadline, not beyond it.
+      let checked = open !== null ? closeProblem(set, open, deadline) : set;
       try {
         await sqlEngine.initialize();
         for (const problem of set.problems) {
@@ -68,7 +115,7 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
       setOpen(null);
       settling.current = false;
     })();
-  }, [set, now, save, items, today, commit]);
+  }, [set, now, save, items, today, commit, open]);
 
   // The mistake explanations on the results page come from re-grading each problem's final draft, after the set ends.
   useEffect(() => {
@@ -92,6 +139,18 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
     setViewing(null); setOpen(null); setExplanations({}); setMessage('');
   };
 
+  // Opening a problem starts its clock. A problem that has already passed is not timed again.
+  const openWorkspace = (id: string) => {
+    if (set) commit({ ...save, interview: openProblem(set, id, Date.now()) });
+    setOpen(id);
+  };
+
+  // Leaving a workspace counts its time up to now.
+  const leaveWorkspace = () => {
+    if (set && open !== null) commit({ ...save, interview: closeProblem(set, open, Date.now()) });
+    setOpen(null);
+  };
+
   const attempt = (id: string, passed: boolean) => {
     if (!set) return;
     const at = Date.now();
@@ -111,24 +170,23 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
 
   // A problem open in the workspace: interview rules apply, and the set's own clock decides when it ends.
   if (set && open) {
-    const challenge = reserveChallenge(open);
-    if (challenge) {
-      const problem = set.problems.find((entry) => entry.id === open);
-      return <Workspace
-        key={open}
-        challenge={challenge}
-        code={`INT · ${set.problems.findIndex((entry) => entry.id === open) + 1} of ${set.problems.length}`}
-        partLabel={undefined}
-        backLabel="Interview set"
-        progress={save.tickets[open] ?? emptyProgress(challenge.starterSql)}
-        setDraft={(draft) => { setDraft(open, draft); }}
-        onHint={() => undefined}
-        onReveal={() => undefined}
-        onBack={() => { setOpen(null); }}
-        review={null}
-        interview={{ passed: problem?.passedAt !== null && problem !== undefined, onAttempt: (passed) => { attempt(open, passed); } }}
-      />;
-    }
+    const challenge = reserveChallenge(open) ?? (loaded?.id === open ? loaded.challenge : undefined);
+    if (!challenge) return <div className="chapter-main"><p className="muted">Loading the ticket…</p></div>;
+    const problem = set.problems.find((entry) => entry.id === open);
+    return <Workspace
+      key={open}
+      challenge={challenge}
+      code={`INT · ${set.problems.findIndex((entry) => entry.id === open) + 1} of ${set.problems.length}`}
+      partLabel={undefined}
+      backLabel="Interview set"
+      progress={save.tickets[open] ?? emptyProgress(challenge.starterSql)}
+      setDraft={(draft) => { setDraft(open, draft); }}
+      onHint={() => undefined}
+      onReveal={() => undefined}
+      onBack={leaveWorkspace}
+      review={null}
+      interview={{ passed: problem?.passedAt !== null && problem !== undefined, onAttempt: (passed) => { attempt(open, passed); } }}
+    />;
   }
 
   if (set) {
@@ -148,7 +206,7 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
       {message && <p role="alert" className="query-error">{message}</p>}
       <section className="practice-section" aria-labelledby="set-problems">
         <h2 id="set-problems">Problems</h2>
-        <div className="practice-list">{set.problems.map((problem) => <button key={problem.id} className="practice-row" disabled={expired} onClick={() => { setOpen(problem.id); }}>
+        <div className="practice-list">{set.problems.map((problem) => <button key={problem.id} className="practice-row" disabled={expired} onClick={() => { openWorkspace(problem.id); }}>
           <span className="practice-title">{titleOf(problem.id)}</span>
           <span className={`ticket-badge ${problem.passedAt !== null ? 'passed-badge' : ''}`}>{problem.passedAt !== null ? <><Check size={12} /> Passed in this set</> : 'Open'}</span>
           <ArrowRight size={16} />
@@ -174,6 +232,7 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
         return <section key={problem.id} className="practice-section" aria-labelledby={`result-${problem.id}`}>
           <h2 id={`result-${problem.id}`}>{titleOf(problem.id)} <span className={`ticket-badge ${problem.passedAt !== null ? 'passed-badge' : ''}`}>{problem.passedAt !== null ? <><Check size={12} /> Passed {mmss((problem.passedAt - viewing.startedAt))} in</> : 'Not passed'}</span></h2>
           <p className="muted"><Clock3 size={13} /> {problem.failures} failed {problem.failures === 1 ? 'submission' : 'submissions'} in this set</p>
+          <p className="muted"><Clock3 size={13} /> {timeLine(problem)}</p>
           <p>Your final query</p>
           <pre>{finalDraft || '(empty)'}</pre>
           {explanations[problem.id] && <div className="mistake-feedback" role="note"><strong>This looks like a known mistake</strong><p>{explanations[problem.id]}</p></div>}
@@ -187,6 +246,7 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
   }
 
   const history = save.interviewHistory.slice(-5).reverse();
+  const comparison = estimateComparison(save.interviewHistory);
   return <div className="chapter-main">
     <button className="text-button" onClick={onBack}><ArrowLeft size={15} />All desks</button>
     <header className="chapter-header">
@@ -206,5 +266,15 @@ export default function Interview({ save, items, today, commit, setDraft, onBack
         <span>{result.problems.filter((problem) => problem.passedAt !== null).length} of {result.problems.length} passed{result.expired ? ' · timer ended the set' : ''}</span>
       </li>)}</ul>
     </section>}
+    <section className="practice-section" aria-labelledby="estimate-compare">
+      <h2 id="estimate-compare">Estimates vs your times</h2>
+      <p className="muted">Medians over your finished sets. A line marked off has a median more than half away from its estimate.</p>
+      {comparison.length === 0
+        ? <p className="muted">No timed problems yet. Finish a set to see your times.</p>
+        : <ul className="weak-list">{comparison.map((row) => <li key={row.id} className="readiness-row">
+          <span>{titleOf(row.id)}</span>
+          <span>Estimate {row.estimate} min · your median {row.medianMinutes.toFixed(1)} min over {row.sets} {row.sets === 1 ? 'set' : 'sets'}{isOffEstimate(row) ? ' · off' : ''}</span>
+        </li>)}</ul>}
+    </section>
   </div>;
 }

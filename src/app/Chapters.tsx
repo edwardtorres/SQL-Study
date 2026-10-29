@@ -2,13 +2,13 @@ import { ArrowRight, Check, Lock, Table2, Trophy } from 'lucide-react';
 import type { ItemMeta } from '../data/itemIndex';
 import type { Chapter } from '../data/curriculum';
 import { DESK_LABEL, deskStatus, partCounts } from '../game/rules';
-import type { SaveV4 } from '../save/progress';
+import type { SaveV5 } from '../save/progress';
 import { bossPartsOf, bossPassed, isPassed, itemsForChapter, partLabel, summarizeChapter } from './model';
 
 export const lessonSectionIds = (chapterId: number): readonly string[] => [1, 2, 3].map((index) => `c${chapterId}-s${index}`);
 
 // A boss part counts only while its pass is not voided by a reveal. A voided part must be passed again with the learner's own query.
-function partState(part: ItemMeta, save: SaveV4): { label: string; passed: boolean } {
+function partState(part: ItemMeta, save: SaveV5): { label: string; passed: boolean } {
   const ticket = save.tickets[part.id];
   if (partCounts(ticket)) return { label: 'Passed', passed: true };
   if (ticket?.revealedAt !== undefined && ticket.revealedAt !== null) return { label: 'Revealed · pass again', passed: false };
@@ -16,7 +16,7 @@ function partState(part: ItemMeta, save: SaveV4): { label: string; passed: boole
 }
 
 export function ChapterView({ chapter, items, save, onLesson, onItem, onScratch, onBack }: {
-  chapter: Chapter; items: readonly ItemMeta[]; save: SaveV4; onLesson: () => void; onItem: (item: ItemMeta) => void; onScratch: () => void; onBack: () => void;
+  chapter: Chapter; items: readonly ItemMeta[]; save: SaveV5; onLesson: () => void; onItem: (item: ItemMeta) => void; onScratch: () => void; onBack: () => void;
 }) {
   const summary = summarizeChapter(items, save, chapter.id, lessonSectionIds(chapter.id));
   const status = deskStatus(items, save, chapter.id);

@@ -1,13 +1,16 @@
 import type { ItemMeta } from '../data/itemIndex';
 import { mistakeTags } from '../core/types';
-import { emptySave, type ChapterProgress, type InterviewProblem, type InterviewResult, type InterviewSet, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type ScoredAttempt, type Schedule, type Streak, type TicketProgress } from './format';
-import { migrateV2ToV4, migrateV3ToV4, readLegacy } from './migrations';
+import {
+  emptySave, type ChapterProgress, type InterviewProblem, type InterviewProblemV4, type InterviewResult, type InterviewResultV4, type InterviewSet,
+  type InterviewSetV4, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type SaveV5, type ScoredAttempt, type Schedule, type Streak, type TicketProgress,
+} from './format';
+import { migrateV2ToV5, migrateV3ToV4, migrateV4ToV5, readLegacy } from './migrations';
 import { ID, dayOrNull, day as isDay, integer, object, readActive, readLessons, stamp, stampOrNull } from './validate';
 
 export * from './format';
 
 export interface RestoredSave {
-  save: SaveV4;
+  save: SaveV5;
   status: 'fresh' | 'restored' | 'migrated' | 'corrupt' | 'future';
   writable: boolean;
 }
@@ -150,25 +153,24 @@ function readReviewRecent(value: Record<string, unknown>): Record<string, ('pass
   return recent;
 }
 
-function readDailyReview(value: unknown): SaveV4['dailyReview'] {
+function readDailyReview(value: unknown): SaveV5['dailyReview'] {
   if (value === null) return null;
   if (!object(value) || !isDay(value.day) || !Array.isArray(value.itemIds) || value.itemIds.length > DAILY_CAP) throw new Error('Invalid daily review');
   if (!value.itemIds.every((id) => typeof id === 'string' && ID.test(id))) throw new Error('Invalid daily review');
   return { day: value.day, itemIds: [...value.itemIds] as string[] };
 }
 
-function readV4(value: Record<string, unknown>): SaveV4 {
+// The fields every version from 4 on shares. The versions differ only in their interview fields, read by their own readers below.
+type CommonFields = Omit<SaveV5, 'version' | 'interview' | 'interviewHistory'>;
+
+function readCommon(value: Record<string, unknown>): CommonFields {
   if (!object(value.tickets) || !object(value.lessons) || !object(value.chapters) || !object(value.badges)) throw new Error('Invalid save');
   if (!object(value.readiness) || !object(value.mistakeTotals) || !object(value.reviews) || !object(value.reviewRecent)) throw new Error('Invalid save');
   if (!integer(value.independentRun, 100_000) || !integer(value.longestRun, 100_000) || value.independentRun > value.longestRun) throw new Error('Invalid save');
-  const interview = value.interview === null ? null : readInterviewSet(value.interview);
-  if (!Array.isArray(value.interviewHistory) || value.interviewHistory.length > INTERVIEW_HISTORY_CAP) throw new Error('Invalid interview');
-  const interviewHistory = value.interviewHistory.map(readInterviewResult);
   const totals = value.mistakeTotals;
   const reviews = value.reviews;
   if (!object(totals.tags) || !object(totals.competencies) || !object(reviews.tags) || !object(reviews.items)) throw new Error('Invalid save');
   return {
-    version: 4,
     activeTicket: readActive(value.activeTicket),
     tickets: readTickets(value.tickets),
     lessons: readLessons(value.lessons),
@@ -189,49 +191,93 @@ function readV4(value: Record<string, unknown>): SaveV4 {
     },
     reviewRecent: readReviewRecent(value.reviewRecent),
     dailyReview: readDailyReview(value.dailyReview),
-    interview,
-    interviewHistory,
   };
+}
+
+// Reads a history list in the version's own shape. The cap applies to every version.
+function readHistory<T>(value: unknown, readOne: (entry: unknown) => T): T[] {
+  if (!Array.isArray(value) || value.length > INTERVIEW_HISTORY_CAP) throw new Error('Invalid interview');
+  return value.map(readOne);
+}
+
+function readV4(value: Record<string, unknown>): SaveV4 {
+  const interview = value.interview === null ? null : readSetV4(value.interview);
+  return { ...readCommon(value), version: 4, interview, interviewHistory: readHistory(value.interviewHistory, readResultV4) };
+}
+
+function readV5(value: Record<string, unknown>): SaveV5 {
+  const interview = value.interview === null ? null : readSet(value.interview);
+  return { ...readCommon(value), version: 5, interview, interviewHistory: readHistory(value.interviewHistory, readResult) };
 }
 
 // The most finished sets kept. Older sets are dropped; the interview-ready signal only reads the last few.
 export const INTERVIEW_HISTORY_CAP = 20;
 const PROBLEM_ID = /^[a-z0-9-]{1,40}$/;
 
-function readInterviewProblems(value: unknown): InterviewProblem[] {
+// Most solve times a problem can record: the set's longest possible limit.
+const MAX_SPENT_MS = 240 * 60_000;
+
+function readProblems<P>(value: unknown, readProblem: (entry: unknown) => P): P[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > 3) throw new Error('Invalid interview');
-  return value.map((entry: unknown) => {
-    if (!object(entry) || typeof entry.id !== 'string' || !PROBLEM_ID.test(entry.id)) throw new Error('Invalid interview');
-    if (entry.passedAt !== null && !stamp(entry.passedAt)) throw new Error('Invalid interview');
-    if (!integer(entry.failures, 1_000)) throw new Error('Invalid interview');
-    return { id: entry.id, passedAt: entry.passedAt, failures: entry.failures };
-  });
+  return value.map(readProblem);
 }
 
-function readInterviewSet(value: unknown): InterviewSet {
+// Version 4 problems have no time fields.
+function readProblemV4(entry: unknown): InterviewProblemV4 {
+  if (!object(entry) || typeof entry.id !== 'string' || !PROBLEM_ID.test(entry.id)) throw new Error('Invalid interview');
+  if (entry.passedAt !== null && !stamp(entry.passedAt)) throw new Error('Invalid interview');
+  if (!integer(entry.failures, 1_000)) throw new Error('Invalid interview');
+  return { id: entry.id, passedAt: entry.passedAt, failures: entry.failures };
+}
+
+function readProblem(entry: unknown): InterviewProblem {
+  if (!object(entry)) throw new Error('Invalid interview');
+  const base = readProblemV4(entry);
+  const { spentMs, openedAt, estimateMinutes } = entry;
+  if (!integer(spentMs, MAX_SPENT_MS)) throw new Error('Invalid interview');
+  if (openedAt !== null && !stamp(openedAt)) throw new Error('Invalid interview');
+  if (estimateMinutes !== null && !(integer(estimateMinutes, 240) && estimateMinutes >= 1)) throw new Error('Invalid interview');
+  return { ...base, spentMs, openedAt, estimateMinutes };
+}
+
+function readSetV4(value: unknown): InterviewSetV4 {
   if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
   if (!stamp(value.startedAt) || !integer(value.limitMinutes, 240) || value.limitMinutes < 1) throw new Error('Invalid interview');
-  return { id: value.id, startedAt: value.startedAt, limitMinutes: value.limitMinutes, problems: readInterviewProblems(value.problems) };
+  return { id: value.id, startedAt: value.startedAt, limitMinutes: value.limitMinutes, problems: readProblems(value.problems, readProblemV4) };
 }
 
-function readInterviewResult(value: unknown): InterviewResult {
+function readSet(value: unknown): InterviewSet {
+  if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
+  if (!stamp(value.startedAt) || !integer(value.limitMinutes, 240) || value.limitMinutes < 1) throw new Error('Invalid interview');
+  return { id: value.id, startedAt: value.startedAt, limitMinutes: value.limitMinutes, problems: readProblems(value.problems, readProblem) };
+}
+
+function readResultV4(value: unknown): InterviewResultV4 {
   if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
   if (!stamp(value.startedAt) || !stamp(value.endedAt) || value.endedAt < value.startedAt) throw new Error('Invalid interview');
   if (!integer(value.limitMinutes, 240) || value.limitMinutes < 1 || typeof value.expired !== 'boolean') throw new Error('Invalid interview');
-  return { id: value.id, startedAt: value.startedAt, endedAt: value.endedAt, limitMinutes: value.limitMinutes, problems: readInterviewProblems(value.problems), expired: value.expired };
+  return { id: value.id, startedAt: value.startedAt, endedAt: value.endedAt, limitMinutes: value.limitMinutes, problems: readProblems(value.problems, readProblemV4), expired: value.expired };
 }
 
-// Reads any save this app can open. Versions 0 to 3 are migrated in memory and rewritten as version 4 on the next change.
+function readResult(value: unknown): InterviewResult {
+  if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
+  if (!stamp(value.startedAt) || !stamp(value.endedAt) || value.endedAt < value.startedAt) throw new Error('Invalid interview');
+  if (!integer(value.limitMinutes, 240) || value.limitMinutes < 1 || typeof value.expired !== 'boolean') throw new Error('Invalid interview');
+  return { id: value.id, startedAt: value.startedAt, endedAt: value.endedAt, limitMinutes: value.limitMinutes, problems: readProblems(value.problems, readProblem), expired: value.expired };
+}
+
+// Reads any save this app can open. Versions 0 to 4 are migrated in memory and rewritten as version 5 on the next change.
 // A save from a newer version is never overwritten. An unreadable save is preserved and the session runs without saving.
 export function restoreSave(raw: string | null, items: readonly ItemMeta[]): RestoredSave {
   if (raw === null) return { save: emptySave(), status: 'fresh', writable: true };
   try {
     const value: unknown = JSON.parse(raw);
     if (!object(value)) throw new Error('Invalid save');
-    if (typeof value.version === 'number' && value.version > 4) return { save: emptySave(), status: 'future', writable: false };
-    if (value.version === 4) return { save: readV4(value), status: 'restored', writable: true };
-    if (value.version === 3) return { save: migrateV3ToV4(readV3(value), items), status: 'migrated', writable: true };
-    return { save: migrateV2ToV4(readLegacy(value), items), status: 'migrated', writable: true };
+    if (typeof value.version === 'number' && value.version > 5) return { save: emptySave(), status: 'future', writable: false };
+    if (value.version === 5) return { save: readV5(value), status: 'restored', writable: true };
+    if (value.version === 4) return { save: migrateV4ToV5(readV4(value)), status: 'migrated', writable: true };
+    if (value.version === 3) return { save: migrateV4ToV5(migrateV3ToV4(readV3(value), items)), status: 'migrated', writable: true };
+    return { save: migrateV2ToV5(readLegacy(value), items), status: 'migrated', writable: true };
   } catch {
     return { save: emptySave(), status: 'corrupt', writable: false };
   }

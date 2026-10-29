@@ -1,20 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import { itemIndex } from '../src/data/itemIndex';
 import { applySubmission, localDay } from '../src/game/rules';
-import { emptyProgress, emptySave, restoreSave, type SaveV4 } from '../src/save/progress';
+import { emptyProgress, emptySave, restoreSave, type SaveV5 } from '../src/save/progress';
 
 const REFERENCE = 'SELECT reference FROM shipments';
 const item = (id: string) => itemIndex.find((candidate) => candidate.id === id)!;
 
 describe('versioned progress', () => {
-  test('first use starts a version 4 save', () => {
+  test('first use starts a version 5 save', () => {
     expect(restoreSave(null, itemIndex)).toEqual({ save: emptySave(), status: 'fresh', writable: true });
   });
 
   test('round trips drafts, passes, hints, reveals, lessons, chapters, streaks and badges', () => {
     const at = Date.parse('2026-03-02T12:00:00Z');
     const graded = applySubmission(emptySave(), itemIndex, item('c1-i1'), REFERENCE, { passed: true, sql: 'SELECT 1', at, day: localDay(at, 'UTC') });
-    const save: SaveV4 = {
+    const save: SaveV5 = {
       ...graded.save,
       activeTicket: 'c1-i1',
       lessons: { 'c1-s1': { read: true, answer: 'a', correct: true } },
@@ -28,7 +28,7 @@ describe('versioned progress', () => {
   test('migrates a version 1 save, keeping its passes and inventing no lesson progress', () => {
     const result = restoreSave(JSON.stringify({ version: 1, activeTicket: 'dispatch', tickets: { dispatch: { draft: 'SELECT id FROM shipments LIMIT 1;', attempts: 1, failures: 0, passed: true, hintTier: 0, solutionRevealed: false, xp: 100 } } }), itemIndex);
     expect(result).toMatchObject({ status: 'migrated', writable: true });
-    expect(result.save.version).toBe(4);
+    expect(result.save.version).toBe(5);
     expect(result.save.lessons).toEqual({});
     // The sample ticket earns the independent award: 25 base plus the 10 first-try bonus.
     expect(result.save.tickets.dispatch).toMatchObject({ passed: true, xp: 35, firstOutcome: 'first-try', firstPassAt: 0, passedAt: 0 });
@@ -54,6 +54,6 @@ describe('versioned progress', () => {
   });
 
   test('does not overwrite a save from a newer version', () => {
-    expect(restoreSave('{"version":5,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
+    expect(restoreSave('{"version":6,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
   });
 });

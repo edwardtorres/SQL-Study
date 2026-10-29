@@ -1,6 +1,9 @@
 import type { ItemMeta } from '../data/itemIndex';
 import { awardFor, CREDIT, isScored, kindOf, outcomeOf, READINESS_WINDOW, settle, type Kind } from '../game/rules';
-import { emptyProgress, emptySave, type LessonProgress, type SaveV3, type SaveV4, type ScoredAttempt, type TicketProgress } from './format';
+import {
+  emptyProgress, emptySave, type InterviewProblem, type InterviewProblemV4, type InterviewResult, type InterviewResultV4, type InterviewSet,
+  type InterviewSetV4, type LessonProgress, type SaveV3, type SaveV4, type SaveV5, type ScoredAttempt, type TicketProgress,
+} from './format';
 import { ID, integer, object, readActive, readLessons } from './validate';
 
 // Versions 0 to 2 are read here and upgraded in memory. Their tickets carry the version 2 fields.
@@ -56,7 +59,7 @@ function migrateTicket(ticket: LegacyTicket, kind: Kind): TicketProgress {
 
 // The readiness window is seeded from the stored first passes, most recent last, as readiness was computed before version 4.
 // Ties keep the same order the old derivation used, so migrated scores do not move.
-function seedReadiness(save: SaveV4, items: readonly ItemMeta[]): SaveV4 {
+function seedReadiness<T extends Pick<SaveV5, 'tickets' | 'readiness'>>(save: T, items: readonly ItemMeta[]): T {
   const firsts = items
     .filter(isScored)
     .flatMap((item) => {
@@ -74,9 +77,9 @@ function seedReadiness(save: SaveV4, items: readonly ItemMeta[]): SaveV4 {
   return { ...save, readiness };
 }
 
-// Version 2 to version 4. Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero,
-// because version 2 kept no history. The mistake log starts empty, because version 2 kept no mistake tags.
-export function migrateV2ToV4(legacy: SaveV2, items: readonly ItemMeta[]): SaveV4 {
+// Version 2 to version 5. Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero,
+// because version 2 kept no history. The mistake log starts empty, because version 2 kept no mistake tags. Version 2 has no interview.
+export function migrateV2ToV5(legacy: SaveV2, items: readonly ItemMeta[]): SaveV5 {
   const kinds = new Map(items.map((item) => [item.id, kindOf(item)]));
   const tickets: Record<string, TicketProgress> = {};
   for (const [id, ticket] of Object.entries(legacy.tickets)) tickets[id] = migrateTicket(ticket, kinds.get(id) ?? 'independent');
@@ -88,9 +91,24 @@ export function migrateV2ToV4(legacy: SaveV2, items: readonly ItemMeta[]): SaveV
 // from the version 3 first passes, which carry real times. Version 3 kept no mistake tags, so the mistake log starts empty.
 export function migrateV3ToV4(save: SaveV3, items: readonly ItemMeta[]): SaveV4 {
   const migrated: SaveV4 = {
-    ...emptySave(),
+    ...emptySave(), version: 4, interview: null, interviewHistory: [],
     activeTicket: save.activeTicket, tickets: save.tickets, lessons: save.lessons, chapters: save.chapters, streak: save.streak,
     independentRun: save.independentRun, longestRun: save.longestRun, badges: save.badges,
   };
   return seedReadiness(migrated, items);
+}
+
+// Version 4 to version 5. Version 4 recorded no time per interview problem, so a migrated problem has no time spent, no open
+// workspace and no estimate. A missing estimate is what marks a migrated result's time as not recorded.
+const migrateProblem = (problem: InterviewProblemV4): InterviewProblem => ({ ...problem, spentMs: 0, openedAt: null, estimateMinutes: null });
+const migrateSet = (set: InterviewSetV4): InterviewSet => ({ ...set, problems: set.problems.map(migrateProblem) });
+const migrateResult = (result: InterviewResultV4): InterviewResult => ({ ...result, problems: result.problems.map(migrateProblem) });
+
+export function migrateV4ToV5(save: SaveV4): SaveV5 {
+  return {
+    ...save,
+    version: 5,
+    interview: save.interview === null ? null : migrateSet(save.interview),
+    interviewHistory: save.interviewHistory.map(migrateResult),
+  };
 }

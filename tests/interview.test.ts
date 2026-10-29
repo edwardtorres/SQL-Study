@@ -6,7 +6,7 @@ import {
   recordInterviewPass, remainingMs, startInterview, type Candidate,
 } from '../src/game/interview';
 import { REPEAT_XP, readinessOf } from '../src/game/rules';
-import { emptyProgress, emptySave, type InterviewProblem, type InterviewResult, type SaveV4 } from '../src/save/format';
+import { emptyProgress, emptySave, type InterviewProblem, type InterviewResult, type SaveV5 } from '../src/save/format';
 
 const NOON = Date.parse('2026-03-02T12:00:00Z');
 const DAY = '2026-03-02';
@@ -14,7 +14,7 @@ const pick = (ids: readonly string[]): Candidate[] => ids.map((id) => ({ id, cha
 // A fixed order: no shuffle, so the draw is the reserve in its declared order.
 const inOrder = () => 0.999999;
 
-function finished(save: SaveV4, ids: readonly string[], options: { passed: boolean[]; failures?: number[]; at?: number; expired?: boolean }): SaveV4 {
+function finished(save: SaveV5, ids: readonly string[], options: { passed: boolean[]; failures?: number[]; at?: number; expired?: boolean }): SaveV5 {
   const candidates = pick(ids);
   let set = startInterview(candidates, NOON);
   candidates.forEach((candidate, index) => {
@@ -68,7 +68,7 @@ describe('the time limit and the deadline', () => {
 });
 
 describe('the credit for a problem', () => {
-  const problem = (passedAt: number | null, failures: number): InterviewProblem => ({ id: 'x', passedAt, failures });
+  const problem = (passedAt: number | null, failures: number): InterviewProblem => ({ id: 'x', passedAt, failures, spentMs: 0, openedAt: null, estimateMinutes: 5 });
   test('a first-time pass is 1, a pass after failures is 0.5, and no pass is 0', () => {
     expect(interviewCredit(problem(NOON, 0))).toBe(1);
     expect(interviewCredit(problem(NOON, 2))).toBe(0.5);
@@ -114,7 +114,7 @@ describe('settling a finished set', () => {
 describe('interview-ready', () => {
   const result = (passed: boolean, expired = false): InterviewResult => ({
     id: 'set', startedAt: 0, endedAt: 1, limitMinutes: 10, expired,
-    problems: [{ id: 'a', passedAt: passed ? 1 : null, failures: 0 }],
+    problems: [{ id: 'a', passedAt: passed ? 1 : null, failures: 0, spentMs: 0, openedAt: null, estimateMinutes: 5 }],
   });
 
   test('two of the last three sets, all passed and submitted in time, is ready', () => {

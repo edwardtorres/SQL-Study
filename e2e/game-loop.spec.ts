@@ -140,9 +140,9 @@ for (const width of [390, 1280]) {
       ]);
       const exported = testInfo.outputPath('larkspur-progress.json');
       await download.saveAs(exported);
-      expect(JSON.parse(readFileSync(exported, 'utf8'))).toMatchObject({ version: 4 });
+      expect(JSON.parse(readFileSync(exported, 'utf8'))).toMatchObject({ version: 5 });
       const future = testInfo.outputPath('future-save.json');
-      writeFileSync(future, '{"version":5,"tickets":{}}');
+      writeFileSync(future, '{"version":6,"tickets":{}}');
       await page.locator('input[type=file]').setInputFiles(future);
       await expect(page.getByRole('alert')).toContainText('newer version');
       await expect(page.getByRole('heading', { name: 'Replace this browser’s progress?' })).toHaveCount(0);

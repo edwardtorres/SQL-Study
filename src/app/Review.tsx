@@ -1,12 +1,12 @@
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import type { ItemMeta } from '../data/itemIndex';
-import type { SaveV4 } from '../save/progress';
+import type { SaveV5 } from '../save/progress';
 import { isPassed } from './model';
 
 interface Props {
   mode: 'daily' | 'needs';
   items: readonly ItemMeta[];
-  save: SaveV4;
+  save: SaveV5;
   // The ticket ids for this page, in order. Daily Review's set is saved per day; a needs-review set is recomputed.
   ids: readonly string[];
   // The desk's title, shown on a needs-review page.

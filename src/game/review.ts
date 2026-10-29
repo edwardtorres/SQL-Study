@@ -1,6 +1,6 @@
 import type { ItemMeta } from '../data/itemIndex';
 import { itemTags } from '../data/itemTags';
-import type { MistakeEntry, Schedule, SaveV4 } from '../save/format';
+import type { MistakeEntry, Schedule, SaveV5 } from '../save/format';
 
 // Spaced review by mistake: schedules, the mistake log, the Daily Review set, needs-review and Weak Spots.
 // Pure functions. They do not import the rules, so the rules can call them. The numbers are documented in
@@ -15,7 +15,7 @@ export const NEEDS_REVIEW_SET_SIZE = 3;
 export const MISTAKE_LOG_CAP = 500;
 export const WEAK_TAG_COUNT = 5;
 
-export type Reviews = SaveV4['reviews'];
+export type Reviews = SaveV5['reviews'];
 
 // Whole calendar days from a 'YYYY-MM-DD' day. Date.UTC has no daylight saving, so day arithmetic is exact.
 export function addDays(day: string, days: number): string {
@@ -47,7 +47,7 @@ export function withReview(reviews: Reviews, itemId: string, pass: boolean, day:
 }
 
 // Totals are never trimmed, so Weak Spots keeps every count after the log has been capped.
-export function appendMistake(save: Pick<SaveV4, 'mistakeLog' | 'mistakeTotals'>, entry: MistakeEntry): Pick<SaveV4, 'mistakeLog' | 'mistakeTotals'> {
+export function appendMistake(save: Pick<SaveV5, 'mistakeLog' | 'mistakeTotals'>, entry: MistakeEntry): Pick<SaveV5, 'mistakeLog' | 'mistakeTotals'> {
   const key = String(entry.competency);
   return {
     mistakeLog: [...save.mistakeLog, entry].slice(-MISTAKE_LOG_CAP),
@@ -58,7 +58,7 @@ export function appendMistake(save: Pick<SaveV4, 'mistakeLog' | 'mistakeTotals'>
   };
 }
 
-export function appendReviewOutcome(recent: SaveV4['reviewRecent'], chapterId: number, pass: boolean): SaveV4['reviewRecent'] {
+export function appendReviewOutcome(recent: SaveV5['reviewRecent'], chapterId: number, pass: boolean): SaveV5['reviewRecent'] {
   const key = String(chapterId);
   const outcome: 'pass' | 'miss' = pass ? 'pass' : 'miss';
   return { ...recent, [key]: [...(recent[key] ?? []), outcome].slice(-NEEDS_REVIEW_WINDOW) };
@@ -66,7 +66,7 @@ export function appendReviewOutcome(recent: SaveV4['reviewRecent'], chapterId: n
 
 // Needs review: the last NEEDS_REVIEW_WINDOW review attempts in a competency, with a pass rate below the threshold.
 // Fewer attempts than the window never shows the mark.
-export function needsReview(save: Pick<SaveV4, 'reviewRecent'>, chapterId: number): boolean {
+export function needsReview(save: Pick<SaveV5, 'reviewRecent'>, chapterId: number): boolean {
   const recent = (save.reviewRecent[String(chapterId)] ?? []).slice(-NEEDS_REVIEW_WINDOW);
   if (recent.length < NEEDS_REVIEW_WINDOW) return false;
   return recent.filter((outcome) => outcome === 'pass').length / recent.length < NEEDS_REVIEW_BELOW;
@@ -75,17 +75,17 @@ export function needsReview(save: Pick<SaveV4, 'reviewRecent'>, chapterId: numbe
 // The candidate pool: chapter tickets the learner has seen, in chapters that are open.
 export interface ReviewPool { items: readonly ItemMeta[]; isOpen: (chapterId: number) => boolean }
 
-const seen = (save: Pick<SaveV4, 'tickets'>, id: string): boolean => (save.tickets[id]?.attempts ?? 0) > 0;
+const seen = (save: Pick<SaveV5, 'tickets'>, id: string): boolean => (save.tickets[id]?.attempts ?? 0) > 0;
 // Least recently passed first. A ticket never passed sorts before any passed one.
-const recency = (save: Pick<SaveV4, 'tickets'>, id: string): number => save.tickets[id]?.passedAt ?? -1;
-const eligible = (save: Pick<SaveV4, 'tickets'>, pool: ReviewPool, picked: ReadonlySet<string>, item: ItemMeta): boolean =>
+const recency = (save: Pick<SaveV5, 'tickets'>, id: string): number => save.tickets[id]?.passedAt ?? -1;
+const eligible = (save: Pick<SaveV5, 'tickets'>, pool: ReviewPool, picked: ReadonlySet<string>, item: ItemMeta): boolean =>
   !picked.has(item.id) && seen(save, item.id) && pool.isOpen(item.chapterId);
-const byRecency = (save: Pick<SaveV4, 'tickets'>) => (a: ItemMeta, b: ItemMeta) => recency(save, a.id) - recency(save, b.id) || a.id.localeCompare(b.id);
+const byRecency = (save: Pick<SaveV5, 'tickets'>) => (a: ItemMeta, b: ItemMeta) => recency(save, a.id) - recency(save, b.id) || a.id.localeCompare(b.id);
 
 // The Daily Review set. A set saved for today is returned as it was, so a reload does not reshuffle it.
 // Due mistake tags come first, oldest due first. Each picks one ticket that models the tag, excluding the ticket
 // that was failed most recently for that tag. The set is then topped up from the weakest competencies, in order.
-export function dailyReviewSet(save: SaveV4, day: string, weakestFirst: readonly number[], pool: ReviewPool): string[] {
+export function dailyReviewSet(save: SaveV5, day: string, weakestFirst: readonly number[], pool: ReviewPool): string[] {
   if (save.dailyReview?.day === day) return [...save.dailyReview.itemIds];
   const picked: string[] = [];
   const taken = new Set<string>();
@@ -115,7 +115,7 @@ export function dailyReviewSet(save: SaveV4, day: string, weakestFirst: readonly
 }
 
 // A needs-review set: the least recently passed seen tickets in the competency.
-export function needsReviewSet(save: SaveV4, chapterId: number, pool: ReviewPool): string[] {
+export function needsReviewSet(save: SaveV5, chapterId: number, pool: ReviewPool): string[] {
   return pool.items
     .filter((item) => item.chapterId === chapterId && seen(save, item.id) && pool.isOpen(item.chapterId))
     .sort(byRecency(save))
@@ -134,7 +134,7 @@ export interface WeakSpots {
   failed: string[];
 }
 
-export function weakSpots(save: Pick<SaveV4, 'tickets' | 'mistakeTotals'>, scores: readonly CompetencyScore[]): WeakSpots {
+export function weakSpots(save: Pick<SaveV5, 'tickets' | 'mistakeTotals'>, scores: readonly CompetencyScore[]): WeakSpots {
   const competencies = [...scores].sort((a, b) =>
     (a.score === null ? 1 : 0) - (b.score === null ? 1 : 0) || (a.score ?? 0) - (b.score ?? 0) || a.chapterId - b.chapterId);
   const tags = Object.entries(save.mistakeTotals.tags)

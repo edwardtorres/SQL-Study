@@ -30,7 +30,7 @@ export interface ChapterProgress { method: 'boss' | 'test-out'; masteredAt: numb
 // countedDay is the last local day with three distinct passed items. items are the distinct items passed on itemsDay.
 export interface Streak { current: number; longest: number; countedDay: string | null; itemsDay: string | null; items: string[] }
 
-// Version 3 shape. Kept for the migration; the current shape is SaveV4.
+// Version 3 shape. Kept for the migration; the current shape is SaveV5.
 export interface SaveV3 {
   version: 3;
   activeTicket: string | null;
@@ -52,17 +52,28 @@ export type MistakeKind = 'failed' | 'revealed';
 export interface MistakeEntry { at: number; day: string; itemId: string; competency: number; tag: string | null; kind: MistakeKind }
 
 // One problem in a timed set. passedAt is when it passed inside the set; failures counts its failed submissions in the set.
-export interface InterviewProblem { id: string; passedAt: number | null; failures: number }
+// spentMs is the time its workspace was open before it passed. It is counted on close and at each 30-second checkpoint.
+// openedAt is set only while the workspace is open. A reload clears it without counting, so a reload loses at most 30 seconds.
+// estimateMinutes is the estimate the set started with; null when a version 4 save did not record one.
+export interface InterviewProblem {
+  id: string; passedAt: number | null; failures: number; spentMs: number; openedAt: number | null; estimateMinutes: number | null;
+}
 // A running set. startedAt and limitMinutes give the deadline.
 export interface InterviewSet { id: string; startedAt: number; limitMinutes: number; problems: InterviewProblem[] }
 // A finished set. expired is set when the timer ended the set rather than the learner.
 export interface InterviewResult { id: string; startedAt: number; endedAt: number; limitMinutes: number; problems: InterviewProblem[]; expired: boolean }
 
+// Version 4 shapes, kept for the migration to version 5. Version 4 recorded no time per problem.
+export interface InterviewProblemV4 { id: string; passedAt: number | null; failures: number }
+export interface InterviewSetV4 { id: string; startedAt: number; limitMinutes: number; problems: InterviewProblemV4[] }
+export interface InterviewResultV4 { id: string; startedAt: number; endedAt: number; limitMinutes: number; problems: InterviewProblemV4[]; expired: boolean }
+
 // Review schedule for a ticket or a mistake tag. step indexes REVIEW_INTERVALS; dueDay is the next day it is due.
 export interface Schedule { step: number; dueDay: string; lastDay: string | null; lastOutcome: 'pass' | 'miss' | null }
 
-export interface SaveV4 {
-  version: 4;
+// Version 5 adds the solve time, the open-workspace marker and the estimate to each interview problem.
+export interface SaveV5 {
+  version: 5;
   activeTicket: string | null;
   tickets: Record<string, TicketProgress>;
   lessons: Record<string, LessonProgress>;
@@ -87,8 +98,15 @@ export interface SaveV4 {
   interviewHistory: InterviewResult[];
 }
 
-export const emptySave = (): SaveV4 => ({
-  version: 4, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
+// Version 4 is the shape before the interview timing fields. Only the migration reads it.
+export type SaveV4 = Omit<SaveV5, 'version' | 'interview' | 'interviewHistory'> & {
+  version: 4;
+  interview: InterviewSetV4 | null;
+  interviewHistory: InterviewResultV4[];
+};
+
+export const emptySave = (): SaveV5 => ({
+  version: 5, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
   readiness: {}, mistakeLog: [], mistakeTotals: { tags: {}, competencies: {} }, reviews: { tags: {}, items: {} }, reviewRecent: {},
   dailyReview: null, interview: null, interviewHistory: [],
 });

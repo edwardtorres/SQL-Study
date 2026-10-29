@@ -10,15 +10,15 @@ const REF_QUEUED_NO_EVENT = "SELECT id FROM shipments WHERE status = 'queued' EX
 const PROBLEMS = ['int-09', 'int-01', 'int-02'];
 
 // A save with chapter 1 mastered and a set running. startedAt is relative to now, so the seeded clock can be
-// running or already expired.
+// running or already expired. Each problem starts with its estimate, as a set drawn by the app does.
 async function seedSet(page: Page, startedAgoMinutes: number, limitMinutes: number): Promise<void> {
   const save = {
-    version: 4, activeTicket: null, tickets: {}, lessons: {}, chapters: { '1': { method: 'boss', masteredAt: 0 } },
+    version: 5, activeTicket: null, tickets: {}, lessons: {}, chapters: { '1': { method: 'boss', masteredAt: 0 } },
     readiness: {}, mistakeLog: [], mistakeTotals: { tags: {}, competencies: {} }, reviews: { tags: {}, items: {} }, reviewRecent: {},
     dailyReview: null, interviewHistory: [],
     interview: {
       id: `set-${Date.now()}`, startedAt: Date.now() - startedAgoMinutes * 60_000, limitMinutes,
-      problems: PROBLEMS.map((id) => ({ id, passedAt: null, failures: 0 })),
+      problems: PROBLEMS.map((id) => ({ id, passedAt: null, failures: 0, spentMs: 0, openedAt: null, estimateMinutes: 5 })),
     },
     streak: { current: 0, longest: 0, countedDay: null, itemsDay: null, items: [] }, independentRun: 0, longestRun: 0, badges: {},
   };
@@ -79,9 +79,18 @@ for (const width of [390, 1280]) {
       await expect(page.getByRole('heading', { name: 'Set finished' })).toBeVisible();
       await expect(page.getByText('1 of 3 passed.')).toBeVisible();
       await expect(page.getByText('Reference solution').first()).toBeVisible();
+      // The passed problem shows its estimate and the time spent on it, and the results page is checked by axe.
+      await expect(page.getByText(/Estimate 5 min · your time on it/).first()).toBeVisible();
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await expectNoSidewaysScroll(page);
       await page.screenshot({ path: testInfo.outputPath(`interview-results-${width}.png`), fullPage: true });
+
+      // Back on the set page, the estimates-against-times view lists the problem that was timed.
+      await page.getByRole('button', { name: 'All desks', exact: true }).tap();
+      await page.getByRole('button', { name: 'Open interview', exact: true }).tap();
+      await expect(page.getByRole('heading', { name: 'Estimates vs your times' })).toBeVisible();
+      await expect(page.getByText(/your median .* min over 1 set/)).toBeVisible();
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     });
 
     test('a set the timer ended while the page was closed is settled on open, and the results say so', async ({ page }) => {

@@ -6,7 +6,7 @@ import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
 import { applySubmission, deskStatus, isOpen, localDay, rankOf, readinessAll, revealSolution, takeHint, totalXp, type GradeResult } from '../game/rules';
 import { dailyReviewSet, needsReviewSet, weakSpots, type ReviewPool } from '../game/review';
-import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV4, type TicketProgress } from '../save/progress';
+import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV5, type TicketProgress } from '../save/progress';
 import { exportSave, importSave } from '../save/transfer';
 import { ChapterView, lessonSectionIds } from './Chapters';
 import OfficeMap from './OfficeMap';
@@ -40,24 +40,24 @@ function initialState() {
 }
 const chapterOf = (id: number) => curriculum.find((chapter) => chapter.id === id);
 const chapterIds = curriculum.map((chapter) => chapter.id);
-const poolOf = (save: SaveV4): ReviewPool => ({ items: itemIndex, isOpen: (chapterId) => isOpen(save, chapterId) });
+const poolOf = (save: SaveV5): ReviewPool => ({ items: itemIndex, isOpen: (chapterId) => isOpen(save, chapterId) });
 
 export default function App() {
   const [restored] = useState(initialState);
-  const [save, setSave] = useState<SaveV4>(restored.save);
+  const [save, setSave] = useState<SaveV5>(restored.save);
   const [view, setView] = useState<View>({ name: 'home' });
   const review = view.name === 'item' ? view.review : null;
   const [saveFailed, setSaveFailed] = useState(!restored.writable);
   const [promotion, setPromotion] = useState<string | null>(null);
-  const [pendingImport, setPendingImport] = useState<SaveV4 | null>(null);
+  const [pendingImport, setPendingImport] = useState<SaveV5 | null>(null);
   const [notice, setNotice] = useState<{ tone: 'status' | 'alert'; text: string } | null>(null);
-  const persist = useCallback((next: SaveV4) => {
+  const persist = useCallback((next: SaveV5) => {
     if (!restored.writable) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); }
     catch { setSaveFailed(true); }
   }, [restored.writable]);
   // Every change that depends on the current save goes through commit, so the state and the stored copy stay together.
-  const commit = useCallback((next: SaveV4) => {
+  const commit = useCallback((next: SaveV5) => {
     setSave(next);
     persist(next);
   }, [persist]);
