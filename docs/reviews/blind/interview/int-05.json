@@ -1,0 +1,32 @@
+{
+  "id": "int-05",
+  "solutionSql": "SELECT s.customer_id,\n       COUNT(i.id)::int AS billed_invoices,\n       (DENSE_RANK() OVER (ORDER BY COUNT(i.id) DESC))::int AS billed_rank\nFROM shipments AS s\nJOIN invoices AS i ON i.shipment_id = s.id\nGROUP BY s.customer_id\nORDER BY billed_rank, s.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      6,
+      35,
+      1
+    ],
+    [
+      1,
+      34,
+      2
+    ],
+    [
+      2,
+      34,
+      2
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "the number of invoices on their shipments",
+      "readingChosen": "Count invoice rows joined to the customer shipments (inner join, so customers whose shipments have no invoice drop out).",
+      "alternativeReading": "Count distinct shipments that have an invoice; identical here because each shipment has at most one invoice."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Inner join shipments to invoices, group by customer_id, DENSE_RANK over the count descending for gapless shared ranks. COUNT and DENSE_RANK return bigint, so both are cast to integer to match the expected column types. Customers with no invoice are excluded by the inner join."
+}

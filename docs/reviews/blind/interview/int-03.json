@@ -1,0 +1,37 @@
+{
+  "id": "int-03",
+  "solutionSql": "WITH booked AS (\n  SELECT customer_id,\n         to_char(booked_at AT TIME ZONE 'UTC', 'YYYY-MM') AS booked_month,\n         booked_at\n  FROM shipments\n),\nfirsts AS (\n  SELECT customer_id,\n         to_char(min(booked_at) AT TIME ZONE 'UTC', 'YYYY-MM') AS first_month\n  FROM shipments\n  GROUP BY customer_id\n)\nSELECT f.customer_id,\n       f.first_month,\n       count(*)::integer AS shipments_in_month\nFROM firsts AS f\nJOIN booked AS b\n  ON b.customer_id = f.customer_id\n AND b.booked_month = f.first_month\nGROUP BY f.customer_id, f.first_month\nORDER BY f.customer_id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "2025-12",
+      7
+    ],
+    [
+      2,
+      "2025-12",
+      7
+    ],
+    [
+      3,
+      "2025-12",
+      8
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "the number of shipments they booked in that month",
+      "readingChosen": "All of the customer's shipments whose booked_at falls in the same UTC calendar month as the first booking (whole month).",
+      "alternativeReading": "Only shipments booked at the exact first booked_at instant, or a rolling 30 days from the first booking."
+    },
+    {
+      "phrase": "the UTC month (as YYYY-MM)",
+      "readingChosen": "Month taken from booked_at AT TIME ZONE 'UTC', independent of the session TimeZone setting.",
+      "alternativeReading": "Month in the session time zone (same result only while the session is UTC)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "First month from min(booked_at) converted to UTC; count joins back on customer and UTC month. Verified identical output with session TimeZone set to America/Los_Angeles. Inner grouping on shipments leaves out customers with no shipment (sample has 8 customers, 6 with shipments). Count cast to integer."
+}

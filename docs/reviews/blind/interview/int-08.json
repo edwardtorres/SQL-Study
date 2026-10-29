@@ -1,0 +1,37 @@
+{
+  "id": "int-08",
+  "solutionSql": "SELECT origin_id,\n       COALESCE(SUM(distance_km) FILTER (WHERE destination_id = 1), 0)::integer AS km_to_warehouse_1,\n       COALESCE(SUM(distance_km) FILTER (WHERE destination_id = 2), 0)::integer AS km_to_warehouse_2\nFROM routes\nGROUP BY origin_id\nORDER BY origin_id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      0,
+      233
+    ],
+    [
+      2,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "For each warehouse that is the origin of at least one route",
+      "readingChosen": "Every distinct routes.origin_id appears, including origins with no route to warehouse 1 or 2 (shown as 0, 0).",
+      "alternativeReading": "Only origins with at least one route to warehouse 1 or warehouse 2 appear."
+    },
+    {
+      "phrase": "km_to_warehouse_1 (integer)",
+      "readingChosen": "SUM(distance_km) is cast to integer to match the stated column type.",
+      "alternativeReading": "Leave SUM as bigint; values are identical, only the type differs."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Conditional aggregation with SUM ... FILTER (WHERE destination_id = n), COALESCE to 0, grouped by routes.origin_id. Duplicate routes between the same pair are summed (sample origin 1 has two routes to warehouse 2: 125 + 108 = 233). A self-route to warehouse 1 or 2, if present in hidden data, is counted."
+}

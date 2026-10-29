@@ -1,0 +1,35 @@
+{
+  "id": "int-07",
+  "solutionSql": "SELECT d.shipment_id, COUNT(*)::int AS distinct_scans\nFROM (\n  SELECT DISTINCT sc.shipment_id, sc.status, sc.occurred_at\n  FROM staging_scans AS sc\n  JOIN shipments AS s ON s.id = sc.shipment_id\n  WHERE sc.status IS NOT NULL\n) AS d\nGROUP BY d.shipment_id\nORDER BY d.shipment_id;",
+  "sampleRowCount": 32,
+  "sampleFirstRows": [
+    [
+      14,
+      1
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      18,
+      1
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "Count the distinct scans of each shipment",
+      "readingChosen": "Only shipments with at least one counted scan appear (shipments whose only scans have no status, e.g. 33, 86, 167 on the sample, are omitted).",
+      "alternativeReading": "Every shipment in staging_scans (or in shipments) appears, with distinct_scans 0 when none of its scans count."
+    },
+    {
+      "phrase": "two scans are the same when they have the same status and occurred_at",
+      "readingChosen": "A scan with a status but NULL occurred_at still counts, and two such scans with the same status are one scan (SELECT DISTINCT treats NULLs as equal).",
+      "alternativeReading": "A scan with NULL occurred_at is not counted (as COUNT(DISTINCT status || occurred_at) would do), or each NULL-time scan counts separately."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Join to shipments drops orphan and NULL shipment ids; WHERE status IS NOT NULL drops statusless scans; SELECT DISTINCT on (shipment_id, status, occurred_at) removes repeats; COUNT(*) cast to int. Sample: 41 scans, 5 orphans, 3 statusless, one exact repeat (120) gives 32 rows, all count 1. Main doubt is whether zero-count shipments should appear.",
+  "superseded": "Instruction text changed to state that a shipment with no scan left to count does not appear; re-solved blind by a fresh agent."
+}

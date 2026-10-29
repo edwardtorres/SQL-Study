@@ -2,7 +2,8 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { items } from '../src/data/catalog';
+import { items as catalogItems } from '../src/data/catalog';
+import { interviewItems } from '../src/data/interview';
 import { datasetCatalog, seedSql, reviewSamples } from '../src/data';
 import { sameRows } from '../src/grader/compare';
 import { readPolicy } from '../src/grader/policy';
@@ -30,6 +31,8 @@ function blindRecords(directory: string): { id: string; solutionSql: string; fil
 describe('blind-solve agreement', () => {
   test('every blind solution agrees with its reference on every dataset its ticket uses', async () => {
     const records = blindRecords(BLIND_ROOT);
+    // The interview reserve is compared too: a set can only ship with blind solutions that agree with it.
+    const items = [...catalogItems, ...interviewItems];
     const byId = new Map(items.map((item) => [item.id, item]));
     const unknown = records.filter((record) => !byId.has(record.id)).map((record) => `${record.file}: no item ${record.id}`);
     expect(unknown, 'blind records must name an existing item').toEqual([]);

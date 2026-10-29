@@ -1,0 +1,34 @@
+{
+  "id": "int-07",
+  "solutionSql": "SELECT d.shipment_id, COUNT(*)::integer AS distinct_scans\nFROM (\n  SELECT DISTINCT sc.shipment_id, sc.status, sc.occurred_at\n  FROM staging_scans AS sc\n  JOIN shipments AS s ON s.id = sc.shipment_id\n  WHERE sc.status IS NOT NULL\n) AS d\nGROUP BY d.shipment_id\nORDER BY d.shipment_id;",
+  "sampleRowCount": 32,
+  "sampleFirstRows": [
+    [
+      14,
+      1
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      18,
+      1
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "two scans are the same when they have the same status and occurred_at",
+      "readingChosen": "Scans with the same shipment, status and occurred_at are one scan; a NULL occurred_at is a value, so two same-status scans with NULL occurred_at count once and a NULL-time scan still counts (SELECT DISTINCT semantics).",
+      "alternativeReading": "A scan with NULL occurred_at is not counted (as COUNT(DISTINCT occurred_at) would ignore it), or each NULL-time scan counts separately."
+    },
+    {
+      "phrase": "A scan for a shipment that does not exist is not counted",
+      "readingChosen": "Keep only scans whose shipment_id matches shipments.id; a NULL shipment_id is also dropped.",
+      "alternativeReading": "None material; a NULL shipment_id could be read as its own group, but it is not an existing shipment."
+    }
+  ],
+  "confidence": "high",
+  "notes": "De-duplicate on (shipment_id, status, occurred_at) after dropping NULL-status and orphan scans, then count per shipment cast to integer. Sample: 41 scans, 5 orphans, 3 NULL-status on real shipments, one duplicate on shipment 120, giving 32 rows of count 1. Scan id is ignored for duplicate detection."
+}

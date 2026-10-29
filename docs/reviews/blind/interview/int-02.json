@@ -1,0 +1,29 @@
+{
+  "id": "int-02",
+  "solutionSql": "SELECT c.id, c.name\nFROM customers AS c\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM shipments AS s\n  WHERE s.customer_id = c.id\n    AND s.booked_at >= TIMESTAMPTZ '2026-01-22 00:00:00+00'\n)\nORDER BY c.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      3,
+      "Cobalt Paperworks"
+    ],
+    [
+      4,
+      "Dovetail Lanterns"
+    ],
+    [
+      5,
+      "Emberwood Games"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "no shipment booked on or after 22 January 2026 (UTC)",
+      "readingChosen": "Open-ended cutoff: any booking at or after 2026-01-22 00:00:00 UTC, with no upper bound, makes a customer active; cutoff written as an explicit UTC timestamptz so the session time zone does not matter.",
+      "alternativeReading": "Only bookings between the cutoff and some reporting date (e.g. today) count; or the cutoff is compared after casting booked_at to a date in the session time zone rather than UTC."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Anti-join with NOT EXISTS so customers with no shipments at all are kept. The cutoff is inclusive (>= midnight UTC 22 Jan), so a booking at exactly 00:00 UTC that day counts as recent. Earlier bookings are ignored. Sample: customers 1 and 2 have bookings on 31 Jan and are excluded; 3-6 last booked 16 Jan; 7 and 8 never booked."
+}

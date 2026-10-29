@@ -1,0 +1,38 @@
+{
+  "id": "int-08",
+  "solutionSql": "SELECT origin_id,\n       COALESCE(SUM(CASE WHEN destination_id = 1 THEN distance_km END), 0)::integer AS km_to_warehouse_1,\n       COALESCE(SUM(CASE WHEN destination_id = 2 THEN distance_km END), 0)::integer AS km_to_warehouse_2\nFROM routes\nGROUP BY origin_id\nORDER BY origin_id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1,
+      0,
+      233
+    ],
+    [
+      2,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "A warehouse with no route to warehouse 1 shows zero there, not blank.",
+      "readingChosen": "Zero instead of NULL applies to both destination columns (warehouse 1 and warehouse 2).",
+      "alternativeReading": "Only km_to_warehouse_1 is coalesced to zero; km_to_warehouse_2 may stay NULL when there is no route to warehouse 2."
+    },
+    {
+      "phrase": "Expected columns: km_to_warehouse_1 (integer)",
+      "readingChosen": "SUM results (bigint) are cast to integer to match the stated column types.",
+      "alternativeReading": "Leave SUM as bigint; values are identical, only the declared type differs."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Conditional aggregation with SUM(CASE ...) grouped by origin_id over routes only, so only originating warehouses appear. Multiple routes on the same origin-destination pair are summed (origin 1 has two routes to warehouse 2: 125+108=233). Routes to other destinations contribute zero to both columns.",
+  "superseded": "Instruction text changed so the zero rule covers both destination columns; re-solved blind by a fresh agent."
+}

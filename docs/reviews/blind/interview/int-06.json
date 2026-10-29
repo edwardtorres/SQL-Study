@@ -1,0 +1,37 @@
+{
+  "id": "int-06",
+  "solutionSql": "SELECT id, route_id,\n       SUM(weight_kg) OVER (PARTITION BY route_id ORDER BY booked_at, id\n                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)::integer AS running_kg\nFROM shipments\nWHERE weight_kg IS NOT NULL\nORDER BY route_id, booked_at, id;",
+  "sampleRowCount": 228,
+  "sampleFirstRows": [
+    [
+      7,
+      1,
+      1412
+    ],
+    [
+      13,
+      1,
+      3398
+    ],
+    [
+      19,
+      1,
+      4825
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "counting shipments in booking order (booked_at, then id)",
+      "readingChosen": "Window ordered by booked_at, id with an explicit ROWS frame from the partition start to the current row, so each shipment adds exactly its own weight even on booked_at ties.",
+      "alternativeReading": "Default RANGE frame ordered by booked_at only, which would give tied shipments the same combined total; rejected because the ticket names id as the tie-breaker."
+    },
+    {
+      "phrase": "running_kg (integer)",
+      "readingChosen": "SUM result (bigint) cast to integer to match the declared column type.",
+      "alternativeReading": "Leave SUM as bigint; values are identical."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Rows with NULL weight_kg are filtered in WHERE before the window, so they are neither output nor counted. Partition by route_id keeps a separate total per route; the first shipment on each route equals its own weight."
+}

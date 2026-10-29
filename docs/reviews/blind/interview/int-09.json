@@ -1,0 +1,20 @@
+{
+  "id": "int-09",
+  "solutionSql": "SELECT s.id\nFROM shipments AS s\nWHERE s.status = 'queued'\n  AND NOT EXISTS (\n    SELECT 1\n    FROM shipment_events AS e\n    WHERE e.shipment_id = s.id\n  )\nORDER BY s.id;",
+  "sampleRowCount": 4,
+  "sampleFirstRows": [
+    [
+      1
+    ],
+    [
+      56
+    ],
+    [
+      100
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [],
+  "confidence": "high",
+  "notes": "Anti-join with NOT EXISTS, filtered to status = 'queued' (the sample's only spelling of queued; other statuses are cancelled, delivered, in_transit). NOT EXISTS avoids the NOT IN NULL trap, though shipment_events.shipment_id is NOT NULL anyway. Sample returns ids 1, 56, 100, 122."
+}

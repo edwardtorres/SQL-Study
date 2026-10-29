@@ -1,0 +1,37 @@
+{
+  "id": "int-01",
+  "solutionSql": "SELECT r.id AS route_id,\n       w.city AS origin_city,\n       COUNT(s.id)::integer AS late_shipments\nFROM routes AS r\nJOIN warehouses AS w ON w.id = r.origin_id\nLEFT JOIN shipments AS s\n  ON s.route_id = r.id\n AND s.status IN ('queued', 'in_transit')\n AND s.delivery_due < DATE '2026-01-05'\nGROUP BY r.id, w.city\nORDER BY r.id;",
+  "sampleRowCount": 6,
+  "sampleFirstRows": [
+    [
+      1,
+      "Valehaven",
+      12
+    ],
+    [
+      2,
+      "Mossreach",
+      10
+    ],
+    [
+      3,
+      "Cloudmere",
+      9
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "still open ... Only queued and in-transit shipments count",
+      "readingChosen": "status IN (queued, in_transit), exact stored values",
+      "alternativeReading": "status NOT IN (delivered, cancelled), which would also count any other status value"
+    },
+    {
+      "phrase": "origin_city",
+      "readingChosen": "city of the warehouse referenced by routes.origin_id",
+      "alternativeReading": "warehouse name instead of city"
+    }
+  ],
+  "confidence": "high",
+  "notes": "LEFT JOIN with the status and date filters in the ON clause keeps zero-count routes; COUNT(s.id) cast to integer. Due date strictly before 2026-01-05. On the sample, route 6 has 8 open shipments due exactly 5 January and correctly shows 0."
+}

@@ -1,0 +1,31 @@
+{
+  "id": "int-04",
+  "solutionSql": "SELECT to_char(s.booked_at AT TIME ZONE 'UTC', 'YYYY-MM') AS booking_month,\n       COUNT(*)::integer AS unbilled_shipments\nFROM shipments AS s\nWHERE NOT EXISTS (SELECT 1 FROM invoices AS i WHERE i.shipment_id = s.id)\nGROUP BY to_char(s.booked_at AT TIME ZONE 'UTC', 'YYYY-MM')\nORDER BY booking_month;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      "2025-12",
+      6
+    ],
+    [
+      "2026-01",
+      29
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "For each UTC booking month ... count the shipments that have no invoice",
+      "readingChosen": "List only months that have at least one unbilled shipment (anti-join, then group); a month whose shipments are all invoiced does not appear.",
+      "alternativeReading": "List every month in which any shipment was booked, showing 0 for months where every shipment has an invoice (LEFT JOIN with COUNT FILTER or COUNT(i.id) inverted)."
+    },
+    {
+      "phrase": "A shipment with an invoice is billed, whether or not the invoice is paid",
+      "readingChosen": "Any invoice row for the shipment makes it billed; paid_at is ignored.",
+      "alternativeReading": "None plausible; the sentence rules out treating unpaid invoices as unbilled."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Anti-join with NOT EXISTS, month from booked_at AT TIME ZONE 'UTC' via to_char YYYY-MM, count cast to integer. Sample has no month with zero unbilled shipments, so both readings of month inclusion give the same sample rows; hidden data could separate them. Invoices are at most one per shipment, so no duplication risk either way.",
+  "superseded": "Instruction text changed to state that only months with unbilled shipments appear; re-solved blind by a fresh agent."
+}

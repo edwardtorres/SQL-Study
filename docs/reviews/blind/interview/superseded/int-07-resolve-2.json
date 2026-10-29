@@ -1,0 +1,40 @@
+{
+  "id": "int-07",
+  "solutionSql": "SELECT d.shipment_id, COUNT(*) AS distinct_scans\nFROM (\n  SELECT DISTINCT sc.shipment_id, sc.status, sc.occurred_at\n  FROM staging_scans AS sc\n  JOIN shipments AS s ON s.id = sc.shipment_id\n  WHERE sc.status IS NOT NULL\n) AS d\nGROUP BY d.shipment_id\nORDER BY d.shipment_id;",
+  "sampleRowCount": 32,
+  "sampleFirstRows": [
+    [
+      14,
+      1
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      18,
+      1
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "two scans are the same when they have the same status and occurred_at",
+      "readingChosen": "Deduplicate on (shipment_id, status, occurred_at) with SELECT DISTINCT, ignoring the scan id; a NULL occurred_at is kept and two scans with the same status and both NULL occurred_at count as one.",
+      "alternativeReading": "Treat a NULL occurred_at as not comparable (each such scan counted separately) or drop it, e.g. COUNT(DISTINCT status || occurred_at) would skip it."
+    },
+    {
+      "phrase": "A scan for a shipment that does not exist is not counted",
+      "readingChosen": "Inner join to shipments, which also drops scans with a NULL shipment_id.",
+      "alternativeReading": "Only drop non-NULL ids missing from shipments; a NULL shipment_id would then form its own group."
+    },
+    {
+      "phrase": "distinct_scans (integer)",
+      "readingChosen": "COUNT(*) left as bigint.",
+      "alternativeReading": "Cast to int4 with ::int."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Sample: 41 scans, 5 orphan ids, 3 NULL-status scans on existing shipments, one exact duplicate (shipment 120) leave 32 shipments with 1 distinct scan each. Dedup ignores scan id. Shipments with only NULL-status scans (33, 86, 167) are absent.",
+  "superseded": "Re-solve on the reworded text (version 2). It returned COUNT(*) as bigint for distinct_scans, which fails the integer column type the grader enforces, and its columnsMatchTicket value was wrong. Superseded by a third blind solve on the same text."
+}

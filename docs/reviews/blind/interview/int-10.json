@@ -1,0 +1,35 @@
+{
+  "id": "int-10",
+  "solutionSql": "CREATE VIEW billed_shipments AS\nSELECT i.shipment_id, s.customer_id, c.name AS customer_name, i.amount\nFROM invoices AS i\nJOIN shipments AS s ON s.id = i.shipment_id\nJOIN customers AS c ON c.id = s.customer_id;",
+  "sampleRowCount": 205,
+  "sampleFirstRows": [
+    [
+      2,
+      2,
+      "Brindle Pantry",
+      "200.00"
+    ],
+    [
+      3,
+      3,
+      "Cobalt Paperworks",
+      "125.00"
+    ],
+    [
+      4,
+      4,
+      "Dovetail Lanterns",
+      "125.00"
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "one row for each invoice",
+      "readingChosen": "Inner joins invoices -> shipments -> customers; the NOT NULL foreign keys guarantee every invoice keeps exactly one row.",
+      "alternativeReading": "LEFT JOINs from invoices to protect invoices whose shipment or customer is missing; identical results while the foreign keys hold."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Joined invoices to shipments on shipment_id, then shipments to customers on customer_id; customer_name is customers.name aliased. Sample: 205 invoices, 205 view rows. information_schema reports integer, integer, text, numeric in the ticket's order. No tables changed."
+}

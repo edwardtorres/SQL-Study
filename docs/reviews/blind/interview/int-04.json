@@ -1,0 +1,30 @@
+{
+  "id": "int-04",
+  "solutionSql": "SELECT to_char(s.booked_at AT TIME ZONE 'UTC', 'YYYY-MM') AS booking_month,\n       COUNT(*)::integer AS unbilled_shipments\nFROM shipments AS s\nWHERE NOT EXISTS (SELECT 1 FROM invoices AS i WHERE i.shipment_id = s.id)\nGROUP BY to_char(s.booked_at AT TIME ZONE 'UTC', 'YYYY-MM')\nORDER BY booking_month;",
+  "sampleRowCount": 2,
+  "sampleFirstRows": [
+    [
+      "2025-12",
+      6
+    ],
+    [
+      "2026-01",
+      29
+    ]
+  ],
+  "columnsMatchTicket": true,
+  "ambiguities": [
+    {
+      "phrase": "UTC booking month",
+      "readingChosen": "Month of booked_at converted to UTC with AT TIME ZONE 'UTC', so the result does not depend on the session time zone",
+      "alternativeReading": "Month of booked_at in the session time zone (UTC in the sample, so identical there)"
+    },
+    {
+      "phrase": "shipments that have no invoice",
+      "readingChosen": "No row in invoices with that shipment_id (anti-join via NOT EXISTS); paid or unpaid invoices both count as billed",
+      "alternativeReading": "Treat unpaid invoices (paid_at IS NULL) as unbilled; rejected because the ticket says billed whether or not paid"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Anti-join with NOT EXISTS, grouped by to_char(booked_at AT TIME ZONE UTC, YYYY-MM), count cast to integer, ordered by month. Months with no unbilled shipments are omitted as instructed. Sample: 35 unbilled of 240 shipments; 205 invoices, one per shipment."
+}

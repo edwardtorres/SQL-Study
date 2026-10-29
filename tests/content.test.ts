@@ -2,7 +2,8 @@ import { PGlite } from '@electric-sql/pglite';
 import { describe, expect, test } from 'vitest';
 import { mistakeTags } from '../src/core/types';
 import type { Challenge } from '../src/core/types';
-import { items } from '../src/data/catalog';
+import { items as catalogItems } from '../src/data/catalog';
+import { interviewItems } from '../src/data/interview';
 import { datasetCatalog, sampleDataset, seedSql } from '../src/data';
 import { lessons } from '../src/data/lessons';
 import citations from '../src/data/citations.json';
@@ -24,6 +25,9 @@ async function planNodesOf(db: PGlite, sql: string): Promise<string[]> {
   const cell = Object.values(result.rows[0] ?? {})[0];
   return nodeTypes(typeof cell === 'string' ? JSON.parse(cell) : cell);
 }
+
+// The interview reserve meets the same standards as the chapter tickets, so the checks cover both.
+const items = [...catalogItems, ...interviewItems];
 
 const bossGroups = new Map<string, Challenge[]>();
 for (const item of items) {
@@ -149,7 +153,7 @@ describe('content check: references and wrong variants on the engine', () => {
     } finally {
       await db.close();
     }
-  }, 120_000);
+  }, 300_000);
 });
 
 describe('content check: lessons', () => {
