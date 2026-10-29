@@ -63,6 +63,19 @@ Every audit includes every section the step prompt requests, under the heading t
 If a section cannot be filled, keep its heading and say exactly why it is empty. An audit that
 omits a requested section is incomplete, even when its other sections are accurate.
 
+## Step prompts
+
+At the start of each step, before any other work, save the user's prompt for that step to
+`docs/prompts/step-N.md`, where N is the step number. The file holds the user's words only. A further
+prompt that starts work within the same step is saved as `docs/prompts/step-N-2.md`, `step-N-3.md`, and so on.
+`docs/prompts/README.md` lists every prompt file, how it was obtained, and whether it was recovered later.
+A prompt that contains a credential or a private link is saved with that value replaced by `[redacted]`, and
+the README says so. Scan a prompt file for tokens and addresses before committing it.
+
+The step's end audit is built from the requested headings in its prompt file. Each requested section appears
+under the heading the prompt gives. A section that cannot be filled keeps its heading, with the reason. The
+audit does not drop, merge or rename a requested heading.
+
 ## Apply lessons from previous study apps
 
 - Shuffle multiple-choice options at render time, preserving stable option IDs.
