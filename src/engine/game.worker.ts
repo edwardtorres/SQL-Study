@@ -1,6 +1,7 @@
 import { datasetCatalog, hiddenDatasets, reviewSampleFor, sampleDataset, schema, seedSql } from '../data';
 import type { DatasetSpec } from '../core/types';
 import { loadItem } from '../data/items/loader';
+import { interviewItems } from '../data/interview';
 import { planProblemFor } from '../grader/plan';
 import { compareResults, sameRows, validateSql } from '../grader';
 import type { Challenge, DatasetOutcome, GradeReport, MistakeFeedback, QueryResult } from '../core/types';
@@ -55,6 +56,9 @@ function loadHidden(runtime: WarmEngine): Promise<void> {
 
 // Ticket definitions load per chapter: a request names its ticket, and the worker loads only that chapter.
 async function challengeOf(id: string): Promise<Challenge> {
+  // The interview reserve is not in any chapter, so it is looked up first.
+  const reserved = interviewItems.find((item) => item.id === id);
+  if (reserved) return reserved;
   try { return await loadItem(id); }
   catch { throw new Error('Unknown ticket.'); }
 }

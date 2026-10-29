@@ -72,3 +72,7 @@
 .weak-tag { border: 1px solid #dce1d6; background: #fffefa; border-radius: 9px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; font-size: 12px; line-height: 1.7; color: #33463d; }
 .weak-tag-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 10px; color: #5b7066; }
 .weak-tag-head code { font-size: 11px; color: #1d3834; overflow-wrap: anywhere; }
+/* Timed interview: the running clock and its expired state. The box is lighter than the page so the muted limit text keeps 4.5:1 contrast. */
+.interview-clock { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: #fffefa; border: 1px solid #dce1d6; border-radius: 9px; padding: 14px 16px; font-size: 12px; color: #1d3834; }
+.interview-clock strong { font-size: 16px; font-weight: 650; }
+.interview-clock.is-expired { border-color: #e2bfa6; color: #8a4a27; }

@@ -3,6 +3,7 @@ import { ArrowRight, Database, Download, RefreshCw, Sparkles, Table2, Upload } f
 import type { Chapter } from '../data/curriculum';
 import type { ItemMeta } from '../data/itemIndex';
 import { needsReview } from '../game/review';
+import { interviewReady } from '../game/interview';
 import { BADGES, currentStreak, DESK_LABEL, deskStatus, entryLevelReady, levelOf, rankOf, readinessAll, totalXp } from '../game/rules';
 import type { SaveV4 } from '../save/progress';
 import './office.css';
@@ -17,10 +18,10 @@ const DESK_NOTE: Record<string, string> = {
 // The first part of a chapter's boss, which a test-out opens directly.
 const firstBossPart = (items: readonly ItemMeta[], chapterId: number): ItemMeta | undefined => items.find((item) => item.chapterId === chapterId && item.bossGroup !== undefined);
 
-export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onDaily, onWeak, onNeeds, onExport, onImport }: {
+export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onDaily, onWeak, onNeeds, onInterview, onExport, onImport }: {
   items: readonly ItemMeta[]; save: SaveV4; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
   onChapter: (chapterId: number) => void; onBossTestOut: (item: ItemMeta) => void; onScratch: () => void;
-  onDaily: () => void; onWeak: () => void; onNeeds: (chapterId: number) => void; onExport: () => void; onImport: (file: File) => void;
+  onDaily: () => void; onWeak: () => void; onNeeds: (chapterId: number) => void; onInterview: () => void; onExport: () => void; onImport: (file: File) => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const xp = totalXp(save);
@@ -64,8 +65,13 @@ export default function OfficeMap({ items, save, today, chapters, notice, canImp
       </li>;
     })}</ol>
     <section className="review-panel" aria-labelledby="review-title">
-      <div className="section-heading"><div><p className="eyebrow">REVIEW</p><h2 id="review-title">Mistakes come back</h2></div></div>
+      <div className="section-heading"><div><p className="eyebrow">REVIEW</p><h2 id="review-title">Review and interview</h2></div></div>
       <ul className="review-list">
+        <li className="review-entry">
+          <div><strong>Timed interview</strong><p>Three problems against the clock, with no hints. {interviewReady(save.interviewHistory) ? 'Interview-ready: two of your last three sets were passed in time.' : 'Pass two of your last three sets in time to become interview-ready.'}</p></div>
+          <span className="section-meta">{save.interview ? 'Set running' : 'No set running'}</span>
+          <button className="secondary-button" onClick={onInterview}><ArrowRight size={15} />Open interview</button>
+        </li>
         <li className="review-entry">
           <div><strong>Daily Review</strong><p>Up to five tickets a day, chosen from the mistakes you have logged. Each one runs on a fresh review sample.</p></div>
           <span className="section-meta">{dailyCount === null ? 'Up to 5 today' : `${dailyCount} today`}</span>

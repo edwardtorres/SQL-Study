@@ -1,6 +1,6 @@
 import type { ItemMeta } from '../data/itemIndex';
 import { mistakeTags } from '../core/types';
-import { emptySave, type ChapterProgress, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type ScoredAttempt, type Schedule, type Streak, type TicketProgress } from './format';
+import { emptySave, type ChapterProgress, type InterviewProblem, type InterviewResult, type InterviewSet, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type ScoredAttempt, type Schedule, type Streak, type TicketProgress } from './format';
 import { migrateV2ToV4, migrateV3ToV4, readLegacy } from './migrations';
 import { ID, dayOrNull, day as isDay, integer, object, readActive, readLessons, stamp, stampOrNull } from './validate';
 
@@ -161,7 +161,9 @@ function readV4(value: Record<string, unknown>): SaveV4 {
   if (!object(value.tickets) || !object(value.lessons) || !object(value.chapters) || !object(value.badges)) throw new Error('Invalid save');
   if (!object(value.readiness) || !object(value.mistakeTotals) || !object(value.reviews) || !object(value.reviewRecent)) throw new Error('Invalid save');
   if (!integer(value.independentRun, 100_000) || !integer(value.longestRun, 100_000) || value.independentRun > value.longestRun) throw new Error('Invalid save');
-  if (value.interview !== null || !Array.isArray(value.interviewHistory) || value.interviewHistory.length > 0) throw new Error('Invalid interview');
+  const interview = value.interview === null ? null : readInterviewSet(value.interview);
+  if (!Array.isArray(value.interviewHistory) || value.interviewHistory.length > INTERVIEW_HISTORY_CAP) throw new Error('Invalid interview');
+  const interviewHistory = value.interviewHistory.map(readInterviewResult);
   const totals = value.mistakeTotals;
   const reviews = value.reviews;
   if (!object(totals.tags) || !object(totals.competencies) || !object(reviews.tags) || !object(reviews.items)) throw new Error('Invalid save');
@@ -187,9 +189,36 @@ function readV4(value: Record<string, unknown>): SaveV4 {
     },
     reviewRecent: readReviewRecent(value.reviewRecent),
     dailyReview: readDailyReview(value.dailyReview),
-    interview: null,
-    interviewHistory: [],
+    interview,
+    interviewHistory,
   };
+}
+
+// The most finished sets kept. Older sets are dropped; the interview-ready signal only reads the last few.
+export const INTERVIEW_HISTORY_CAP = 20;
+const PROBLEM_ID = /^[a-z0-9-]{1,40}$/;
+
+function readInterviewProblems(value: unknown): InterviewProblem[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 3) throw new Error('Invalid interview');
+  return value.map((entry: unknown) => {
+    if (!object(entry) || typeof entry.id !== 'string' || !PROBLEM_ID.test(entry.id)) throw new Error('Invalid interview');
+    if (entry.passedAt !== null && !stamp(entry.passedAt)) throw new Error('Invalid interview');
+    if (!integer(entry.failures, 1_000)) throw new Error('Invalid interview');
+    return { id: entry.id, passedAt: entry.passedAt, failures: entry.failures };
+  });
+}
+
+function readInterviewSet(value: unknown): InterviewSet {
+  if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
+  if (!stamp(value.startedAt) || !integer(value.limitMinutes, 240) || value.limitMinutes < 1) throw new Error('Invalid interview');
+  return { id: value.id, startedAt: value.startedAt, limitMinutes: value.limitMinutes, problems: readInterviewProblems(value.problems) };
+}
+
+function readInterviewResult(value: unknown): InterviewResult {
+  if (!object(value) || typeof value.id !== 'string' || !ID.test(value.id)) throw new Error('Invalid interview');
+  if (!stamp(value.startedAt) || !stamp(value.endedAt) || value.endedAt < value.startedAt) throw new Error('Invalid interview');
+  if (!integer(value.limitMinutes, 240) || value.limitMinutes < 1 || typeof value.expired !== 'boolean') throw new Error('Invalid interview');
+  return { id: value.id, startedAt: value.startedAt, endedAt: value.endedAt, limitMinutes: value.limitMinutes, problems: readInterviewProblems(value.problems), expired: value.expired };
 }
 
 // Reads any save this app can open. Versions 0 to 3 are migrated in memory and rewritten as version 4 on the next change.

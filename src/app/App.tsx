@@ -18,6 +18,7 @@ const LessonView = lazy(() => import('./LessonView'));
 const Scratchpad = lazy(() => import('./Scratchpad'));
 const Review = lazy(() => import('./Review'));
 const WeakSpots = lazy(() => import('./WeakSpots'));
+const Interview = lazy(() => import('./Interview'));
 
 type View =
   | { name: 'home' }
@@ -28,6 +29,7 @@ type View =
   | { name: 'daily' }
   | { name: 'needs'; chapterId: number }
   | { name: 'weak' }
+  | { name: 'interview' }
   | { name: 'scratch' };
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -149,6 +151,7 @@ export default function App() {
     : view.name === 'scratch' ? 'Scratchpad'
       : view.name === 'daily' ? 'Daily Review'
         : view.name === 'weak' ? 'Weak Spots'
+          : view.name === 'interview' ? 'Interview'
           : view.name === 'needs' ? `Needs review · Chapter ${view.chapterId}`
       : view.name === 'item' && meta ? `Chapter ${meta.chapterId} · ${meta.title}`
         : current ? `Chapter ${current.id}${view.name === 'lesson' ? ' · Lesson' : ''}` : 'Office';
@@ -190,6 +193,7 @@ export default function App() {
             {view.name === 'home' && <OfficeMap
               items={itemIndex} save={save} today={today} chapters={curriculum} canImport={restored.writable} onScratch={() => { go({ name: 'scratch' }); }}
               onDaily={() => { go({ name: 'daily' }); }} onWeak={() => { go({ name: 'weak' }); }} onNeeds={(chapterId) => { go({ name: 'needs', chapterId }); }}
+              onInterview={() => { go({ name: 'interview' }); }}
               onChapter={(chapterId) => { go({ name: 'chapter', chapterId }); }} onBossTestOut={openItem} onExport={exportProgress} onImport={(file) => { void importProgress(file); }}
               notice={<>
                 {pendingImport && <section className="import-confirm" aria-labelledby="import-title">
@@ -205,6 +209,7 @@ export default function App() {
             {view.name === 'scratch' && <Scratchpad onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'daily' && <Review mode="daily" items={itemIndex} save={save} ids={save.dailyReview?.day === today ? save.dailyReview.itemIds : []} chapterTitle={undefined} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'needs' && <Review mode="needs" items={itemIndex} save={save} ids={needsReviewSet(save, view.chapterId, poolOf(save))} chapterTitle={chapterOf(view.chapterId)?.title} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
+            {view.name === 'interview' && <Interview save={save} items={itemIndex} today={today} commit={commit} setDraft={(id, draft) => { updateTicket(id, (previous) => ({ ...previous, draft })); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'weak' && <WeakSpots items={itemIndex} save={save} scores={readinessAll(save, chapterIds)} chapterTitle={(chapterId) => chapterOf(chapterId)?.title ?? `Chapter ${chapterId}`} onOpen={(item) => { openItem(item); }} onLesson={(chapterId) => { go({ name: 'lesson', chapterId }); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'item' && meta && !item && <div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the ticket…</div>}
             {view.name === 'item' && meta && item && <Workspace

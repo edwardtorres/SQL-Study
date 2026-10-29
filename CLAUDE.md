@@ -266,6 +266,43 @@ Game loop table: a first pass earns its award, and any later pass earns the repe
 **Pages.** Daily Review and Weak Spots are on the office map. A desk with a *Needs review* mark has a *Review this desk*
 button, which lists the three seen tickets in that desk passed longest ago.
 
+## Timed interview (Step 5)
+
+The interview reserve is ten problems in `src/data/interview`, kept apart from the chapters. Each reserve problem scores
+toward its primary competency (`chapterId`) and carries an estimate in whole minutes. Pure rules are in
+`src/game/interview.ts`; `tests/interview.test.ts` pins them.
+
+**Draw.** A set has three problems. The reserve comes first, unseen problems before seen ones. Only if the reserve runs out
+does the draw take chapter 13 independent tickets, then independent tickets from mastered chapters 4 to 12 (the multi-concept
+group). A problem is seen once it has an attempt or sat in a finished set.
+
+**Time limit.** The sum of the problems' estimates, rounded up to a whole minute. A chapter ticket with no estimate of its
+own is timed at the independent default, 6 minutes.
+
+**Timer.** The deadline is the saved start time plus the limit, so a reload keeps the time left. When the deadline passes,
+the set ends on its own. The page grades each unpassed problem's saved draft once the engine is ready, and a draft that
+passes counts as passed at the deadline. A set that expired while the page was closed is settled the same way on open.
+
+**Inside a set.** Run is allowed. Submit reports pass or fail only. Hints, reveals, the detailed grade card and the mistake
+explanations are not shown. The reference and the explanations appear on the results page, after the set ends.
+
+**Scoring.** Each problem adds one readiness attempt when the set ends: 1 for a first-time pass, 0.5 for a pass after
+failures, 0 for a problem not passed (including one the timer ended). A pass earns the independent award, and a later pass of
+the same problem earns the repeat award once a day. Passed problems count toward the streak. Mastery, the mistake log and
+the review schedules are never changed by an interview.
+
+**Interview-ready.** At least two of the last three finished sets were submitted by the learner in time, and every problem in
+each of them passed. A set the timer ended never counts.
+
+**Short set (development only).** One problem and two minutes, behind `import.meta.env.DEV`. The production scan forbids its
+marker, `__SQL_DESK_SHORT_SET__`. `e2e/interview-dev.spec.ts` covers it through the `dev-interview` project, which runs
+against the dev server.
+
+**Deviations from the Step 5 plan.** The multi-concept group uses the chapter number (4 and later) instead of a generated
+structural index. Chapter 13 estimates are not read, so those tickets use the default. The distinct-scan ticket (int-07)
+replaced the planned DISTINCT ON latest-scan ticket, because the staging feed in the seed has no multi-scan ordering to test,
+and chapter 8 already covers latest-per-group.
+
 ## Execution findings and cross-browser checks
 
 Engine start (flake closed as machine contention, 2026-10-28). One full Chromium run at 390 px

@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const assets = await readdir('dist/assets');
-const forbidden = ['__SQL_DESK_DEV_ONLY__', '?seed=', 'debugSeedOverride'];
+const forbidden = ['__SQL_DESK_DEV_ONLY__', '?seed=', 'debugSeedOverride', '__SQL_DESK_SHORT_SET__'];
 let checked = 0;
 for (const name of assets) {
   if (!/\.(js|html)$/.test(name)) continue;

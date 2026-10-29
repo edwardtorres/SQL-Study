@@ -51,6 +51,13 @@ export interface ScoredAttempt { at: number; credit: number }
 export type MistakeKind = 'failed' | 'revealed';
 export interface MistakeEntry { at: number; day: string; itemId: string; competency: number; tag: string | null; kind: MistakeKind }
 
+// One problem in a timed set. passedAt is when it passed inside the set; failures counts its failed submissions in the set.
+export interface InterviewProblem { id: string; passedAt: number | null; failures: number }
+// A running set. startedAt and limitMinutes give the deadline.
+export interface InterviewSet { id: string; startedAt: number; limitMinutes: number; problems: InterviewProblem[] }
+// A finished set. expired is set when the timer ended the set rather than the learner.
+export interface InterviewResult { id: string; startedAt: number; endedAt: number; limitMinutes: number; problems: InterviewProblem[]; expired: boolean }
+
 // Review schedule for a ticket or a mistake tag. step indexes REVIEW_INTERVALS; dueDay is the next day it is due.
 export interface Schedule { step: number; dueDay: string; lastDay: string | null; lastOutcome: 'pass' | 'miss' | null }
 
@@ -74,9 +81,10 @@ export interface SaveV4 {
   reviewRecent: Record<string, ('pass' | 'miss')[]>;
   // The day's Daily Review tickets, saved when the page first opens that day.
   dailyReview: { day: string; itemIds: string[] } | null;
-  // Timed interview sets. Empty until the interview mode lands.
-  interview: null;
-  interviewHistory: [];
+  // The running timed set, if any. Its start and limit give the deadline, so a reload keeps the time left.
+  interview: InterviewSet | null;
+  // The last finished sets, oldest first. Only the last few decide the interview-ready signal.
+  interviewHistory: InterviewResult[];
 }
 
 export const emptySave = (): SaveV4 => ({
