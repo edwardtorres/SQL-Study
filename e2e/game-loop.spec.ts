@@ -142,7 +142,7 @@ for (const width of [390, 1280]) {
       await download.saveAs(exported);
       expect(JSON.parse(readFileSync(exported, 'utf8'))).toMatchObject({ version: 4 });
       const future = testInfo.outputPath('future-save.json');
-      writeFileSync(future, '{"version":4,"tickets":{}}');
+      writeFileSync(future, '{"version":5,"tickets":{}}');
       await page.locator('input[type=file]').setInputFiles(future);
       await expect(page.getByRole('alert')).toContainText('newer version');
       await expect(page.getByRole('heading', { name: 'Replace this browser’s progress?' })).toHaveCount(0);
