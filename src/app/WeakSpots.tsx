@@ -6,11 +6,11 @@ import { itemTags } from '../data/itemTags';
 import { lessons } from '../data/lessons';
 import { weakSpots, WEAK_TAG_COUNT } from '../game/review';
 import { isOpen, type Readiness } from '../game/rules';
-import type { SaveV5 } from '../save/progress';
+import type { SaveV6 } from '../save/progress';
 
 interface Props {
   items: readonly ItemMeta[];
-  save: SaveV5;
+  save: SaveV6;
   scores: readonly Readiness[];
   chapterTitle: (chapterId: number) => string;
   onOpen: (item: ItemMeta) => void;
@@ -35,7 +35,7 @@ for (const lesson of lessons) {
 
 // The most frequent logged mistakes, each with the practice tickets that model it. Memoised on the save, so the
 // variant explanations below load once per save rather than once per render.
-function tagRowsOf(items: readonly ItemMeta[], save: SaveV5): TagRow[] {
+function tagRowsOf(items: readonly ItemMeta[], save: SaveV6): TagRow[] {
   return weakSpots(save, []).tags.map(({ tag, count }) => ({
     tag,
     count,

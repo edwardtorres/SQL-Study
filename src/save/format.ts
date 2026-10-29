@@ -30,7 +30,7 @@ export interface ChapterProgress { method: 'boss' | 'test-out'; masteredAt: numb
 // countedDay is the last local day with three distinct passed items. items are the distinct items passed on itemsDay.
 export interface Streak { current: number; longest: number; countedDay: string | null; itemsDay: string | null; items: string[] }
 
-// Version 3 shape. Kept for the migration; the current shape is SaveV5.
+// Version 3 shape. Kept for the migration; the current shape is SaveV6.
 export interface SaveV3 {
   version: 3;
   activeTicket: string | null;
@@ -72,8 +72,11 @@ export interface InterviewResultV4 { id: string; startedAt: number; endedAt: num
 export interface Schedule { step: number; dueDay: string; lastDay: string | null; lastOutcome: 'pass' | 'miss' | null }
 
 // Version 5 adds the solve time, the open-workspace marker and the estimate to each interview problem.
-export interface SaveV5 {
-  version: 5;
+// Version 6 adds the backup record: when progress was last exported, and when the reminder is snoozed.
+export interface BackupState { createdAt: number; lastExportAt: number | null; reminderSnoozedUntil: number | null }
+
+export interface SaveV6 {
+  version: 6;
   activeTicket: string | null;
   tickets: Record<string, TicketProgress>;
   lessons: Record<string, LessonProgress>;
@@ -96,7 +99,12 @@ export interface SaveV5 {
   interview: InterviewSet | null;
   // The last finished sets, oldest first. Only the last few decide the interview-ready signal.
   interviewHistory: InterviewResult[];
+  // When this browser was first given a save, and when progress was last exported. Read by the backup reminder.
+  backup: BackupState;
 }
+
+// Version 5 is the shape before the backup record. Only the migration reads it.
+export type SaveV5 = Omit<SaveV6, "version" | "backup"> & { version: 5 };
 
 // Version 4 is the shape before the interview timing fields. Only the migration reads it.
 export type SaveV4 = Omit<SaveV5, 'version' | 'interview' | 'interviewHistory'> & {
@@ -105,10 +113,11 @@ export type SaveV4 = Omit<SaveV5, 'version' | 'interview' | 'interviewHistory'> 
   interviewHistory: InterviewResultV4[];
 };
 
-export const emptySave = (): SaveV5 => ({
-  version: 5, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
+export const emptySave = (): SaveV6 => ({
+  version: 6, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
   readiness: {}, mistakeLog: [], mistakeTotals: { tags: {}, competencies: {} }, reviews: { tags: {}, items: {} }, reviewRecent: {},
   dailyReview: null, interview: null, interviewHistory: [],
+  backup: { createdAt: 0, lastExportAt: null, reminderSnoozedUntil: null },
 });
 
 export const emptyProgress = (draft = ''): TicketProgress => ({

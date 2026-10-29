@@ -1,5 +1,5 @@
 import type { ItemMeta } from '../data/itemIndex';
-import { emptyProgress, type ChapterProgress, type Outcome, type SaveV5, type Streak, type TicketProgress } from '../save/format';
+import { emptyProgress, type ChapterProgress, type Outcome, type SaveV6, type Streak, type TicketProgress } from '../save/format';
 import { appendMistake, withMiss, withReview, appendReviewOutcome } from './review';
 
 // The game rules as pure functions: XP, hint costs, levels, ranks, gating, mastery, reveals, streaks, badges and readiness.
@@ -45,7 +45,7 @@ export function levelOf(xp: number): { level: number; into: number; span: number
   return { level, into: xp - levelStart(level), span: levelStart(level + 1) - levelStart(level) };
 }
 
-export const totalXp = (save: Pick<SaveV5, 'tickets'>): number => Object.values(save.tickets).reduce((sum, ticket) => sum + ticket.xp, 0);
+export const totalXp = (save: Pick<SaveV6, 'tickets'>): number => Object.values(save.tickets).reduce((sum, ticket) => sum + ticket.xp, 0);
 
 // Ranks follow mastery, not XP. The highest rank whose chapter is mastered is the current rank.
 export const RANKS: readonly { name: string; chapter: number }[] = [
@@ -56,16 +56,16 @@ export const RANKS: readonly { name: string; chapter: number }[] = [
   { name: 'Data Engineer I', chapter: 13 },
 ];
 
-export const isMastered = (save: Pick<SaveV5, 'chapters'>, chapterId: number): boolean => save.chapters[String(chapterId)] !== undefined;
+export const isMastered = (save: Pick<SaveV6, 'chapters'>, chapterId: number): boolean => save.chapters[String(chapterId)] !== undefined;
 
-export function rankOf(save: Pick<SaveV5, 'chapters'>): string {
+export function rankOf(save: Pick<SaveV6, 'chapters'>): string {
   let rank = RANKS[0]!.name;
   for (const entry of RANKS) if (entry.chapter === 0 || isMastered(save, entry.chapter)) rank = entry.name;
   return rank;
 }
 
 // Chapter 1 is open. Any other chapter opens when the one before it is mastered. A mastered chapter stays open.
-export function isOpen(save: Pick<SaveV5, 'chapters'>, chapterId: number): boolean {
+export function isOpen(save: Pick<SaveV6, 'chapters'>, chapterId: number): boolean {
   return chapterId === 1 || isMastered(save, chapterId) || isMastered(save, chapterId - 1);
 }
 
@@ -80,18 +80,18 @@ export function partCounts(ticket: TicketProgress | undefined): boolean {
   return ticket !== undefined && ticket.passedAt !== null && (ticket.revealedAt === null || ticket.passedAt > ticket.revealedAt);
 }
 
-export function groupCounts(items: readonly ItemMeta[], save: Pick<SaveV5, 'tickets'>, group: string): boolean {
+export function groupCounts(items: readonly ItemMeta[], save: Pick<SaveV6, 'tickets'>, group: string): boolean {
   const parts = items.filter((item) => item.bossGroup === group);
   return parts.length > 0 && parts.every((part) => partCounts(save.tickets[part.id]));
 }
 
-export function chapterBossesPass(items: readonly ItemMeta[], save: Pick<SaveV5, 'tickets'>, chapterId: number): boolean {
+export function chapterBossesPass(items: readonly ItemMeta[], save: Pick<SaveV6, 'tickets'>, chapterId: number): boolean {
   const groups = bossGroupsOf(items, chapterId);
   return groups.length > 0 && groups.every((group) => groupCounts(items, save, group));
 }
 
 // Test-out: the chapter was mastered before any of its lesson sections were answered and before any of its non-boss tickets passed.
-export function masteryMethod(items: readonly ItemMeta[], save: SaveV5, chapterId: number): ChapterProgress['method'] {
+export function masteryMethod(items: readonly ItemMeta[], save: SaveV6, chapterId: number): ChapterProgress['method'] {
   const touched = items.some((item) => item.chapterId === chapterId && item.bossGroup === undefined && save.tickets[item.id]?.passed === true)
     || Object.entries(save.lessons).some(([id, lesson]) => id.startsWith(`c${chapterId}-s`) && lesson.answer !== null);
   return touched ? 'boss' : 'test-out';
@@ -99,10 +99,10 @@ export function masteryMethod(items: readonly ItemMeta[], save: SaveV5, chapterI
 
 // Reveal rule: the reveal never adds XP or mastery. For a boss part it voids the current pass until a later pass that differs from the solution.
 // A reveal is a logged miss: it resets the ticket's review schedule and the mistake log records it.
-export function revealSolution(save: SaveV5, item: ItemMeta, at: number, day: string): SaveV5 {
+export function revealSolution(save: SaveV6, item: ItemMeta, at: number, day: string): SaveV6 {
   const ticket = save.tickets[item.id] ?? emptyProgress();
   if (ticket.solutionRevealed) return save;
-  const next: SaveV5 = { ...save, tickets: { ...save.tickets, [item.id]: { ...ticket, solutionRevealed: true, revealedAt: at } } };
+  const next: SaveV6 = { ...save, tickets: { ...save.tickets, [item.id]: { ...ticket, solutionRevealed: true, revealedAt: at } } };
   return {
     ...next,
     ...appendMistake(next, { at, day, itemId: item.id, competency: item.chapterId, tag: null, kind: 'revealed' }),
@@ -110,7 +110,7 @@ export function revealSolution(save: SaveV5, item: ItemMeta, at: number, day: st
   };
 }
 
-export function takeHint(save: SaveV5, itemId: string): SaveV5 {
+export function takeHint(save: SaveV6, itemId: string): SaveV6 {
   const ticket = save.tickets[itemId] ?? emptyProgress();
   return { ...save, tickets: { ...save.tickets, [itemId]: { ...ticket, hintTier: Math.min(3, ticket.hintTier + 1) } } };
 }
@@ -149,7 +149,7 @@ export function currentStreak(streak: Streak, today: string): number {
   return dayGap(streak.countedDay, today) <= 1 ? streak.current : 0;
 }
 
-export interface Badge { id: string; title: string; earned: (items: readonly ItemMeta[], save: SaveV5) => boolean }
+export interface Badge { id: string; title: string; earned: (items: readonly ItemMeta[], save: SaveV6) => boolean }
 
 const rankBadge = (id: string, title: string, chapter: number): Badge => ({ id, title, earned: (_items, save) => isMastered(save, chapter) });
 
@@ -174,13 +174,13 @@ export const BADGES: readonly Badge[] = [
 const bossGroupsOfAll = (items: readonly ItemMeta[]): string[] => [...new Set(items.map((item) => item.bossGroup).filter((group): group is string => group !== undefined))];
 
 // Every item of the chapter passed, and none needed a reveal. Hints are allowed.
-function chapterSolvedWithoutReveal(items: readonly ItemMeta[], save: SaveV5, chapterId: number): boolean {
+function chapterSolvedWithoutReveal(items: readonly ItemMeta[], save: SaveV6, chapterId: number): boolean {
   const chapterItems = items.filter((item) => item.chapterId === chapterId);
   return chapterItems.length > 0 && chapterItems.every((item) => save.tickets[item.id]?.passed === true && save.tickets[item.id]?.revealedAt === null);
 }
 
 // Mastery and badges follow from the tickets, so one pass through here settles both. Mastery is never taken back.
-export function settle(items: readonly ItemMeta[], save: SaveV5, at: number): SaveV5 {
+export function settle(items: readonly ItemMeta[], save: SaveV6, at: number): SaveV6 {
   let next = save;
   for (const chapterId of chapterIdsOf(items)) {
     if (isMastered(next, chapterId) || !chapterBossesPass(items, next, chapterId)) continue;
@@ -196,7 +196,7 @@ export function settle(items: readonly ItemMeta[], save: SaveV5, at: number): Sa
 export interface Grade { passed: boolean; sql: string; at: number; day: string; tag?: string | null; reviewing?: boolean; hinted?: boolean; revealed?: boolean }
 
 export interface GradeResult {
-  save: SaveV5;
+  save: SaveV6;
   xp: number;
   // The outcome of this item's first pass, when this submission was that pass.
   outcome: Outcome | null;
@@ -212,7 +212,7 @@ export interface GradeResult {
 export const reviewCredit = (grade: Pick<Grade, 'revealed' | 'hinted'>): number => (grade.revealed === true ? 0 : grade.hinted === true ? REVIEW_HINTED_CREDIT : 1);
 
 // Applies one graded submission. The learner's draft is kept by the caller, so this touches only progress.
-export function applySubmission(save: SaveV5, items: readonly ItemMeta[], item: ItemMeta, referenceSql: string, grade: Grade): GradeResult {
+export function applySubmission(save: SaveV6, items: readonly ItemMeta[], item: ItemMeta, referenceSql: string, grade: Grade): GradeResult {
   const none = { xp: 0, outcome: null, counted: false, copyOfReveal: false, promoted: null, badges: [] };
   if (!isOpen(save, item.chapterId)) return { save, ...none };
   const previous = save.tickets[item.id] ?? emptyProgress();
@@ -220,7 +220,7 @@ export function applySubmission(save: SaveV5, items: readonly ItemMeta[], item: 
   const reviewing = grade.reviewing === true;
   if (!grade.passed) {
     const ticket = { ...previous, attempts, failures: previous.failures + 1 };
-    let failed: SaveV5 = { ...withTicket(save, item.id, ticket), ...appendMistake(save, { at: grade.at, day: grade.day, itemId: item.id, competency: item.chapterId, tag: grade.tag ?? null, kind: 'failed' }) };
+    let failed: SaveV6 = { ...withTicket(save, item.id, ticket), ...appendMistake(save, { at: grade.at, day: grade.day, itemId: item.id, competency: item.chapterId, tag: grade.tag ?? null, kind: 'failed' }) };
     failed = { ...failed, reviews: withMiss(failed.reviews, item.id, grade.tag ?? null, grade.day) };
     if (reviewing) failed = recordReviewAttempt(failed, item, 0, grade.day, grade.at);
     return { save: failed, ...none };
@@ -241,7 +241,7 @@ export function applySubmission(save: SaveV5, items: readonly ItemMeta[], item: 
   const independentRun = first && item.role === 'independent' ? (outcome === 'first-try' ? save.independentRun + 1 : 0) : save.independentRun;
   const before = rankOf(save);
   const earned = Object.keys(save.badges);
-  let updated: SaveV5 = {
+  let updated: SaveV6 = {
     ...withTicket(save, item.id, ticket),
     streak: recordStreakItem(save.streak, grade.day, item.id),
     independentRun,
@@ -261,35 +261,35 @@ export function applySubmission(save: SaveV5, items: readonly ItemMeta[], item: 
 // A review attempt: its outcome joins the competency's review window, its schedule advances or resets, and a scored
 // ticket adds its credit to the readiness window. A pass is any credit above zero. A ticket passes one review a day:
 // a repeat pass after a review pass that day changes nothing, so a reload cannot add credit again.
-function recordReviewAttempt(save: SaveV5, item: ItemMeta, credit: number, day: string, at: number): SaveV5 {
+function recordReviewAttempt(save: SaveV6, item: ItemMeta, credit: number, day: string, at: number): SaveV6 {
   const pass = credit > 0;
   const schedule = save.reviews.items[item.id];
   if (pass && schedule?.lastDay === day && schedule.lastOutcome === 'pass') return save;
-  const next: SaveV5 = { ...save, reviewRecent: appendReviewOutcome(save.reviewRecent, item.chapterId, pass), reviews: withReview(save.reviews, item.id, pass, day) };
+  const next: SaveV6 = { ...save, reviewRecent: appendReviewOutcome(save.reviewRecent, item.chapterId, pass), reviews: withReview(save.reviews, item.id, pass, day) };
   return isScored(item) ? recordScored(next, item.chapterId, at, credit) : next;
 }
 
-function withTicket(save: SaveV5, itemId: string, ticket: TicketProgress): SaveV5 {
+function withTicket(save: SaveV6, itemId: string, ticket: TicketProgress): SaveV6 {
   return { ...save, tickets: { ...save.tickets, [itemId]: ticket } };
 }
 
 // Readiness: each competency keeps its most recent scored attempts, first passes and review attempts alike.
 // Only the window matters, so the oldest attempt falls out when a new one is added.
-export function recordScored(save: SaveV5, chapterId: number, at: number, credit: number): SaveV5 {
+export function recordScored(save: SaveV6, chapterId: number, at: number, credit: number): SaveV6 {
   const key = String(chapterId);
   return { ...save, readiness: { ...save.readiness, [key]: [...(save.readiness[key] ?? []), { at, credit }].slice(-READINESS_WINDOW) } };
 }
 
 export interface Readiness { chapterId: number; scored: number; score: number | null; ready: boolean }
 
-export function readinessOf(save: Pick<SaveV5, 'readiness'>, chapterId: number): Readiness {
+export function readinessOf(save: Pick<SaveV6, 'readiness'>, chapterId: number): Readiness {
   const entries = save.readiness[String(chapterId)] ?? [];
   const scored = entries.length;
   const score = scored >= READINESS_MINIMUM ? entries.reduce((sum, entry) => sum + entry.credit, 0) / scored : null;
   return { chapterId, scored, score, ready: score !== null && score >= READY_AT };
 }
 
-export const readinessAll = (save: Pick<SaveV5, 'readiness'>, chapterIds: readonly number[]): Readiness[] =>
+export const readinessAll = (save: Pick<SaveV6, 'readiness'>, chapterIds: readonly number[]): Readiness[] =>
   chapterIds.map((chapterId) => readinessOf(save, chapterId));
 
 // The entry-level signal appears only when every competency has a score and each one is at or above READY_AT.
@@ -297,7 +297,7 @@ export const entryLevelReady = (rows: readonly Readiness[]): boolean => rows.len
 
 export type DeskStatus = 'locked' | 'open' | 'in-progress' | 'mastered' | 'tested-out';
 
-export function deskStatus(items: readonly ItemMeta[], save: SaveV5, chapterId: number): DeskStatus {
+export function deskStatus(items: readonly ItemMeta[], save: SaveV6, chapterId: number): DeskStatus {
   const mastered = save.chapters[String(chapterId)];
   if (mastered) return mastered.method === 'test-out' ? 'tested-out' : 'mastered';
   if (!isOpen(save, chapterId)) return 'locked';

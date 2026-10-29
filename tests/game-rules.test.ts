@@ -4,12 +4,12 @@ import {
   applySubmission, awardFor, BADGES, CREDIT, currentStreak, dayGap, deskStatus, entryLevelReady, isMastered, isOpen, levelOf, levelStart,
   localDay, normalizeSql, rankOf, readinessAll, readinessOf, recordScored, recordStreakItem, revealSolution, settle, takeHint, totalXp,
 } from '../src/game/rules';
-import { emptyProgress, emptySave, type SaveV5, type Streak, type TicketProgress } from '../src/save/format';
+import { emptyProgress, emptySave, type SaveV6, type Streak, type TicketProgress } from '../src/save/format';
 
 const REFERENCE = 'SELECT reference FROM shipments';
 const ZONE = 'America/New_York';
 const NOON = '2026-03-02T12:00:00Z';
-const reveal = (save: SaveV5, id: string, at: number) => revealSolution(save, item(id), at, localDay(at, 'UTC'));
+const reveal = (save: SaveV6, id: string, at: number) => revealSolution(save, item(id), at, localDay(at, 'UTC'));
 
 const item = (id: string, pool: readonly ItemMeta[] = itemIndex): ItemMeta => {
   const found = pool.find((candidate) => candidate.id === id);
@@ -21,7 +21,7 @@ const bossPartsOf = (chapterId: number): string[] => itemIndex
   .map((candidate) => candidate.id);
 
 // One graded submission. The default query differs from the reference, so it is an ordinary pass.
-function grade(save: SaveV5, id: string, options: { passed?: boolean; sql?: string; at?: string; zone?: string; pool?: readonly ItemMeta[] } = {}) {
+function grade(save: SaveV6, id: string, options: { passed?: boolean; sql?: string; at?: string; zone?: string; pool?: readonly ItemMeta[] } = {}) {
   const pool = options.pool ?? itemIndex;
   const at = Date.parse(options.at ?? NOON);
   return applySubmission(save, pool, item(id, pool), REFERENCE, {
@@ -29,7 +29,7 @@ function grade(save: SaveV5, id: string, options: { passed?: boolean; sql?: stri
   });
 }
 
-function passAll(save: SaveV5, ids: readonly string[], at = NOON): SaveV5 {
+function passAll(save: SaveV6, ids: readonly string[], at = NOON): SaveV6 {
   return ids.reduce((next, id) => grade(next, id, { at }).save, save);
 }
 
@@ -160,7 +160,7 @@ describe('ranks, gating and test-outs', () => {
 
   test('promotion is reported on the grade that changes the rank, and not again after', () => {
     const save = passAll(emptySave(), [...bossPartsOf(1), ...bossPartsOf(2)]);
-    const results = bossPartsOf(3).reduce<{ save: SaveV5; promoted: (string | null)[] }>((state, id) => {
+    const results = bossPartsOf(3).reduce<{ save: SaveV6; promoted: (string | null)[] }>((state, id) => {
       const result = grade(state.save, id);
       return { save: result.save, promoted: [...state.promoted, result.promoted] };
     }, { save, promoted: [] });
@@ -351,7 +351,7 @@ describe('readiness', () => {
 
 describe('review attempts', () => {
   // A review pass through applySubmission. The reviewing flag and the hinted flag are the only inputs the review path reads.
-  function review(save: SaveV5, id: string, options: { passed?: boolean; hinted?: boolean; revealed?: boolean; at?: string } = {}) {
+  function review(save: SaveV6, id: string, options: { passed?: boolean; hinted?: boolean; revealed?: boolean; at?: string } = {}) {
     const at = Date.parse(options.at ?? NOON);
     return applySubmission(save, itemIndex, item(id), REFERENCE, {
       passed: options.passed ?? true, sql: 'SELECT other FROM shipments', at, day: localDay(at, 'UTC'), reviewing: true,

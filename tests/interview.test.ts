@@ -6,7 +6,7 @@ import {
   recordInterviewPass, remainingMs, startInterview, type Candidate,
 } from '../src/game/interview';
 import { REPEAT_XP, readinessOf } from '../src/game/rules';
-import { emptyProgress, emptySave, type InterviewProblem, type InterviewResult, type SaveV5 } from '../src/save/format';
+import { emptyProgress, emptySave, type InterviewProblem, type InterviewResult, type SaveV6 } from '../src/save/format';
 
 const NOON = Date.parse('2026-03-02T12:00:00Z');
 const DAY = '2026-03-02';
@@ -14,7 +14,7 @@ const pick = (ids: readonly string[]): Candidate[] => ids.map((id) => ({ id, cha
 // A fixed order: no shuffle, so the draw is the reserve in its declared order.
 const inOrder = () => 0.999999;
 
-function finished(save: SaveV5, ids: readonly string[], options: { passed: boolean[]; failures?: number[]; at?: number; expired?: boolean }): SaveV5 {
+function finished(save: SaveV6, ids: readonly string[], options: { passed: boolean[]; failures?: number[]; at?: number; expired?: boolean }): SaveV6 {
   const candidates = pick(ids);
   let set = startInterview(candidates, NOON);
   candidates.forEach((candidate, index) => {

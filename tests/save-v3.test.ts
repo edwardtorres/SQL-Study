@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { itemIndex } from '../src/data/itemIndex';
 import { applySubmission, localDay, totalXp } from '../src/game/rules';
-import { emptySave, restoreSave, type SaveV5 } from '../src/save/progress';
+import { emptySave, restoreSave, type SaveV6 } from '../src/save/progress';
 
 // The fixture is a real version 2 save from the Step 3b build, captured in Chromium by driving its UI: two guided passes,
 // one wrong query, one hint, one reveal, and one correct lesson prediction.
 const v2Text = readFileSync(new URL('./fixtures/save-v2.json', import.meta.url), 'utf8');
-const migrated = (): SaveV5 => {
+const migrated = (): SaveV6 => {
   const result = restoreSave(v2Text, itemIndex);
   expect(result.status).toBe('migrated');
   return result.save;
@@ -83,7 +83,7 @@ describe('version 2 boss tickets under the new reveal rule', () => {
 });
 
 describe('version 3 consistency', () => {
-  const v3 = (): SaveV5 => JSON.parse(JSON.stringify(emptySave())) as SaveV5;
+  const v3 = (): SaveV6 => JSON.parse(JSON.stringify(emptySave())) as SaveV6;
   const cases: [string, (save: Record<string, unknown>) => void][] = [
     ['a pass without a first outcome', (save) => { save.tickets = { 'c1-i1': { draft: '', attempts: 1, failures: 0, passed: true, hintTier: 0, solutionRevealed: false, xp: 35, firstOutcome: null, firstPassAt: 1, passedAt: 1, revealedAt: null, repeatDay: null } }; }],
     ['a pass time without a pass', (save) => { save.tickets = { 'c1-i1': { draft: '', attempts: 1, failures: 1, passed: false, hintTier: 0, solutionRevealed: false, xp: 0, firstOutcome: null, firstPassAt: null, passedAt: 1, revealedAt: null, repeatDay: null } }; }],

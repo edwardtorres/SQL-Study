@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { itemIndex } from '../src/data/itemIndex';
 import { readinessOf } from '../src/game/rules';
-import { restoreSave, type SaveV5 } from '../src/save/progress';
+import { restoreSave, type SaveV6 } from '../src/save/progress';
 
 // The fixture is a real version 3 save from the Step 4 build, captured in Chromium by driving its UI: a lesson answer,
 // a first-try guided pass, a hinted pass, a reveal, an unpassed ticket, a three-part chapter 1 boss, and a streak.
 const v3Text = readFileSync(new URL('./fixtures/save-v3.json', import.meta.url), 'utf8');
-const migrated = (): SaveV5 => {
+const migrated = (): SaveV6 => {
   const result = restoreSave(v3Text, itemIndex);
   expect(result.status).toBe('migrated');
   return result.save;
@@ -16,7 +16,7 @@ const migrated = (): SaveV5 => {
 describe('version 3 to version 4 migration, on the captured fixture', () => {
   test('every version 3 field carries over unchanged', () => {
     const save = migrated();
-    expect(save.version).toBe(5);
+    expect(save.version).toBe(6);
     expect(save.activeTicket).toBe('c1-b1-p3');
     expect(save.chapters).toEqual({ '1': expect.objectContaining({ method: 'boss' }) });
     expect(save.badges).toHaveProperty('boss-first-try');
@@ -44,7 +44,7 @@ describe('version 3 to version 4 migration, on the captured fixture', () => {
     expect(save.readiness['1']!.map((entry) => entry.credit)).toEqual([1, 1, 1]);
   });
 
-  test('a migrated save round trips as a version 5 save', () => {
+  test('a migrated save round trips as a version 6 save', () => {
     const save = migrated();
     expect(restoreSave(JSON.stringify(save), itemIndex)).toEqual({ save, status: 'restored', writable: true });
   });
@@ -78,6 +78,6 @@ describe('version 4 validation', () => {
   });
 
   test('a save from a version above 4 is never overwritten', () => {
-    expect(restoreSave('{"version":6,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
+    expect(restoreSave('{"version":7,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
   });
 });

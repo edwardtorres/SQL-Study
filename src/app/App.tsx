@@ -6,13 +6,15 @@ import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
 import { applySubmission, deskStatus, isOpen, localDay, rankOf, readinessAll, revealSolution, takeHint, totalXp, type GradeResult } from '../game/rules';
 import { dailyReviewSet, needsReviewSet, weakSpots, type ReviewPool } from '../game/review';
-import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV5, type TicketProgress } from '../save/progress';
+import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV6, type TicketProgress } from '../save/progress';
 import { exportSave, importSave } from '../save/transfer';
 import { ChapterView, lessonSectionIds } from './Chapters';
 import OfficeMap from './OfficeMap';
 import Promotion from './Promotion';
 import { partLabel, summarizeChapter } from './model';
 import { registerOfflineWorker, type ApplyUpdate } from '../pwa/register';
+import { anchoredBackup, backupDue, exportedBackup, snoozedBackup } from '../save/backup';
+import { requestPersistence } from '../save/persist';
 
 const Workspace = lazy(() => import('./Workspace'));
 const LessonView = lazy(() => import('./LessonView'));
@@ -43,16 +45,16 @@ function initialState() {
 }
 const chapterOf = (id: number) => curriculum.find((chapter) => chapter.id === id);
 const chapterIds = curriculum.map((chapter) => chapter.id);
-const poolOf = (save: SaveV5): ReviewPool => ({ items: itemIndex, isOpen: (chapterId) => isOpen(save, chapterId) });
+const poolOf = (save: SaveV6): ReviewPool => ({ items: itemIndex, isOpen: (chapterId) => isOpen(save, chapterId) });
 
 export default function App() {
   const [restored] = useState(initialState);
-  const [save, setSave] = useState<SaveV5>(restored.save);
+  const [save, setSave] = useState<SaveV6>(restored.save);
   const [view, setView] = useState<View>({ name: 'home' });
   const review = view.name === 'item' ? view.review : null;
   const [saveFailed, setSaveFailed] = useState(!restored.writable);
   const [promotion, setPromotion] = useState<string | null>(null);
-  const [pendingImport, setPendingImport] = useState<SaveV5 | null>(null);
+  const [pendingImport, setPendingImport] = useState<SaveV6 | null>(null);
   const [notice, setNotice] = useState<{ tone: 'status' | 'alert'; text: string } | null>(null);
   // A waiting offline worker offers a reload. The learner decides when, so a deploy never interrupts a query.
   const [applyUpdate, setApplyUpdate] = useState<ApplyUpdate | null>(null);
@@ -60,16 +62,26 @@ export default function App() {
   useEffect(() => {
     return registerOfflineWorker((apply) => { setApplyUpdate(() => apply); });
   }, []);
-  const persist = useCallback((next: SaveV5) => {
+
+
+  const persist = useCallback((next: SaveV6) => {
     if (!restored.writable) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); }
     catch { setSaveFailed(true); }
   }, [restored.writable]);
   // Every change that depends on the current save goes through commit, so the state and the stored copy stay together.
-  const commit = useCallback((next: SaveV5) => {
+  const commit = useCallback((next: SaveV6) => {
     setSave(next);
     persist(next);
   }, [persist]);
+  // The backup reminder counts from the first load of a save. The browser is asked once to keep the site's storage.
+  useEffect(() => {
+    if (save.backup.createdAt === 0) commit(anchoredBackup(save, Date.now()));
+  }, [save, commit]);
+
+  useEffect(() => {
+    void requestPersistence();
+  }, []);
   const updateTicket = useCallback((id: string, update: (previous: TicketProgress) => TicketProgress) => {
     setSave((previous) => {
       const item = itemMetaById(id);
@@ -117,6 +129,7 @@ export default function App() {
     link.download = 'larkspur-progress.json';
     link.click();
     window.setTimeout(() => { URL.revokeObjectURL(url); }, 1_000);
+    commit(exportedBackup(save, Date.now()));
     setNotice({ tone: 'status', text: 'Progress exported. Keep the file somewhere safe.' });
   };
   const importProgress = async (file: File) => {
@@ -200,6 +213,11 @@ export default function App() {
         </header>
         <main id="main" className={view.name === 'item' || view.name === 'scratch' ? 'workspace-main' : 'board-main'}>
           {saveFailed && <p role="alert" className="save-warning">{restored.status === 'future' ? 'Your save belongs to a newer app version. This session will not overwrite it.' : restored.status === 'corrupt' ? 'Your saved progress could not be read. The original is preserved; this session continues without saving.' : 'Progress could not be saved on this browser. Keep this tab open to retain this session.'}</p>}
+          {saveFailed && restored.writable && <div className="save-warning-actions"><p>Progress since this failure lives only in this tab until a save succeeds.</p><button className="secondary-button" onClick={exportProgress}>Export progress</button></div>}
+          {backupDue(save, Date.now()) && <section className="backup-banner" aria-label="Backup reminder">
+            <p>Keep a copy of your progress. It has been a week since {save.backup.lastExportAt ? 'you last exported it' : 'this browser started saving it'}.</p>
+            <div className="button-row"><button className="primary-button" onClick={exportProgress}>Export now</button><button className="secondary-button" onClick={() => { commit(snoozedBackup(save, Date.now())); }}>Later</button></div>
+          </section>}
           {applyUpdate && <section className="update-banner" aria-label="Update available">
             <p>A new version of the desk is ready. Your progress is saved, so reloading is safe.</p>
             <button className="primary-button" onClick={applyUpdate}>Reload to update</button>

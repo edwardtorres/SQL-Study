@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { currentPersistence, type Persistence } from '../save/persist';
 
-// Settings. The install help and the offline status live here; the save-protection panels are added to this page too.
+// Settings. The offline status, the storage answer, the Safari note and the install help live here.
 interface Props { onBack: () => void }
 
 type Offline = 'checking' | 'ready' | 'pending' | 'unsupported';
+type Stored = Persistence | 'checking';
 
 export default function Settings({ onBack }: Props) {
   const [offline, setOffline] = useState<Offline>('checking');
+  const [stored, setStored] = useState<Stored>('checking');
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -17,6 +20,19 @@ export default function Settings({ onBack }: Props) {
     // The page is controlled once the worker has installed and claimed it. Before that, the status says so.
     setOffline(navigator.serviceWorker.controller ? 'ready' : 'pending');
   }, []);
+
+  // The browser reports whether it keeps this site's storage. The answer is shown as it stands.
+  useEffect(() => {
+    void currentPersistence().then((answer) => { setStored(answer); });
+  }, []);
+
+  const storedCopy = stored === 'granted'
+    ? 'Kept for this site. The browser will not clear it to free space.'
+    : stored === 'not-granted'
+      ? 'Not kept for this site yet. The browser may clear it when storage runs short, so keep a backup file.'
+      : stored === 'unsupported'
+        ? 'This browser does not report whether storage is kept.'
+        : 'Checking…';
 
   const offlineCopy = offline === 'ready'
     ? 'Available offline. A SQL screen you have opened is saved for offline use, so its editor and engine work without a connection.'
@@ -35,6 +51,11 @@ export default function Settings({ onBack }: Props) {
     <section className="practice-section" aria-labelledby="offline-title">
       <h2 id="offline-title">Offline use</h2>
       <p role="status">{offlineCopy}</p>
+    </section>
+    <section className="practice-section" aria-labelledby="storage-title">
+      <h2 id="storage-title">Keeping your progress</h2>
+      <p role="status">{storedCopy}</p>
+      <p>Safari may delete the website data of a site you have not used for a while. Export a backup file from the office now and then, and keep it somewhere safe.</p>
     </section>
     <section className="practice-section" aria-labelledby="install-title">
       <h2 id="install-title">Install on iPhone</h2>

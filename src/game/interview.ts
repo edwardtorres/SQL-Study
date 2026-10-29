@@ -1,6 +1,6 @@
 import { interviewItems } from '../data/interview';
 import type { ItemMeta } from '../data/itemIndex';
-import { emptyProgress, type InterviewProblem, type InterviewResult, type InterviewSet, type SaveV5 } from '../save/format';
+import { emptyProgress, type InterviewProblem, type InterviewResult, type InterviewSet, type SaveV6 } from '../save/format';
 import { awardFor, isMastered, recordScored, recordStreakItem, REPEAT_XP } from './rules';
 
 // Timed interview sets. Pure functions: the page reads the clock and the engine, and passes the results in.
@@ -31,13 +31,13 @@ export function chapterOf(items: readonly ItemMeta[], id: string): number | unde
 }
 
 // A problem counts as seen once it has any attempt or sat in a finished set.
-const seen = (save: Pick<SaveV5, 'tickets' | 'interviewHistory'>, id: string): boolean =>
+const seen = (save: Pick<SaveV6, 'tickets' | 'interviewHistory'>, id: string): boolean =>
   (save.tickets[id]?.attempts ?? 0) > 0 || save.interviewHistory.some((set) => set.problems.some((problem) => problem.id === id));
 
 // Draw order: reserve problems first, then chapter 13 independent tickets, then independent tickets of mastered chapters
 // from chapter 4 on (the multi-concept tickets). Within each group an unseen problem comes before a seen one, and the
 // order inside each of those two parts is shuffled by random.
-export function drawInterview(save: SaveV5, items: readonly ItemMeta[], count: number, random: () => number = Math.random): Candidate[] {
+export function drawInterview(save: SaveV6, items: readonly ItemMeta[], count: number, random: () => number = Math.random): Candidate[] {
   const shuffle = <T,>(list: readonly T[]): T[] => {
     const copy = [...list];
     for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -138,9 +138,9 @@ export const interviewCredit = (problem: InterviewProblem): number => (problem.p
 
 // Settles a finished set. Readiness takes one attempt per problem, and passes earn XP and streak like any ticket.
 // Mastery, the mistake log and the review schedules are never changed by an interview.
-export function finishInterview(save: SaveV5, items: readonly ItemMeta[], set: InterviewSet, endedAt: number, day: string): { save: SaveV5; result: InterviewResult } {
+export function finishInterview(save: SaveV6, items: readonly ItemMeta[], set: InterviewSet, endedAt: number, day: string): { save: SaveV6; result: InterviewResult } {
   const expired = endedAt >= deadlineOf(set);
-  let next: SaveV5 = { ...save, interview: null };
+  let next: SaveV6 = { ...save, interview: null };
   for (const problem of set.problems) {
     const chapterId = chapterOf(items, problem.id) ?? 1;
     next = recordScored(next, chapterId, endedAt, interviewCredit(problem));

@@ -2,7 +2,7 @@ import type { ItemMeta } from '../data/itemIndex';
 import { awardFor, CREDIT, isScored, kindOf, outcomeOf, READINESS_WINDOW, settle, type Kind } from '../game/rules';
 import {
   emptyProgress, emptySave, type InterviewProblem, type InterviewProblemV4, type InterviewResult, type InterviewResultV4, type InterviewSet,
-  type InterviewSetV4, type LessonProgress, type SaveV3, type SaveV4, type SaveV5, type ScoredAttempt, type TicketProgress,
+  type InterviewSetV4, type LessonProgress, type SaveV3, type SaveV4, type SaveV5, type SaveV6, type ScoredAttempt, type TicketProgress,
 } from './format';
 import { ID, integer, object, readActive, readLessons } from './validate';
 
@@ -59,7 +59,7 @@ function migrateTicket(ticket: LegacyTicket, kind: Kind): TicketProgress {
 
 // The readiness window is seeded from the stored first passes, most recent last, as readiness was computed before version 4.
 // Ties keep the same order the old derivation used, so migrated scores do not move.
-function seedReadiness<T extends Pick<SaveV5, 'tickets' | 'readiness'>>(save: T, items: readonly ItemMeta[]): T {
+function seedReadiness<T extends Pick<SaveV6, 'tickets' | 'readiness'>>(save: T, items: readonly ItemMeta[]): T {
   const firsts = items
     .filter(isScored)
     .flatMap((item) => {
@@ -77,9 +77,9 @@ function seedReadiness<T extends Pick<SaveV5, 'tickets' | 'readiness'>>(save: T,
   return { ...save, readiness };
 }
 
-// Version 2 to version 5. Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero,
+// Version 2 to the current version. Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero,
 // because version 2 kept no history. The mistake log starts empty, because version 2 kept no mistake tags. Version 2 has no interview.
-export function migrateV2ToV5(legacy: SaveV2, items: readonly ItemMeta[]): SaveV5 {
+export function migrateV2(legacy: SaveV2, items: readonly ItemMeta[]): SaveV6 {
   const kinds = new Map(items.map((item) => [item.id, kindOf(item)]));
   const tickets: Record<string, TicketProgress> = {};
   for (const [id, ticket] of Object.entries(legacy.tickets)) tickets[id] = migrateTicket(ticket, kinds.get(id) ?? 'independent');
@@ -111,4 +111,10 @@ export function migrateV4ToV5(save: SaveV4): SaveV5 {
     interview: save.interview === null ? null : migrateSet(save.interview),
     interviewHistory: save.interviewHistory.map(migrateResult),
   };
+}
+
+// Version 5 to version 6. The backup record is new, so it starts unanchored (createdAt 0). The app anchors it on the first load,
+// which starts the seven-day export reminder from the upgrade rather than from a time the save never recorded.
+export function migrateV5ToV6(save: SaveV5): SaveV6 {
+  return { ...save, version: 6, backup: { createdAt: 0, lastExportAt: null, reminderSnoozedUntil: null } };
 }

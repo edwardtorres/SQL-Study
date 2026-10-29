@@ -136,10 +136,10 @@ for (const width of [390, 1280]) {
 }
 
 test('future save is not overwritten by this version', async ({ page }) => {
-  await page.addInitScript(() => { localStorage.setItem('larkspur-sql-desk.progress', '{"version":6,"futureData":"preserve"}'); });
+  await page.addInitScript(() => { localStorage.setItem('larkspur-sql-desk.progress', '{"version":7,"futureData":"preserve"}'); });
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('newer app version');
   await openTicket(page, 1, 'The heavy-load shortlist');
   await page.getByRole('textbox', { name: 'SQL query', exact: true }).fill('SELECT 1;');
-  expect(await page.evaluate(() => localStorage.getItem('larkspur-sql-desk.progress'))).toBe('{"version":6,"futureData":"preserve"}');
+  expect(await page.evaluate(() => localStorage.getItem('larkspur-sql-desk.progress'))).toBe('{"version":7,"futureData":"preserve"}');
 });

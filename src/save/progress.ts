@@ -2,15 +2,15 @@ import type { ItemMeta } from '../data/itemIndex';
 import { mistakeTags } from '../core/types';
 import {
   emptySave, type ChapterProgress, type InterviewProblem, type InterviewProblemV4, type InterviewResult, type InterviewResultV4, type InterviewSet,
-  type InterviewSetV4, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type SaveV5, type ScoredAttempt, type Schedule, type Streak, type TicketProgress,
+  type InterviewSetV4, type MistakeEntry, type Outcome, type SaveV3, type SaveV4, type SaveV5, type SaveV6, type BackupState, type ScoredAttempt, type Schedule, type Streak, type TicketProgress,
 } from './format';
-import { migrateV2ToV5, migrateV3ToV4, migrateV4ToV5, readLegacy } from './migrations';
+import { migrateV2, migrateV3ToV4, migrateV4ToV5, migrateV5ToV6, readLegacy } from './migrations';
 import { ID, dayOrNull, day as isDay, integer, object, readActive, readLessons, stamp, stampOrNull } from './validate';
 
 export * from './format';
 
 export interface RestoredSave {
-  save: SaveV5;
+  save: SaveV6;
   status: 'fresh' | 'restored' | 'migrated' | 'corrupt' | 'future';
   writable: boolean;
 }
@@ -153,7 +153,7 @@ function readReviewRecent(value: Record<string, unknown>): Record<string, ('pass
   return recent;
 }
 
-function readDailyReview(value: unknown): SaveV5['dailyReview'] {
+function readDailyReview(value: unknown): SaveV6['dailyReview'] {
   if (value === null) return null;
   if (!object(value) || !isDay(value.day) || !Array.isArray(value.itemIds) || value.itemIds.length > DAILY_CAP) throw new Error('Invalid daily review');
   if (!value.itemIds.every((id) => typeof id === 'string' && ID.test(id))) throw new Error('Invalid daily review');
@@ -161,7 +161,7 @@ function readDailyReview(value: unknown): SaveV5['dailyReview'] {
 }
 
 // The fields every version from 4 on shares. The versions differ only in their interview fields, read by their own readers below.
-type CommonFields = Omit<SaveV5, 'version' | 'interview' | 'interviewHistory'>;
+type CommonFields = Omit<SaveV6, 'version' | 'interview' | 'interviewHistory' | 'backup'>;
 
 function readCommon(value: Record<string, unknown>): CommonFields {
   if (!object(value.tickets) || !object(value.lessons) || !object(value.chapters) || !object(value.badges)) throw new Error('Invalid save');
@@ -208,6 +208,18 @@ function readV4(value: Record<string, unknown>): SaveV4 {
 function readV5(value: Record<string, unknown>): SaveV5 {
   const interview = value.interview === null ? null : readSet(value.interview);
   return { ...readCommon(value), version: 5, interview, interviewHistory: readHistory(value.interviewHistory, readResult) };
+}
+
+// The backup record: when this browser was given its save, and when progress was last exported. A zero creation time is an
+// upgraded save the app has not yet anchored (see migrateV5ToV6).
+function readBackup(value: unknown): BackupState {
+  if (!object(value) || !stamp(value.createdAt) || !stampOrNull(value.lastExportAt) || !stampOrNull(value.reminderSnoozedUntil)) throw new Error('Invalid backup');
+  return { createdAt: value.createdAt, lastExportAt: value.lastExportAt, reminderSnoozedUntil: value.reminderSnoozedUntil };
+}
+
+function readV6(value: Record<string, unknown>): SaveV6 {
+  const interview = value.interview === null ? null : readSet(value.interview);
+  return { ...readCommon(value), version: 6, interview, interviewHistory: readHistory(value.interviewHistory, readResult), backup: readBackup(value.backup) };
 }
 
 // The most finished sets kept. Older sets are dropped; the interview-ready signal only reads the last few.
@@ -266,18 +278,19 @@ function readResult(value: unknown): InterviewResult {
   return { id: value.id, startedAt: value.startedAt, endedAt: value.endedAt, limitMinutes: value.limitMinutes, problems: readProblems(value.problems, readProblem), expired: value.expired };
 }
 
-// Reads any save this app can open. Versions 0 to 4 are migrated in memory and rewritten as version 5 on the next change.
+// Reads any save this app can open. Versions 0 to 5 are migrated in memory and rewritten as version 6 on the next change.
 // A save from a newer version is never overwritten. An unreadable save is preserved and the session runs without saving.
 export function restoreSave(raw: string | null, items: readonly ItemMeta[]): RestoredSave {
   if (raw === null) return { save: emptySave(), status: 'fresh', writable: true };
   try {
     const value: unknown = JSON.parse(raw);
     if (!object(value)) throw new Error('Invalid save');
-    if (typeof value.version === 'number' && value.version > 5) return { save: emptySave(), status: 'future', writable: false };
-    if (value.version === 5) return { save: readV5(value), status: 'restored', writable: true };
-    if (value.version === 4) return { save: migrateV4ToV5(readV4(value)), status: 'migrated', writable: true };
-    if (value.version === 3) return { save: migrateV4ToV5(migrateV3ToV4(readV3(value), items)), status: 'migrated', writable: true };
-    return { save: migrateV2ToV5(readLegacy(value), items), status: 'migrated', writable: true };
+    if (typeof value.version === 'number' && value.version > 6) return { save: emptySave(), status: 'future', writable: false };
+    if (value.version === 6) return { save: readV6(value), status: 'restored', writable: true };
+    if (value.version === 5) return { save: migrateV5ToV6(readV5(value)), status: 'migrated', writable: true };
+    if (value.version === 4) return { save: migrateV5ToV6(migrateV4ToV5(readV4(value))), status: 'migrated', writable: true };
+    if (value.version === 3) return { save: migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(readV3(value), items))), status: 'migrated', writable: true };
+    return { save: migrateV2(readLegacy(value), items), status: 'migrated', writable: true };
   } catch {
     return { save: emptySave(), status: 'corrupt', writable: false };
   }

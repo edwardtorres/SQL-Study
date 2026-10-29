@@ -6,7 +6,7 @@ import {
   addDays, appendMistake, appendReviewOutcome, dailyReviewSet, isDue, MISTAKE_LOG_CAP, needsReview, needsReviewSet, REVIEW_INTERVALS,
   scheduleAfter, weakSpots, withMiss, withReview,
 } from '../src/game/review';
-import { emptyProgress, emptySave, type MistakeEntry, type SaveV5 } from '../src/save/format';
+import { emptyProgress, emptySave, type MistakeEntry, type SaveV6 } from '../src/save/format';
 
 const DAY = '2026-03-02';
 const REFERENCE = 'SELECT reference FROM shipments';
@@ -18,7 +18,7 @@ const item = (id: string): ItemMeta => {
 const gapDays = (from: string, to: string): number => (Date.parse(to) - Date.parse(from)) / 86_400_000;
 const open = { items: itemIndex, isOpen: () => true };
 const tagged = (tag: string): ItemMeta[] => itemIndex.filter((candidate) => (itemTags[candidate.id] as readonly string[] | undefined)?.includes(tag) === true);
-const seen = (ids: readonly string[]): SaveV5['tickets'] => Object.fromEntries(ids.map((id) => [id, { ...emptyProgress(), attempts: 1 }]));
+const seen = (ids: readonly string[]): SaveV6['tickets'] => Object.fromEntries(ids.map((id) => [id, { ...emptyProgress(), attempts: 1 }]));
 
 describe('addDays and the intervals', () => {
   test('whole calendar days cross month and year boundaries', () => {
@@ -83,7 +83,7 @@ describe('the mistake log and the review window', () => {
   });
 
   test('a review window keeps the last five outcomes', () => {
-    const recent = ['miss', 'pass', 'pass', 'miss', 'miss', 'pass'].reduce<SaveV5['reviewRecent']>(
+    const recent = ['miss', 'pass', 'pass', 'miss', 'miss', 'pass'].reduce<SaveV6['reviewRecent']>(
       (state, outcome) => appendReviewOutcome(state, 1, outcome === 'pass'), {},
     );
     expect(recent['1']).toEqual(['pass', 'pass', 'miss', 'miss', 'pass']);
@@ -105,14 +105,14 @@ describe('the mistake log and the review window', () => {
 
 describe('the Daily Review set', () => {
   test('a set saved for the day is returned as it was', () => {
-    const save: SaveV5 = { ...emptySave(), dailyReview: { day: DAY, itemIds: ['c1-i2'] } };
+    const save: SaveV6 = { ...emptySave(), dailyReview: { day: DAY, itemIds: ['c1-i2'] } };
     expect(dailyReviewSet(save, DAY, [13, 1], open)).toEqual(['c1-i2']);
   });
 
   test('a due tag offers a seen ticket that models it, not the ticket failed most recently', () => {
     const candidates = tagged('GE_VS_GT').map((candidate) => candidate.id);
     expect(candidates.length).toBeGreaterThan(1);
-    const save: SaveV5 = {
+    const save: SaveV6 = {
       ...emptySave(),
       tickets: seen(candidates),
       reviews: { items: {}, tags: { GE_VS_GT: scheduleAfter(undefined, false, '2026-02-28') } },
@@ -125,7 +125,7 @@ describe('the Daily Review set', () => {
   });
 
   test('a due ticket that was never seen is not offered', () => {
-    const save: SaveV5 = { ...emptySave(), reviews: { items: {}, tags: { GE_VS_GT: scheduleAfter(undefined, false, '2026-02-28') } } };
+    const save: SaveV6 = { ...emptySave(), reviews: { items: {}, tags: { GE_VS_GT: scheduleAfter(undefined, false, '2026-02-28') } } };
     expect(dailyReviewSet(save, DAY, [], open)).toEqual([]);
   });
 
@@ -133,7 +133,7 @@ describe('the Daily Review set', () => {
     const tags = Object.keys(itemTags).flatMap((id) => itemTags[id] ?? []);
     const distinct = [...new Set(tags)].slice(0, 8);
     const allSeen = seen(itemIndex.map((candidate) => candidate.id));
-    const save: SaveV5 = {
+    const save: SaveV6 = {
       ...emptySave(),
       tickets: allSeen,
       reviews: { items: {}, tags: Object.fromEntries(distinct.map((tag) => [tag, scheduleAfter(undefined, false, '2026-02-20')])) },
@@ -142,14 +142,14 @@ describe('the Daily Review set', () => {
   });
 
   test('when no tag is due, the set is topped up from the weakest competency first', () => {
-    const save: SaveV5 = { ...emptySave(), tickets: seen(itemIndex.filter((candidate) => candidate.chapterId === 13).map((candidate) => candidate.id)) };
+    const save: SaveV6 = { ...emptySave(), tickets: seen(itemIndex.filter((candidate) => candidate.chapterId === 13).map((candidate) => candidate.id)) };
     const picked = dailyReviewSet(save, DAY, [13, 1], open);
     expect(picked).toHaveLength(5);
     expect(picked.every((id) => item(id).chapterId === 13)).toBe(true);
   });
 
   test('closed chapters are never offered', () => {
-    const save: SaveV5 = { ...emptySave(), tickets: seen(itemIndex.filter((candidate) => candidate.chapterId === 13).map((candidate) => candidate.id)) };
+    const save: SaveV6 = { ...emptySave(), tickets: seen(itemIndex.filter((candidate) => candidate.chapterId === 13).map((candidate) => candidate.id)) };
     expect(dailyReviewSet(save, DAY, [13], { items: itemIndex, isOpen: (chapter) => chapter === 1 })).toEqual([]);
   });
 
@@ -157,7 +157,7 @@ describe('the Daily Review set', () => {
     const candidates = tagged('GE_VS_GT');
     const older = candidates[0]!;
     const passedTickets = Object.fromEntries(candidates.map((candidate, index) => [candidate.id, { ...emptyProgress(), attempts: 1, passed: true, passedAt: 1_000 * (index + 1) }]));
-    const save: SaveV5 = {
+    const save: SaveV6 = {
       ...emptySave(),
       tickets: passedTickets,
       reviews: { items: {}, tags: { GE_VS_GT: scheduleAfter(undefined, false, '2026-02-28') } },
@@ -177,7 +177,7 @@ describe('needs-review set and Weak Spots', () => {
   });
 
   test('Weak Spots ranks unscored competencies last and lists the top tags by count', () => {
-    const save: SaveV5 = {
+    const save: SaveV6 = {
       ...emptySave(),
       mistakeTotals: { tags: { GE_VS_GT: 4, LIMIT_MISSING: 9, FILTER_MISSING: 4, WRONG_VALUE: 1, WRONG_SOURCE: 2, STRING_INDEX: 7, CASE_ORDER: 3 }, competencies: {} },
     };
@@ -192,7 +192,7 @@ describe('needs-review set and Weak Spots', () => {
   });
 
   test('Weak Spots lists revealed tickets, most recent reveal first, and failed unpassed tickets', () => {
-    const save: SaveV5 = {
+    const save: SaveV6 = {
       ...emptySave(),
       tickets: {
         'c1-i1': { ...emptyProgress(), solutionRevealed: true, revealedAt: 100, attempts: 1 },

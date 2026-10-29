@@ -145,8 +145,8 @@ for (const width of [390, 1280]) {
   });
 }
 
-// Upgrade: a real version 1 save in localStorage must load, keep its drafts and passes, and be rewritten as version 5.
-test('a real version 1 save loads with its drafts and passes, then upgrades to version 5', async ({ page }) => {
+// Upgrade: a real version 1 save in localStorage must load, keep its drafts and passes, and be rewritten as version 6.
+test('a real version 1 save loads with its drafts and passes, then upgrades to version 6', async ({ page }) => {
   test.setTimeout(90_000);
   const v1 = {
     version: 1,
@@ -163,7 +163,7 @@ test('a real version 1 save loads with its drafts and passes, then upgrades to v
   await page.getByRole('button', { name: /The heavy-load shortlist/ }).first().tap();
   await expect(page.getByRole('textbox', { name: 'SQL query', exact: true })).toContainText('LIMIT 1');
   await page.getByRole('textbox', { name: 'SQL query', exact: true }).fill('SELECT id FROM shipments LIMIT 2;');
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null')?.version)).toBe(5);
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null')?.version)).toBe(6);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('larkspur-sql-desk.progress') ?? 'null'));
   expect(saved.lessons).toEqual({});
   expect(saved.tickets.dispatch.passed).toBe(true);

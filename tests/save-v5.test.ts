@@ -15,7 +15,7 @@ describe('version 4 to version 5 migration', () => {
   test('a running set migrates, and each problem starts with no time spent, no open workspace and no estimate', () => {
     const result = restoreSave(JSON.stringify(v4Save(v4Set, [v4Result])), itemIndex);
     expect(result.status).toBe('migrated');
-    expect(result.save.version).toBe(5);
+    expect(result.save.version).toBe(6);
     expect(result.save.interview?.problems).toEqual([
       { id: 'int-01', passedAt: 2_000, failures: 1, spentMs: 0, openedAt: null, estimateMinutes: null },
       { id: 'int-02', passedAt: null, failures: 0, spentMs: 0, openedAt: null, estimateMinutes: null },
@@ -43,9 +43,12 @@ describe('version 5 validation', () => {
     interview: { id: 'set-2', startedAt: 1_000, limitMinutes: 10, problems: [{ id: 'int-01', passedAt: null, failures: 0, spentMs: 90_000, openedAt: null, estimateMinutes: 5, ...problem }] },
   });
 
-  test('a version 5 save with solve times round trips as written', () => {
-    const save = v5Set({});
-    expect(restoreSave(JSON.stringify(save), itemIndex)).toEqual({ save, status: 'restored', writable: true });
+  test('a version 5 save with solve times migrates to version 6, keeping every time as written', () => {
+    const { backup: _backup, ...v5 } = { ...v5Set({}), version: 5 };
+    const result = restoreSave(JSON.stringify(v5), itemIndex);
+    expect(result).toMatchObject({ status: 'migrated', writable: true });
+    expect(result.save.version).toBe(6);
+    expect(result.save.interview?.problems[0]).toEqual({ id: 'int-01', passedAt: null, failures: 0, spentMs: 90_000, openedAt: null, estimateMinutes: 5 });
   });
 
   test('a time that is negative, an estimate of zero, or an open marker of the wrong kind is corrupt', () => {
@@ -59,6 +62,6 @@ describe('version 5 validation', () => {
   });
 
   test('a save from version 6 is never overwritten', () => {
-    expect(restoreSave('{"version":6,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
+    expect(restoreSave('{"version":7,"tickets":{}}', itemIndex)).toMatchObject({ status: 'future', writable: false });
   });
 });

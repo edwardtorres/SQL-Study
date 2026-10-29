@@ -10,13 +10,13 @@ import {
   isExpired, isOffEstimate, OFF_ESTIMATE_SHARE, openProblem, recordInterviewFailure, recordInterviewPass, remainingMs, settleExpiredPass,
   SHORT_SET_MINUTES, SHORT_SET_PROBLEMS, startInterview,
 } from '../game/interview';
-import { emptyProgress, type InterviewProblem, type InterviewResult, type SaveV5 } from '../save/format';
+import { emptyProgress, type InterviewProblem, type InterviewResult, type SaveV6 } from '../save/format';
 import Workspace from './Workspace';
 
 // A timed interview set. The page owns the clock and the grading; the rules are in src/game/interview.ts.
 interface Props {
-  save: SaveV5; items: readonly ItemMeta[]; today: string;
-  commit: (next: SaveV5) => void;
+  save: SaveV6; items: readonly ItemMeta[]; today: string;
+  commit: (next: SaveV6) => void;
   setDraft: (id: string, draft: string) => void;
   onBack: () => void;
 }

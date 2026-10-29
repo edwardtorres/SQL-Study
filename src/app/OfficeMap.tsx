@@ -5,7 +5,7 @@ import type { ItemMeta } from '../data/itemIndex';
 import { needsReview } from '../game/review';
 import { interviewReady } from '../game/interviewReady';
 import { BADGES, currentStreak, DESK_LABEL, deskStatus, entryLevelReady, levelOf, rankOf, readinessAll, totalXp } from '../game/rules';
-import type { SaveV5 } from '../save/progress';
+import type { SaveV6 } from '../save/progress';
 import './office.css';
 
 const DESK_NOTE: Record<string, string> = {
@@ -19,7 +19,7 @@ const DESK_NOTE: Record<string, string> = {
 const firstBossPart = (items: readonly ItemMeta[], chapterId: number): ItemMeta | undefined => items.find((item) => item.chapterId === chapterId && item.bossGroup !== undefined);
 
 export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onDaily, onWeak, onNeeds, onInterview, onExport, onImport }: {
-  items: readonly ItemMeta[]; save: SaveV5; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
+  items: readonly ItemMeta[]; save: SaveV6; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
   onChapter: (chapterId: number) => void; onBossTestOut: (item: ItemMeta) => void; onScratch: () => void;
   onDaily: () => void; onWeak: () => void; onNeeds: (chapterId: number) => void; onInterview: () => void; onExport: () => void; onImport: (file: File) => void;
 }) {
