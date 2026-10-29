@@ -3,7 +3,7 @@ import { ArrowRight, Database, Download, RefreshCw, Sparkles, Table2, Upload } f
 import type { Chapter } from '../data/curriculum';
 import type { ItemMeta } from '../data/itemIndex';
 import { needsReview } from '../game/review';
-import { interviewReady } from '../game/interview';
+import { interviewReady } from '../game/interviewReady';
 import { BADGES, currentStreak, DESK_LABEL, deskStatus, entryLevelReady, levelOf, rankOf, readinessAll, totalXp } from '../game/rules';
 import type { SaveV5 } from '../save/progress';
 import './office.css';

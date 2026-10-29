@@ -12,9 +12,7 @@ export const DEFAULT_MINUTES = 6;
 // The dev-only short set: one problem and two minutes.
 export const SHORT_SET_PROBLEMS = 1;
 export const SHORT_SET_MINUTES = 2;
-// Interview-ready: at least READY_NEEDED of the last READY_WINDOW sets were submitted by the learner in time, with every problem passed.
-export const READY_WINDOW = 3;
-export const READY_NEEDED = 2;
+export { interviewReady, READY_NEEDED, READY_WINDOW } from './interviewReady';
 // An estimate is marked off when the learner's median time differs from it by more than this share of the estimate.
 export const OFF_ESTIMATE_SHARE = 0.5;
 
@@ -166,12 +164,6 @@ export function finishInterview(save: SaveV5, items: readonly ItemMeta[], set: I
   const problems = set.problems.map((problem) => ({ ...problem, openedAt: null }));
   const result: InterviewResult = { id: set.id, startedAt: set.startedAt, endedAt, limitMinutes: set.limitMinutes, problems, expired };
   return { save: { ...next, interview: null, interviewHistory: [...save.interviewHistory, result].slice(-20) }, result };
-}
-
-// Interview-ready: at least READY_NEEDED of the last READY_WINDOW finished sets, each submitted in time, had every problem passed.
-export function interviewReady(history: readonly InterviewResult[]): boolean {
-  const last = history.slice(-READY_WINDOW);
-  return last.filter((set) => !set.expired && set.problems.every((problem) => problem.passedAt !== null)).length >= READY_NEEDED;
 }
 
 // One problem's learner times against its estimate. The median is over the finished sets that recorded a time.
