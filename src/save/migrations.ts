@@ -1,6 +1,6 @@
 import type { ItemMeta } from '../data/itemIndex';
-import { awardFor, kindOf, outcomeOf, settle, type Kind } from '../game/rules';
-import { emptyProgress, emptySave, type LessonProgress, type SaveV3, type TicketProgress } from './format';
+import { awardFor, CREDIT, isScored, kindOf, outcomeOf, READINESS_WINDOW, settle, type Kind } from '../game/rules';
+import { emptyProgress, emptySave, type LessonProgress, type SaveV3, type SaveV4, type ScoredAttempt, type TicketProgress } from './format';
 import { ID, integer, object, readActive, readLessons } from './validate';
 
 // Versions 0 to 2 are read here and upgraded in memory. Their tickets carry the version 2 fields.
@@ -54,10 +54,43 @@ function migrateTicket(ticket: LegacyTicket, kind: Kind): TicketProgress {
   return { ...base, passed: true, xp: awardFor(kind, outcome, ticket.hintTier), firstOutcome: outcome, firstPassAt: 0, passedAt: 0 };
 }
 
-// Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero, because version 2 kept no history.
-export function migrateToV3(legacy: SaveV2, items: readonly ItemMeta[]): SaveV3 {
+// The readiness window is seeded from the stored first passes, most recent last, as readiness was computed before version 4.
+// Ties keep the same order the old derivation used, so migrated scores do not move.
+function seedReadiness(save: SaveV4, items: readonly ItemMeta[]): SaveV4 {
+  const firsts = items
+    .filter(isScored)
+    .flatMap((item) => {
+      const ticket = save.tickets[item.id];
+      return ticket?.firstOutcome && ticket.firstPassAt !== null ? [{ chapter: item.chapterId, at: ticket.firstPassAt, credit: CREDIT[ticket.firstOutcome] }] : [];
+    })
+    .sort((a, b) => b.at - a.at);
+  const readiness: Record<string, ScoredAttempt[]> = {};
+  for (const { chapter, at, credit } of firsts) {
+    const key = String(chapter);
+    const kept = readiness[key] ?? [];
+    if (kept.length < READINESS_WINDOW) readiness[key] = [...kept, { at, credit }];
+  }
+  for (const key of Object.keys(readiness)) readiness[key] = readiness[key]!.reverse();
+  return { ...save, readiness };
+}
+
+// Version 2 to version 4. Mastery, badges and the desk state follow from the migrated tickets. Streaks and runs start at zero,
+// because version 2 kept no history. The mistake log starts empty, because version 2 kept no mistake tags.
+export function migrateV2ToV4(legacy: SaveV2, items: readonly ItemMeta[]): SaveV4 {
   const kinds = new Map(items.map((item) => [item.id, kindOf(item)]));
   const tickets: Record<string, TicketProgress> = {};
   for (const [id, ticket] of Object.entries(legacy.tickets)) tickets[id] = migrateTicket(ticket, kinds.get(id) ?? 'independent');
-  return settle(items, { ...emptySave(), activeTicket: legacy.activeTicket, tickets, lessons: legacy.lessons }, 0);
+  const settled = settle(items, { ...emptySave(), activeTicket: legacy.activeTicket, tickets, lessons: legacy.lessons }, 0);
+  return seedReadiness(settled, items);
+}
+
+// Version 3 to version 4. Every version 3 field carries over; the new fields start empty, and the readiness window is seeded
+// from the version 3 first passes, which carry real times. Version 3 kept no mistake tags, so the mistake log starts empty.
+export function migrateV3ToV4(save: SaveV3, items: readonly ItemMeta[]): SaveV4 {
+  const migrated: SaveV4 = {
+    ...emptySave(),
+    activeTicket: save.activeTicket, tickets: save.tickets, lessons: save.lessons, chapters: save.chapters, streak: save.streak,
+    independentRun: save.independentRun, longestRun: save.longestRun, badges: save.badges,
+  };
+  return seedReadiness(migrated, items);
 }

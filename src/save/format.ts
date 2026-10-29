@@ -30,6 +30,7 @@ export interface ChapterProgress { method: 'boss' | 'test-out'; masteredAt: numb
 // countedDay is the last local day with three distinct passed items. items are the distinct items passed on itemsDay.
 export interface Streak { current: number; longest: number; countedDay: string | null; itemsDay: string | null; items: string[] }
 
+// Version 3 shape. Kept for the migration; the current shape is SaveV4.
 export interface SaveV3 {
   version: 3;
   activeTicket: string | null;
@@ -43,8 +44,45 @@ export interface SaveV3 {
   badges: Record<string, number>;
 }
 
-export const emptySave = (): SaveV3 => ({
-  version: 3, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
+// One scored attempt in a competency's readiness window: when it happened and the credit it earned.
+export interface ScoredAttempt { at: number; credit: number }
+
+// A failed or revealed attempt, with the mistake tag its wrong variant matched (null when none did).
+export type MistakeKind = 'failed' | 'revealed';
+export interface MistakeEntry { at: number; day: string; itemId: string; competency: number; tag: string | null; kind: MistakeKind }
+
+// Review schedule for a ticket or a mistake tag. step indexes REVIEW_INTERVALS; dueDay is the next day it is due.
+export interface Schedule { step: number; dueDay: string; lastDay: string | null; lastOutcome: 'pass' | 'miss' | null }
+
+export interface SaveV4 {
+  version: 4;
+  activeTicket: string | null;
+  tickets: Record<string, TicketProgress>;
+  lessons: Record<string, LessonProgress>;
+  chapters: Record<string, ChapterProgress>;
+  streak: Streak;
+  independentRun: number;
+  longestRun: number;
+  badges: Record<string, number>;
+  // Per chapter (competency), the most recent scored attempts. Readiness is computed from this window.
+  readiness: Record<string, ScoredAttempt[]>;
+  // The most recent failed and revealed attempts. Totals are kept separately so trimming the log loses no counts.
+  mistakeLog: MistakeEntry[];
+  mistakeTotals: { tags: Record<string, number>; competencies: Record<string, number> };
+  reviews: { tags: Record<string, Schedule>; items: Record<string, Schedule> };
+  // Per competency, the most recent review attempts: 'pass' means first try or hinted, 'miss' otherwise.
+  reviewRecent: Record<string, ('pass' | 'miss')[]>;
+  // The day's Daily Review tickets, saved when the page first opens that day.
+  dailyReview: { day: string; itemIds: string[] } | null;
+  // Timed interview sets. Empty until the interview mode lands.
+  interview: null;
+  interviewHistory: [];
+}
+
+export const emptySave = (): SaveV4 => ({
+  version: 4, activeTicket: null, tickets: {}, lessons: {}, chapters: {}, streak: emptyStreak(), independentRun: 0, longestRun: 0, badges: {},
+  readiness: {}, mistakeLog: [], mistakeTotals: { tags: {}, competencies: {} }, reviews: { tags: {}, items: {} }, reviewRecent: {},
+  dailyReview: null, interview: null, interviewHistory: [],
 });
 
 export const emptyProgress = (draft = ''): TicketProgress => ({

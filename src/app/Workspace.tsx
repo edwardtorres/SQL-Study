@@ -13,8 +13,8 @@ import ResultsTable, { cellText } from '../components/ResultsTable';
 interface Props {
   challenge: Challenge; code: string; partLabel: string | undefined; backLabel: string; progress: TicketProgress;
   setDraft: (draft: string) => void;
-  // Grades the submission against the save. The app applies the rules and returns what was earned.
-  grade: (passed: boolean, sql: string) => GradeResult;
+  // Grades the submission against the save. tag is the mistake the matched wrong variant models, or null.
+  grade: (passed: boolean, sql: string, tag: string | null) => GradeResult;
   onHint: () => void; onReveal: () => void; onBack: () => void;
 }
 
@@ -67,10 +67,10 @@ export default function Workspace({ challenge, code, partLabel, backLabel, progr
     try {
       const graded = await sqlEngine.grade(challenge.id, progress.draft);
       setReport(graded.report); setStatePreview(null); setResult(graded.preview);
-      setOutcome(grade(graded.report.passed, progress.draft));
+      setOutcome(grade(graded.report.passed, progress.draft, graded.report.mistake?.mistake ?? null));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
-      setOutcome(grade(false, progress.draft));
+      setOutcome(grade(false, progress.draft, null));
     } finally { setBusy(false); }
   };
   const selectedTable = schema.find((item) => item.name === table)!;

@@ -218,14 +218,43 @@ current streak, and the longest streak is kept.
 reveal); Ten in a row (ten independent first-try passes in a row); Window functions and Pipelines (every item in
 chapter 8 or 11 passed with no reveal, hints allowed); a seven-day and a thirty-day streak; Every chapter mastered.
 
-**Readiness.** The thirteen competencies are the thirteen chapters. Each scored first pass earns credit by how it was
-earned: first try 1.0, hinted or passed after failures 0.5, revealed 0. Each competency uses its 10 most recent scored
-first passes. A score shows only from 5 scored items, and below that it reads *Not enough data*. A competency is
-*ready* at 0.80 or above. The entry-level signal appears only when all 13 competencies are ready.
+**Readiness.** The thirteen competencies are the thirteen chapters. Each scored attempt earns credit: a first pass by
+how it was earned (first try 1.0, hinted or passed after failures 0.5, revealed 0), and a review attempt by its own
+outcome (first try 1.0, a hint 0.5, a reveal or a failure 0). Each competency keeps its 10 most recent scored attempts.
+A score shows only from 5 scored attempts, and below that it reads *Not enough data*. A competency is *ready* at 0.80
+or above. The entry-level signal appears only when all 13 competencies are ready. Scored means independent and boss
+tickets; guided and sample tickets are not scored.
 
 **Migration.** A version 2 save keeps its passes and drafts. Its XP is recalculated under the table above. Its
 outcomes are conservative: a pass after failures or hints is hinted, and a pass after a reveal is revealed. A revealed
-boss part is void until it passes again. Streaks and runs start at zero, and badges are derived with time 0.
+boss part is void until it passes again. Streaks and runs start at zero, and badges are derived with time 0. A version
+3 save carries every field over; its readiness window is seeded from its first passes, so its scores do not move.
+
+## Spaced review (Step 5)
+
+Schedules live in `src/game/review.ts`; the numbers are pinned by `tests/review.test.ts`.
+
+**Intervals.** A ticket and each mistake tag it models keep a schedule. The intervals are 1, 2, 4, 7, 14 and 30 days.
+A pass steps to the next interval, capped at 30 days. A miss (a failed attempt, or a reveal) resets to step 0, due the
+next day. A tag's schedule starts at its first logged mistake, and a review pass of a ticket advances the schedule of
+each tag it models.
+
+**Mistake log.** Every failed and revealed attempt is logged with the mistake tag its wrong variant matched, or no tag.
+The log keeps the last 500 entries. Totals per tag and per competency are kept separately and never trimmed.
+
+**Daily Review.** At most 5 tickets per local day. The set is saved the first time the page opens that day, so a reload
+does not reshuffle it. Due tags come first, oldest due first. Each picks one seen ticket that models the tag, not the
+ticket failed most recently for it, and preferring the one passed longest ago. The set is then topped up from the
+weakest competency. A ticket never seen is not offered.
+
+**Needs review.** Over a competency's last 5 review attempts (at least 5 are needed), a pass rate below 60% shows a
+*Needs review* mark on its desk. A pass is a first try or a hinted attempt; a reveal is a miss. Mastery is never changed.
+
+**Weak Spots.** Competencies ranked by readiness, weakest first, with the attempts each rests on. The five most frequent
+mistake tags. Revealed tickets, most recent first, and tickets that have failed without a pass.
+
+**Re-solves (built in S2).** A re-solve of a ticket the learner has seen will use a visible sample from a verified seed
+pool, so the sample cannot be remembered. The content check will run every item against every pool seed.
 
 ## Execution findings and cross-browser checks
 

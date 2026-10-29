@@ -5,7 +5,7 @@ import { itemIndex, itemMetaById, type ItemMeta } from '../data/itemIndex';
 import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
 import { applySubmission, deskStatus, localDay, rankOf, revealSolution, takeHint, totalXp, type GradeResult } from '../game/rules';
-import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV3, type TicketProgress } from '../save/progress';
+import { emptyProgress, restoreSave, SAVE_KEY, type LessonProgress, type SaveV4, type TicketProgress } from '../save/progress';
 import { exportSave, importSave } from '../save/transfer';
 import { ChapterView, lessonSectionIds } from './Chapters';
 import OfficeMap from './OfficeMap';
@@ -33,19 +33,19 @@ const chapterOf = (id: number) => curriculum.find((chapter) => chapter.id === id
 
 export default function App() {
   const [restored] = useState(initialState);
-  const [save, setSave] = useState<SaveV3>(restored.save);
+  const [save, setSave] = useState<SaveV4>(restored.save);
   const [view, setView] = useState<View>({ name: 'home' });
   const [saveFailed, setSaveFailed] = useState(!restored.writable);
   const [promotion, setPromotion] = useState<string | null>(null);
-  const [pendingImport, setPendingImport] = useState<SaveV3 | null>(null);
+  const [pendingImport, setPendingImport] = useState<SaveV4 | null>(null);
   const [notice, setNotice] = useState<{ tone: 'status' | 'alert'; text: string } | null>(null);
-  const persist = useCallback((next: SaveV3) => {
+  const persist = useCallback((next: SaveV4) => {
     if (!restored.writable) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); }
     catch { setSaveFailed(true); }
   }, [restored.writable]);
   // Every change that depends on the current save goes through commit, so the state and the stored copy stay together.
-  const commit = useCallback((next: SaveV3) => {
+  const commit = useCallback((next: SaveV4) => {
     setSave(next);
     persist(next);
   }, [persist]);
@@ -76,9 +76,9 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
   // Grading applies the rules to the save as it is now. The result carries the XP, the badges and any promotion.
-  const grade = (item: ItemMeta, referenceSql: string, passed: boolean, sql: string): GradeResult => {
+  const grade = (item: ItemMeta, referenceSql: string, passed: boolean, sql: string, tag: string | null): GradeResult => {
     const at = Date.now();
-    const result = applySubmission(save, itemIndex, item, referenceSql, { passed, sql, at, day: localDay(at, zone()) });
+    const result = applySubmission(save, itemIndex, item, referenceSql, { passed, sql, at, day: localDay(at, zone()), tag });
     commit(result.save);
     if (result.promoted) setPromotion(result.promoted);
     return result;
@@ -186,9 +186,9 @@ export default function App() {
               backLabel={chapterOf(meta.chapterId) ? `Chapter ${meta.chapterId}` : 'Office'}
               progress={save.tickets[item.id] ?? emptyProgress(item.starterSql)}
               setDraft={(draft) => { updateTicket(item.id, (previous) => ({ ...previous, draft })); }}
-              grade={(passed, sql) => grade(meta, item.referenceSql, passed, sql)}
+              grade={(passed, sql, tag) => grade(meta, item.referenceSql, passed, sql, tag)}
               onHint={() => { commit(takeHint(save, item.id)); }}
-              onReveal={() => { commit(revealSolution(save, item.id, Date.now())); }}
+              onReveal={() => { const at = Date.now(); commit(revealSolution(save, meta, at, localDay(at, zone()))); }}
               onBack={() => { go(chapterOf(meta.chapterId) ? { name: 'chapter', chapterId: meta.chapterId } : { name: 'home' }); }}
             />}
           </Suspense>

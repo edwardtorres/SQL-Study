@@ -2,13 +2,14 @@ import { describe, expect, test } from 'vitest';
 import { itemIndex, type ItemMeta } from '../src/data/itemIndex';
 import {
   applySubmission, awardFor, BADGES, CREDIT, currentStreak, dayGap, deskStatus, entryLevelReady, isMastered, isOpen, levelOf, levelStart,
-  localDay, normalizeSql, rankOf, readinessAll, readinessOf, recordStreakItem, revealSolution, settle, takeHint, totalXp,
+  localDay, normalizeSql, rankOf, readinessAll, readinessOf, recordScored, recordStreakItem, revealSolution, settle, takeHint, totalXp,
 } from '../src/game/rules';
-import { emptyProgress, emptySave, type SaveV3, type Streak, type TicketProgress } from '../src/save/format';
+import { emptyProgress, emptySave, type SaveV4, type Streak, type TicketProgress } from '../src/save/format';
 
 const REFERENCE = 'SELECT reference FROM shipments';
 const ZONE = 'America/New_York';
 const NOON = '2026-03-02T12:00:00Z';
+const reveal = (save: SaveV4, id: string, at: number) => revealSolution(save, item(id), at, localDay(at, 'UTC'));
 
 const item = (id: string, pool: readonly ItemMeta[] = itemIndex): ItemMeta => {
   const found = pool.find((candidate) => candidate.id === id);
@@ -20,7 +21,7 @@ const bossPartsOf = (chapterId: number): string[] => itemIndex
   .map((candidate) => candidate.id);
 
 // One graded submission. The default query differs from the reference, so it is an ordinary pass.
-function grade(save: SaveV3, id: string, options: { passed?: boolean; sql?: string; at?: string; zone?: string; pool?: readonly ItemMeta[] } = {}) {
+function grade(save: SaveV4, id: string, options: { passed?: boolean; sql?: string; at?: string; zone?: string; pool?: readonly ItemMeta[] } = {}) {
   const pool = options.pool ?? itemIndex;
   const at = Date.parse(options.at ?? NOON);
   return applySubmission(save, pool, item(id, pool), REFERENCE, {
@@ -28,7 +29,7 @@ function grade(save: SaveV3, id: string, options: { passed?: boolean; sql?: stri
   });
 }
 
-function passAll(save: SaveV3, ids: readonly string[], at = NOON): SaveV3 {
+function passAll(save: SaveV4, ids: readonly string[], at = NOON): SaveV4 {
   return ids.reduce((next, id) => grade(next, id, { at }).save, save);
 }
 
@@ -159,7 +160,7 @@ describe('ranks, gating and test-outs', () => {
 
   test('promotion is reported on the grade that changes the rank, and not again after', () => {
     const save = passAll(emptySave(), [...bossPartsOf(1), ...bossPartsOf(2)]);
-    const results = bossPartsOf(3).reduce<{ save: SaveV3; promoted: (string | null)[] }>((state, id) => {
+    const results = bossPartsOf(3).reduce<{ save: SaveV4; promoted: (string | null)[] }>((state, id) => {
       const result = grade(state.save, id);
       return { save: result.save, promoted: [...state.promoted, result.promoted] };
     }, { save, promoted: [] });
@@ -171,14 +172,14 @@ describe('reveal rules', () => {
   test('revealing a boss part after its pass voids that pass, so the chapter is not mastered', () => {
     const [first, second, third] = bossPartsOf(1) as [string, string, string];
     let save = grade(emptySave(), first).save;
-    save = revealSolution(save, first, Date.parse('2026-03-02T13:00:00Z'));
+    save = reveal(save, first, Date.parse('2026-03-02T13:00:00Z'));
     save = passAll(save, [second, third], '2026-03-02T14:00:00Z');
     expect(isMastered(save, 1)).toBe(false);
   });
 
   test('a pass of a revealed boss part with the reference query does not count', () => {
     const first = bossPartsOf(1)[0]!;
-    const revealed = revealSolution(emptySave(), first, Date.parse('2026-03-02T11:00:00Z'));
+    const revealed = reveal(emptySave(), first, Date.parse('2026-03-02T11:00:00Z'));
     const copy = grade(revealed, first, { sql: '  select  reference from shipments ; ' });
     expect(copy).toMatchObject({ counted: false, copyOfReveal: true, xp: 0 });
     expect(copy.save.tickets[first]!.passed).toBe(false);
@@ -186,25 +187,25 @@ describe('reveal rules', () => {
 
   test('a different query passes a revealed boss part again, and that pass counts', () => {
     const [first, ...rest] = bossPartsOf(1) as [string, ...string[]];
-    let save = revealSolution(emptySave(), first, Date.parse('2026-03-02T11:00:00Z'));
+    let save = reveal(emptySave(), first, Date.parse('2026-03-02T11:00:00Z'));
     save = grade(save, first, { at: NOON }).save;
     expect(save.tickets[first]!.passedAt).toBe(Date.parse(NOON));
     expect(isMastered(passAll(save, rest), 1)).toBe(true);
   });
 
   test('revealing a guided ticket never blocks its pass, and its award is the flat reveal', () => {
-    const revealed = revealSolution(emptySave(), 'c1-g1', Date.parse('2026-03-02T11:00:00Z'));
+    const revealed = reveal(emptySave(), 'c1-g1', Date.parse('2026-03-02T11:00:00Z'));
     expect(grade(revealed, 'c1-g1', { sql: REFERENCE })).toMatchObject({ counted: true, outcome: 'revealed', xp: 5 });
   });
 
   test('revealing after a pass keeps the XP that pass earned', () => {
     const first = grade(emptySave(), 'c1-i1').save;
-    expect(revealSolution(first, 'c1-i1', Date.parse('2026-03-02T13:00:00Z')).tickets['c1-i1']!.xp).toBe(35);
+    expect(reveal(first, 'c1-i1', Date.parse('2026-03-02T13:00:00Z')).tickets['c1-i1']!.xp).toBe(35);
   });
 
   test('mastery is kept once earned, so a later reveal does not take it back', () => {
     const mastered = passAll(emptySave(), bossPartsOf(1));
-    expect(isMastered(revealSolution(mastered, bossPartsOf(1)[0]!, Date.parse('2026-03-09T13:00:00Z')), 1)).toBe(true);
+    expect(isMastered(reveal(mastered, bossPartsOf(1)[0]!, Date.parse('2026-03-09T13:00:00Z')), 1)).toBe(true);
   });
 
   test('normalizing ignores whitespace, letter case and a trailing semicolon, and nothing more', () => {
@@ -305,45 +306,40 @@ describe('readiness', () => {
     ...item('c1-i1'), id: `c${chapterId}-r${index}`, chapterId, title: `r${index}`,
   }));
 
-  test('fewer than five scored items shows no score, and five first passes show one', () => {
+  test('fewer than five scored attempts shows no score, and five first passes show one', () => {
     const items = independent(5);
     let save = emptySave();
     for (const candidate of items.slice(0, 4)) save = applySubmission(save, items, candidate, REFERENCE, { passed: true, sql: 'x', at: 1, day: '2026-03-02' }).save;
-    expect(readinessOf(items, save, 1)).toMatchObject({ scored: 4, score: null, ready: false });
+    expect(readinessOf(save, 1)).toMatchObject({ scored: 4, score: null, ready: false });
     save = applySubmission(save, items, items[4]!, REFERENCE, { passed: true, sql: 'x', at: 2, day: '2026-03-02' }).save;
-    expect(readinessOf(items, save, 1)).toMatchObject({ scored: 5, score: 1, ready: true });
+    expect(readinessOf(save, 1)).toMatchObject({ scored: 5, score: 1, ready: true });
   });
 
   test('credit is 1 for a first try, 0.5 for a hinted pass and 0 for a reveal, and 0.8 or more is ready', () => {
     expect(CREDIT).toEqual({ 'first-try': 1, hinted: 0.5, revealed: 0 });
-    const items = independent(5);
-    const pass = (save: SaveV3, index: number, outcome: TicketProgress['firstOutcome']) => ({
-      ...save, tickets: { ...save.tickets, [items[index]!.id]: ticket({ firstPassAt: index + 1, firstOutcome: outcome }) },
-    });
-    const below = [0, 1, 2].reduce((save, index) => pass(save, index, 'first-try'), pass(pass(emptySave(), 3, 'hinted'), 4, 'revealed'));
-    expect(readinessOf(items, below, 1)).toMatchObject({ score: 0.7, ready: false });
-    const atThreshold = [0, 1, 2, 3].reduce((save, index) => pass(save, index, 'first-try'), pass(emptySave(), 4, 'revealed'));
-    expect(readinessOf(items, atThreshold, 1)).toMatchObject({ score: 0.8, ready: true });
+    const credits = (values: number[]) => values.reduce((save, credit) => recordScored(save, 1, 1, credit), emptySave());
+    expect(readinessOf(credits([1, 1, 1, 0.5, 0]), 1)).toMatchObject({ score: 0.7, ready: false });
+    expect(readinessOf(credits([1, 1, 1, 1, 0]), 1)).toMatchObject({ score: 0.8, ready: true });
   });
 
-  test('only the ten most recent scored first passes count', () => {
-    const items = independent(12);
-    const tickets = Object.fromEntries(items.map((candidate, index) => [candidate.id, ticket({ firstPassAt: index, firstOutcome: index < 2 ? 'revealed' : 'first-try' })]));
-    expect(readinessOf(items, { tickets }, 1)).toMatchObject({ scored: 10, score: 1 });
+  test('only the ten most recent scored attempts count', () => {
+    const credits = [0, 0, ...Array<number>(10).fill(1)];
+    const save = credits.reduce((state, credit, index) => recordScored(state, 1, index, credit), emptySave());
+    expect(readinessOf(save, 1)).toMatchObject({ scored: 10, score: 1 });
   });
 
   test('guided tickets and sample tickets are not scored', () => {
-    const tickets = { 'c1-g1': ticket({ firstPassAt: 1 }), dispatch: ticket({ firstPassAt: 2 }) };
-    expect(readinessOf(itemIndex, { tickets }, 1).scored).toBe(0);
+    const save = ['c1-g1', 'dispatch'].reduce((state, id) => grade(state, id).save, emptySave());
+    expect(readinessOf(save, 1).scored).toBe(0);
   });
 
   test('the entry-level signal needs every one of the 13 competencies ready', () => {
-    const items = Array.from({ length: 13 }, (_, chapter) => independent(5, chapter + 1)).flat();
-    const tickets = Object.fromEntries(items.map((candidate, index) => [candidate.id, ticket({ firstPassAt: index })]));
-    expect(readinessAll(items, { tickets })).toHaveLength(13);
-    expect(entryLevelReady(readinessAll(items, { tickets }))).toBe(true);
-    const missingChapterThirteen = Object.fromEntries(Object.entries(tickets).filter(([id]) => !id.startsWith('c13-')));
-    expect(entryLevelReady(readinessAll(items, { tickets: missingChapterThirteen }))).toBe(false);
+    const chapterIds = Array.from({ length: 13 }, (_, index) => index + 1);
+    const full = chapterIds.reduce((save, chapter) => [1, 1, 1, 1, 1].reduce((state, credit) => recordScored(state, chapter, 1, credit), save), emptySave());
+    expect(readinessAll(full, chapterIds)).toHaveLength(13);
+    expect(entryLevelReady(readinessAll(full, chapterIds))).toBe(true);
+    const missingThirteen = { ...full, readiness: Object.fromEntries(Object.entries(full.readiness).filter(([key]) => key !== '13')) };
+    expect(entryLevelReady(readinessAll(missingThirteen, chapterIds))).toBe(false);
   });
 
   test('a first-try pass earns the full credit whether it is a boss part or an independent ticket', () => {

@@ -1,6 +1,6 @@
 import type { ItemMeta } from '../data/itemIndex';
 import { groupCounts } from '../game/rules';
-import type { SaveV3 } from '../save/progress';
+import type { SaveV4 } from '../save/progress';
 
 // Pure helpers for the chapter UI. Nothing here touches the engine or the DOM.
 export interface ChapterSummary { chapterId: number; items: readonly ItemMeta[]; graded: number; passed: number; bossPassed: boolean; lessonsDone: number; lessonCount: number }
@@ -20,16 +20,16 @@ export function partLabel(item: ItemMeta, items: readonly ItemMeta[]): string | 
   return `Part ${parts.indexOf(item) + 1} of ${parts.length}`;
 }
 
-export function isPassed(save: Pick<SaveV3, 'tickets'>, id: string): boolean {
+export function isPassed(save: Pick<SaveV4, 'tickets'>, id: string): boolean {
   return save.tickets[id]?.passed === true;
 }
 
 // A boss part counts only while its pass is not voided by a reveal. See src/game/rules.ts.
-export function bossPassed(items: readonly ItemMeta[], save: Pick<SaveV3, 'tickets'>, group: string): boolean {
+export function bossPassed(items: readonly ItemMeta[], save: Pick<SaveV4, 'tickets'>, group: string): boolean {
   return groupCounts(items, save, group);
 }
 
-export function summarizeChapter(items: readonly ItemMeta[], save: SaveV3, chapterId: number, sectionIds: readonly string[]): ChapterSummary {
+export function summarizeChapter(items: readonly ItemMeta[], save: SaveV4, chapterId: number, sectionIds: readonly string[]): ChapterSummary {
   const chapterItems = itemsForChapter(items, chapterId);
   const groups = [...new Set(chapterItems.map((item) => item.bossGroup).filter((group): group is string => Boolean(group)))];
   const singles = chapterItems.filter((item) => !item.bossGroup);

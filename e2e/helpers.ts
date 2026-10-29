@@ -10,7 +10,7 @@ const SAVE_KEY = 'larkspur-sql-desk.progress';
 export async function masterChaptersThrough(page: Page, chapter: number): Promise<void> {
   const chapters = Object.fromEntries(Array.from({ length: chapter }, (_, index) => [String(index + 1), { method: 'boss', masteredAt: 0 }]));
   const save = {
-    version: 3, activeTicket: null, tickets: {}, lessons: {}, chapters,
+    version: 4, activeTicket: null, tickets: {}, lessons: {}, chapters, readiness: {}, mistakeLog: [], mistakeTotals: { tags: {}, competencies: {} }, reviews: { tags: {}, items: {} }, reviewRecent: {}, dailyReview: null, interview: null, interviewHistory: [],
     streak: { current: 0, longest: 0, countedDay: null, itemsDay: null, items: [] }, independentRun: 0, longestRun: 0, badges: {},
   };
   await page.addInitScript(({ key, value }) => {

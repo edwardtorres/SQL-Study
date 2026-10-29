@@ -140,7 +140,7 @@ for (const width of [390, 1280]) {
       ]);
       const exported = testInfo.outputPath('larkspur-progress.json');
       await download.saveAs(exported);
-      expect(JSON.parse(readFileSync(exported, 'utf8'))).toMatchObject({ version: 3 });
+      expect(JSON.parse(readFileSync(exported, 'utf8'))).toMatchObject({ version: 4 });
       const future = testInfo.outputPath('future-save.json');
       writeFileSync(future, '{"version":4,"tickets":{}}');
       await page.locator('input[type=file]').setInputFiles(future);

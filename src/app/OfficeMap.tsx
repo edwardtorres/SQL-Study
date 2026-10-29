@@ -3,7 +3,7 @@ import { ArrowRight, Database, Download, Sparkles, Table2, Upload } from 'lucide
 import type { Chapter } from '../data/curriculum';
 import type { ItemMeta } from '../data/itemIndex';
 import { BADGES, currentStreak, DESK_LABEL, deskStatus, entryLevelReady, levelOf, rankOf, readinessAll, totalXp } from '../game/rules';
-import type { SaveV3 } from '../save/progress';
+import type { SaveV4 } from '../save/progress';
 import './office.css';
 
 const DESK_NOTE: Record<string, string> = {
@@ -17,14 +17,14 @@ const DESK_NOTE: Record<string, string> = {
 const firstBossPart = (items: readonly ItemMeta[], chapterId: number): ItemMeta | undefined => items.find((item) => item.chapterId === chapterId && item.bossGroup !== undefined);
 
 export default function OfficeMap({ items, save, today, chapters, notice, canImport, onChapter, onBossTestOut, onScratch, onExport, onImport }: {
-  items: readonly ItemMeta[]; save: SaveV3; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
+  items: readonly ItemMeta[]; save: SaveV4; today: string; chapters: readonly Chapter[]; notice: ReactNode; canImport: boolean;
   onChapter: (chapterId: number) => void; onBossTestOut: (item: ItemMeta) => void; onScratch: () => void; onExport: () => void; onImport: (file: File) => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const xp = totalXp(save);
   const level = levelOf(xp);
   const streak = currentStreak(save.streak, today);
-  const readiness = readinessAll(items, save);
+  const readiness = readinessAll(save, chapters.map((chapter) => chapter.id));
   const readyCount = readiness.filter((row) => row.ready).length;
   const rank = rankOf(save);
   return <>
