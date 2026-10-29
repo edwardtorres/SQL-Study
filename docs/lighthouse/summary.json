@@ -1,0 +1,64 @@
+{
+  "url": "http://127.0.0.1:4173/",
+  "form": "mobile (Lighthouse default: simulated throttling, 412 x 823 viewport)",
+  "runs": 3,
+  "medianScores": {
+    "performance": 98,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 91
+  },
+  "results": [
+    {
+      "run": 1,
+      "lighthouseVersion": "13.5.0",
+      "scores": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 91
+      },
+      "metrics": {
+        "firstContentfulPaintMs": 1958,
+        "largestContentfulPaintMs": 1958,
+        "totalBlockingTimeMs": 62,
+        "cumulativeLayoutShift": 0,
+        "speedIndexMs": 1958
+      }
+    },
+    {
+      "run": 2,
+      "lighthouseVersion": "13.5.0",
+      "scores": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 91
+      },
+      "metrics": {
+        "firstContentfulPaintMs": 1961,
+        "largestContentfulPaintMs": 1961,
+        "totalBlockingTimeMs": 45,
+        "cumulativeLayoutShift": 0,
+        "speedIndexMs": 1961
+      }
+    },
+    {
+      "run": 3,
+      "lighthouseVersion": "13.5.0",
+      "scores": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 91
+      },
+      "metrics": {
+        "firstContentfulPaintMs": 1958,
+        "largestContentfulPaintMs": 1958,
+        "totalBlockingTimeMs": 50,
+        "cumulativeLayoutShift": 0,
+        "speedIndexMs": 1958
+      }
+    }
+  ]
+}

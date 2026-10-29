@@ -1,0 +1,36 @@
+{
+  "measuredAt": "2026-10-29T18:46:32.959Z",
+  "runs": 5,
+  "clickToRunEnabledMs": {
+    "390": {
+      "median": 2567,
+      "min": 2560,
+      "max": 2677,
+      "samples": [
+        2560,
+        2596,
+        2567,
+        2563,
+        2677
+      ]
+    },
+    "1280": {
+      "median": 2649,
+      "min": 2550,
+      "max": 2744,
+      "samples": [
+        2712,
+        2744,
+        2550,
+        2627,
+        2649
+      ]
+    }
+  },
+  "mainChunk": {
+    "file": "assets/main-BCUWjZgu.js",
+    "raw": 326378,
+    "gzip": 94489,
+    "brotli": 81545
+  }
+}

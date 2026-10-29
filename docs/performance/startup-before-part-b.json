@@ -1,0 +1,36 @@
+{
+  "measuredAt": "2026-10-29T18:15:24.943Z",
+  "runs": 5,
+  "clickToRunEnabledMs": {
+    "390": {
+      "median": 2513,
+      "min": 2493,
+      "max": 2547,
+      "samples": [
+        2493,
+        2547,
+        2527,
+        2513,
+        2511
+      ]
+    },
+    "1280": {
+      "median": 2510,
+      "min": 2463,
+      "max": 2610,
+      "samples": [
+        2610,
+        2509,
+        2463,
+        2530,
+        2510
+      ]
+    }
+  },
+  "mainChunk": {
+    "file": "assets/main-wZvSOKsL.js",
+    "raw": 354785,
+    "gzip": 100474,
+    "brotli": 86079
+  }
+}
