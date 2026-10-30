@@ -1,6 +1,7 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight, Leaf, LoaderCircle, Settings as SettingsIcon, Sparkles, ShieldCheck, Table2 } from 'lucide-react';
-import { curriculum, reviewSampleIdFor } from '../data';
+import { curriculum } from '../data/curriculum';
+import { reviewSampleIdFor } from '../data/datasets';
 import { itemIndex, itemMetaById, type ItemMeta } from '../data/itemIndex';
 import { loadItem } from '../data/items/loader';
 import type { Challenge } from '../core/types';
@@ -50,6 +51,8 @@ const poolOf = (save: SaveV6): ReviewPool => ({ items: itemIndex, isOpen: (chapt
 export default function App() {
   const [restored] = useState(initialState);
   const [save, setSave] = useState<SaveV6>(restored.save);
+  // Async grading must merge with edits made while the worker was running.
+  const latestSave = useRef(save);
   const [view, setView] = useState<View>({ name: 'home' });
   const review = view.name === 'item' ? view.review : null;
   const [saveFailed, setSaveFailed] = useState(!restored.writable);
@@ -71,6 +74,7 @@ export default function App() {
   }, [restored.writable]);
   // Every change that depends on the current save goes through commit, so the state and the stored copy stay together.
   const commit = useCallback((next: SaveV6) => {
+    latestSave.current = next;
     setSave(next);
     persist(next);
   }, [persist]);
@@ -83,20 +87,14 @@ export default function App() {
     void requestPersistence();
   }, []);
   const updateTicket = useCallback((id: string, update: (previous: TicketProgress) => TicketProgress) => {
-    setSave((previous) => {
-      const item = itemMetaById(id);
-      const next = { ...previous, tickets: { ...previous.tickets, [id]: update(previous.tickets[id] ?? emptyProgress(item?.starterSql)) } };
-      persist(next);
-      return next;
-    });
-  }, [persist]);
+    const previous = latestSave.current;
+    const item = itemMetaById(id);
+    commit({ ...previous, tickets: { ...previous.tickets, [id]: update(previous.tickets[id] ?? emptyProgress(item?.starterSql)) } });
+  }, [commit]);
   const answerLesson = useCallback((sectionId: string, progress: LessonProgress) => {
-    setSave((previous) => {
-      const next = { ...previous, lessons: { ...previous.lessons, [sectionId]: progress } };
-      persist(next);
-      return next;
-    });
-  }, [persist]);
+    const previous = latestSave.current;
+    commit({ ...previous, lessons: { ...previous.lessons, [sectionId]: progress } });
+  }, [commit]);
   const closePromotion = useCallback(() => { setPromotion(null); }, []);
   const openItem = (item: ItemMeta, reviewing = false) => {
     const next = { ...save, activeTicket: item.id };
@@ -114,9 +112,10 @@ export default function App() {
   const grade = (item: ItemMeta, referenceSql: string, submission: { passed: boolean; sql: string; tag: string | null; hinted: boolean }): GradeResult => {
     const at = Date.now();
     const reviewing = review !== null;
-    const result = applySubmission(save, itemIndex, item, referenceSql, {
+    const currentSave = latestSave.current;
+    const result = applySubmission(currentSave, itemIndex, item, referenceSql, {
       passed: submission.passed, sql: submission.sql, at, day: localDay(at, zone()), tag: submission.tag,
-      reviewing, hinted: submission.hinted, revealed: reviewing && (save.tickets[item.id]?.solutionRevealed ?? false),
+      reviewing, hinted: submission.hinted, revealed: reviewing && (currentSave.tickets[item.id]?.solutionRevealed ?? false),
     });
     commit(result.save);
     if (result.promoted) setPromotion(result.promoted);
@@ -161,11 +160,13 @@ export default function App() {
   const meta = view.name === 'item' ? itemMetaById(view.itemId) : undefined;
   // The ticket's full definition loads with its chapter; the view shows a loading card until it arrives.
   const [loaded, setLoaded] = useState<Challenge | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const itemId = view.name === 'item' ? view.itemId : undefined;
   useEffect(() => {
     if (itemId === undefined) return;
     let cancelled = false;
-    loadItem(itemId).then((found) => { if (!cancelled) setLoaded(found); }).catch(() => { if (!cancelled) setLoaded(null); });
+    setLoadError(false);
+    loadItem(itemId).then((found) => { if (!cancelled) setLoaded(found); }).catch(() => { if (!cancelled) { setLoaded(null); setLoadError(true); } });
     return () => { cancelled = true; };
   }, [itemId]);
   const item = itemId !== undefined && loaded?.id === itemId ? loaded : undefined;
@@ -245,7 +246,7 @@ export default function App() {
             {view.name === 'needs' && <Review mode="needs" items={itemIndex} save={save} ids={needsReviewSet(save, view.chapterId, poolOf(save))} chapterTitle={chapterOf(view.chapterId)?.title} onOpen={(item) => { openItem(item, true); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'interview' && <Interview save={save} items={itemIndex} today={today} commit={commit} setDraft={(id, draft) => { updateTicket(id, (previous) => ({ ...previous, draft })); }} onBack={() => { go({ name: 'home' }); }} />}
             {view.name === 'weak' && <WeakSpots items={itemIndex} save={save} scores={readinessAll(save, chapterIds)} chapterTitle={(chapterId) => chapterOf(chapterId)?.title ?? `Chapter ${chapterId}`} onOpen={(item) => { openItem(item); }} onLesson={(chapterId) => { go({ name: 'lesson', chapterId }); }} onBack={() => { go({ name: 'home' }); }} />}
-            {view.name === 'item' && meta && !item && <div className="loading-card" role="status"><LoaderCircle className="spin" /> Opening the ticket…</div>}
+            {view.name === 'item' && meta && !item && <div className="loading-card" role="status">{loadError ? <><p>The ticket could not be downloaded. Once your connection is restored, reload the desk and open the ticket again.</p><button className="secondary-button" onClick={() => { window.location.reload(); }}>Reload desk</button></> : <><LoaderCircle className="spin" /> Opening the ticket…</>}</div>}
             {view.name === 'item' && meta && item && <Workspace
               key={item.id}
               challenge={item}

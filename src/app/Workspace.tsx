@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, ChevronDown, ChevronRight, CircleHelp, Clock3, Database, ExternalLink, Eye, KeyRound, LoaderCircle, Play, RefreshCw, Send, Table2, Terminal, XCircle } from 'lucide-react';
 import type { Challenge, GradeReport, QueryResult } from '../core/types';
-import { curriculum, reviewSampleFor, schema } from '../data';
+import { curriculum } from '../data/curriculum';
+import { reviewSampleFor } from '../data/datasets';
+import { schema } from '../data/seed';
 import { sqlEngine } from '../engine/client';
 import type { EngineInfo, StatePreview } from '../engine/protocol';
 import StateSample from './StateSample';
@@ -61,7 +63,7 @@ export default function Workspace({ challenge, code, partLabel, backLabel, progr
     return () => { cancelled = true; };
   }, [engineInfo, table, showSchema]);
   const preview = useCallback(async (sql: string) => {
-    setBusy(true); setMessage(''); setReport(null); setOutcome(null);
+    setBusy(true); setMessage(''); setReport(null); setOutcome(null); setResult(null); setStatePreview(null);
     try {
       // Write tickets show database state after the learner's statements; read tickets show their query rows.
       if (challenge.checks) { setStatePreview(await sqlEngine.previewState(challenge.id, sql, reviewSampleId)); setResult(null); }

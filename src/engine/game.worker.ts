@@ -1,4 +1,5 @@
-import { datasetCatalog, hiddenDatasets, reviewSampleFor, sampleDataset, schema, seedSql } from '../data';
+import { datasetCatalog, hiddenDatasets, reviewSampleFor, sampleDataset } from '../data/datasets';
+import { schema, seedSql } from '../data/seed';
 import type { DatasetSpec } from '../core/types';
 import { loadItem } from '../data/items/loader';
 import { interviewItems } from '../data/interview';

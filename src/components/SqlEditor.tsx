@@ -5,7 +5,7 @@ import { tags } from '@lezer/highlight';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState, Prec } from '@codemirror/state';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { schema } from '../data';
+import { schema } from '../data/seed';
 export interface SqlEditorHandle { insert: (keyword: string) => void }
 interface Props { value: string; onChange: (value: string) => void; onRun: () => void }
 const SqlEditor = forwardRef<SqlEditorHandle, Props>(function SqlEditor({ value, onChange, onRun }, ref) {

@@ -38,27 +38,41 @@ self.addEventListener('fetch', (event) => {
 
 // The app is one page, so every navigation gets the newest index.html when online and the cached one when not.
 async function networkFirst(request) {
-  const cache = await caches.open(SHELL_CACHE);
+  let response;
   try {
-    const response = await fetch(request);
-    if (response.ok) await cache.put('/index.html', response.clone());
-    return response;
-  } catch {
-    const cached = await cache.match('/index.html');
+    response = await fetch(request);
+  } catch (error) {
+    const cached = await caches.match('/index.html');
     if (cached) return cached;
-    throw new Error('The app shell is not cached yet.');
+    throw error;
   }
+  if (response.ok) {
+    try {
+      const cache = await caches.open(SHELL_CACHE);
+      await cache.put('/index.html', response.clone());
+    } catch {
+      // Storage quota or permissions must not break an online page load.
+    }
+  }
+  return response;
 }
 
-// Hashed files never change under the same name, so a cached copy is always right. Lookups search every cache, so a shell file
-// that was precached is found under /assets/ too.
+// Cache writes are best effort: an online resource remains usable when browser storage is full.
 async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+  try {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+  } catch {
+    // If cache access is unavailable, try the network.
+  }
   const response = await fetch(request);
   if (response.ok) {
-    const cache = await caches.open(ASSET_CACHE);
-    await cache.put(request, response.clone());
+    try {
+      const cache = await caches.open(ASSET_CACHE);
+      await cache.put(request, response.clone());
+    } catch {
+      // The network response still works, even if offline storage cannot be updated.
+    }
   }
   return response;
 }
