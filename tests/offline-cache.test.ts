@@ -12,7 +12,7 @@ for (const mode of ['networkFirst', 'cacheFirst']) {
       const unavailable = () => Promise.reject(new Error('Storage unavailable'));
       const caches = {
         match: failure === 'match' ? unavailable : vi.fn(async () => undefined),
-        open: failure === 'open' ? unavailable : vi.fn(async () => ({ put: failure === 'put' ? unavailable : vi.fn() })),
+        open: failure === 'open' ? unavailable : vi.fn(async () => ({ put: failure === 'put' ? unavailable : vi.fn(), match: vi.fn(async () => new Response('older cached shell')) })),
       };
       const context = { self: { addEventListener: vi.fn() }, caches, fetch: vi.fn(async () => response) };
       runInNewContext(source, context);
@@ -26,7 +26,10 @@ for (const mode of ['networkFirst', 'cacheFirst']) {
 test('navigation falls back to the installed shell when the network fails', async () => {
   const context = {
     self: { addEventListener: vi.fn() },
-    caches: { match: vi.fn(async () => new Response('offline shell')) },
+    caches: {
+      match: vi.fn(async () => new Response('offline shell')),
+      open: vi.fn(async () => ({ match: vi.fn(async () => new Response('offline shell')) })),
+    },
     fetch: vi.fn(async () => { throw new Error('Offline'); }),
   };
   runInNewContext(source, context);
